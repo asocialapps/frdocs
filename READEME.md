@@ -37,7 +37,7 @@ Puis:
     bundle install
     bundle exec jekyll serve
 
-## Build et test
+## Build et test (local)
 
     bundle exec jekyll build
     npx http-server ./_site -p 8080
