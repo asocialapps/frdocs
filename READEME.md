@@ -37,6 +37,11 @@ Puis:
     bundle install
     bundle exec jekyll serve
 
+## Build et test
+
+    bundle exec jekyll build
+    npx http-server ./_site -p 8080
+
 ## Paths sous Windows
 
     RubyGems Environment:
