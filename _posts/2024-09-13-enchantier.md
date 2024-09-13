@@ -10,7 +10,7 @@ excerpt: >-
 L'application est encore en chantier,  test et finalisation. Les manuels sont partiels et parfois non consistents avec le code actuel.
 
 Les projets associés sur github sont:
-- [asocial-manuels (ce site)](https://github.com/dsportes/asocial-manuels)
+- [asocial-man (ce site)](https://github.com/dsportes/asocial-man)
 - [asocial-app](https://github.com/dsportes/asocial-app)
 - [asocial-srv](https://github.com/dsportes/asocial-srv)
 - [upload](https://github.com/dsportes/upload)
