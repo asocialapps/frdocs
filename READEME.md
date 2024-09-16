@@ -17,7 +17,7 @@ Puis il faut corriger le Gemfile:
 On peut relancer:
 
     bundle install
-    jekyll serve
+    bundle exec jekyll serve
 
 ## Changement de skin
 Dans Gemfile:
