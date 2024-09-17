@@ -17,9 +17,9 @@ Pour se connecter à son espace, il suffit d'ouvrir dans un navigateur la page W
 
 > Une organisation n'est pas attachée à son prestataire initial qui peut _exporter_ les données de l'organisation pour un autre, ce qui ne prend que le temps de la copie des données.
 
-# Créer son compte
+# Créer son compte, ses avatars principal et secondaires
 
-Avant de pouvoir accéder à l'application une personne doit créer son propre compte **sponsorisé par une autre y ayant déjà un compte**. 
+Avant de pouvoir accéder à l'application une personne doit créer son propre compte **sponsorisé par un autre compte**. 
 
 Sponsor et sponsorisé ont convenu entre eux,
 - du nom du sponsorisé, par exemple `Charles`, qui pourra changer.
@@ -35,30 +35,66 @@ Si le titulaire du nouveau compte accepte les conditions proposées par le spons
 
 > _Revers de cette sécurité_ : si la personne titulaire d'un compte oublie sa **phrase secrète de connexion**, elle est ramenée à l'impuissance du pirate. Son compte s'autodétruira dans un délai d'un an et toutes ses données et notes disparaîtront.
 
-[Information détaillée à propos de la gestion des comptes](/appli/comptes.md)
-
-[Usage de la cryptographie dans AsocialApp](/tech/crypto.md)
-
-# Avatars principal et secondaires d'un compte
+### Avatars principal et secondaires facultatifs
 
 En créant son compte, le titulaire a créé son **avatar principal**. 
 
 Un avatar,
 - a un _identifiant_ aléatoire de 12 lettres / chiffres: ce code est immuable et non interprétable.
-- a une **carte de visite** cryptée constituée d'une photo facultative et d'un court texte (son _nom / pseudo_) d'au moins 6 signes, par exemple `Charles III, roi des esturgeons et d’Écosse`.
+- a une **carte de visite** cryptée constituée,
+  - d'une photo facultative,
+  - d'un court texte (son _nom / pseudo_) d'au moins 6 signes, par exemple `Charles III, roi des esturgeons et d’Écosse`.
 
-Ultérieurement le titulaire du compte peut créer des **avatars secondaires**, chacun ayant leur identifiant et leur carte de visite. Il peut utiliser à son gré l'un ou l'autre de ses avatars, ce qui lui confère plusieurs _personnalités_.
+Ultérieurement le titulaire du compte peut créer des **avatars secondaires**, 
+- chacun a son identifiant et sa carte de visite. 
+- le titulaire du compte peut utiliser à son gré l'un ou l'autre de ses avatars, ce qui lui confère plusieurs _personnalités_ vis à vis des autres.
 
-> **Le titulaire du compte est le seul à connaître la liste de ses avatars secondaires**. En regardant deux avatars, personne n'est en mesure de savoir s'ils correspondent ou non au même compte.
+> **Le titulaire du compte est le seul à connaître ses avatars secondaires**. En regardant deux avatars, personne n'est en mesure de savoir s'ils correspondent ou non au même compte.
 
 > Comme dans la vraie vie **plusieurs avatars peuvent porter le même "nom"**: à l'écran les 4 derniers signes de l'identifiant complète les noms ( `Charles#9476` et `Charles#5AR2`). Leurs cartes de visite permettront aux autres de distinguer Charles "_Général de brigade_" de Charles "_Roi des esturgeons_".
+
+### L'administrateur technique
+C'est le représentant technique du prestataire. **Il n'a pas de compte** mais _une clé d'accès à l'application_ pour initialiser un espace pour une organisation et effectuer quelques actions techniques: exportation d'espaces, suppressions d'espaces, notifications importantes, etc.
+
+### Le Comptable
+_Le Comptable_ **est un compte** qui a reçu de l'administrateur technique à la création de l'espace de l'organisation une _phrase de sponsoring_ qui lui a permis de créer son compte. C'est un compte _presque_ normal, toutefois: 
+- mais pour être bien identifiable il a une _carte de visite_ immuable, sans photo et de nom _Comptable_,
+- il ne peut pas se créer des avatars secondaires,
+- il a le pouvoir de gérer **des forfaits gratuits**:
+  - en découpant le forfait global **en tranches**,
+  - en pouvant désigner certains comptes comme _délégués_ et en charge d'accorder des forfaits gratuits à des comptes.
+
+> Le **Comptable** n'a pas plus que les autres comptes les moyens cryptographiques de s'immiscer dans les notes des avatars des comptes et leurs chats: ce n'est en aucune façon un modérateur et il n'a aucun moyen d'accéder aux contenus, pas plus qu'à l'identité des avatars, sauf de ceux qu'il connaît personnellement.
+
+### Comptes autonomes "A"
+Un compte _autonome_:
+- **paye son abonnement** (qu'il fixe lui-même) **et sa consommation** (sans limite a priori),
+- **ne peut être ni _restreint_, ni _bloqué_** tant que son solde est créditeur.
+
+Un compte "A" _augmente son solde_ en faisant parvenir des _paiements_ que le Comptable va enregistrer sans qu'il puisse faire le rapprochement entre un _paiement_ et le compte crédité. 
+
+### Comptes de l'organisation "O"
+Pour certaines organisations, les comptes "A" ne sont pas acceptables:
+- si un compte "A" quitte l'organisation ou qu'il est devenu nuisible à l'organisation, il ne peut pas être restreint / bloqué.
+- l'organisation peut souhaiter contrôler les ressources utilisées par les comptes et les restreindre,
+- l'organisation peut avoir inclus l'abonnement et la consommation de certains comptes dans ses _frais d'adhésion_ ou équivalents.
+
+Pour répondre à ces objectifs, il existe une seconde catégorie de compte: **les comptes "O", de l'organisation**.
+
+L'organisation paye de facto l'abonnement et la consommation pour le compte mais en contrepartie,
+- elle lui fixe des limites potentiellement bloquantes d'abonnement et de consommation,
+- elle peut restreindre voire bloquer le compte. 
+
+[Information détaillée à propos de la gestion des comptes](./comptes.md)
+
+[Créer, gérer et supprimer ses avatars](./avatars.html)
 
 # Notes personnelles
 
 **Un note porte un texte** d'au plus 5000 caractères pouvant s'afficher avec un minimum de _décoration_, gras, italique, titres, listes ... Ce texte est modifiable.
 
 **Des fichiers peuvent être attachés à une note**
-- beaucoup de types de fichiers (`.jpg .mp3 .mp4 .pdf ...`) s'affichent directement dans le navigateur, les autres sont téléchargeables.
+- les types de fichiers les plus usuels (`.jpg .mp3 .mp4 .pdf ...`) s'affichent directement dans le navigateur, les autres sont téléchargeables.
 - il est possible d'ajouter et de supprimer des fichiers attachés à une note.
 - quand plusieurs fichiers portant le même _nom_ dans la note, ils sont vus comme des révisions successives, qu'on peut garder, ou ne garder que la dernière, ou celle de son choix.
 
@@ -68,46 +104,53 @@ Ultérieurement le titulaire du compte peut créer des **avatars secondaires**, 
 
 > Un avatar peut créer des notes **personnelles**, les mettre à jour, les supprimer et les indexer par des mots clés personnels. Elles sont cryptées, comme toutes les données des comptes, et seul le titulaire du compte a, par l'intermédiaire de sa phrase secrète, la clé de cryptage apte à les décrypter.
 
+[Notes personnelles et de groupe](./notes.html)
+
 # Contacts
 
 Un contact est _un avatar_ dont le compte connaît **la carte de visite** cryptée. 
 
-Un contact est établi entre deux avatars par l'existence d'un au moins de ces types de liens:
-- **un chat a été établi** entre les deux avatars: le _chat_ ne pouvant pas être supprimé, **ce contact est permanent**. La clé de la carte de visite a été échangée à la création du _chat_.
-- **les deux avatars sont membres d'un même groupe**: les clés de leur cartes de visites sont disponibles à tous les membres du groupe (ayant droit d'accès aux membres). **Ce contact est temporaire**, dure tant que les deux sont membres du groupe.
-  - si l'un des deux souhaite rendre ce contact **permanent** il ouvre un _chat_ avec lui.
+### Contact _permanent_
+Un contact _permanent_ est établi entre deux avatars quand ils ont ouvert un _chat_ entre eux.
 
-Un contact _disparaît_ quand l'avatar correspondant disparaît, par résiliation volontaire ou forcée (non utilisation du compte ou défaut de crédit).
+le _chat_ ne pouvant pas être supprimé, **ce contact est permanent**. La clé de la carte de visite a été échangée à la création du _chat_: un _chat_ ne peut pas être supprimé, il ne disparaît que quand les deux contacts du _chat_ ont disparu.
 
-> Un compte peut rester totalement isolé et n'avoir aucun contact avec les autres: à la création de son compte par _sponsoring_, le sponsor comme le sponsorisé peuvent déclarer vouloir ou non **ouvrir un _chat_** entre eux (ce qui les rend _contacts mutuels permanent_).
+### Contact _temporaire_
+Lorsque **deux avatars sont membres d'un même groupe**, les clés de leur cartes de visites sont inscrites dans le groupe et sont ainsi accessibles à tous les membres (ayant droit d'accès aux membres). 
+
+**Ce contact est temporaire**, dure tant que les deux avatars sont membres du groupe.
+- si l'un des deux avatars souhaite rendre ce contact **permanent** il ouvre un _chat_ avec l'autre.
+- un tel contact _disparaît_ quand l'avatar correspondant disparaît, par résiliation volontaire ou forcée (non utilisation du compte ou défaut de crédit).
+
+> Un compte peut rester totalement isolé et n'avoir _aucun contact_ avec les autres: à la création de son compte par _sponsoring_, le sponsor comme le sponsorisé peuvent déclarer vouloir ou non **ouvrir un _chat_** entre eux (ce qui les rend _contacts mutuels permanent_).
 
 > Un contact est réciproque, si Julie a Émilie dans ses contacts, Émilie a Julie dans ses contacts: chacun a échangé avec l'autre la clé de cryptage qui permet de lire la carte de visite de l'autre.
 
 ## Un compte peut attacher un commentaire personnel et ses propres mots clés à ses _contacts_ 
 Ceci facilite le filtrage dans le répertoire des _contacts_ selon des critères de son choix: le compte les déclarent pour lui et lui seul les voit. La _carte de visite_ d'un contact pouvant évoluer selon la volonté de ce dernier, conserver un nom / commentaire personnel à son propos est une bonne idée.
 
-> Les mots clés attribués par un compte à un contact lui permettent de le classer comme _indésirable_ ou _oubliette_ ou _amis_ et de s'en servir comme filtre pour le voir ou non dans son répertoire de contacts.
+> Les mots clés attribués par un compte à un contact lui permettent de le classer comme _expert_ _oubliette_ ou _ami_ et de s'en servir comme filtre pour le voir ou non dans son répertoire de contacts.
 
-# "Chats" entre contacts
+# "Chats" entre avatars
 
-Un chat peut être ouvert,
+Un chat peut être **ouvert**,
 - à la création du compte entre sponsor et sponsorisé si tous deux en sont d'accord,
 - avec le membre _actif_ d'un groupe pour lequel on a droit d'accès aux membres (voir plus loin),
 - par contact direct avec une _phrase de contact_.
 
-Les deux contacts peuvent écrire des textes courts:
+Les deux avatars peuvent écrire des textes courts:
 - un texte d'un _chat_ ne peut plus y être modifié mais peut être supprimé par son auteur,
 - le volume total des textes sur le _chat_ est limité à 5000 signes, les plus anciens étant perdus en cas de dépassement de cette limite.
 
 Une fois créé un _chat_ ne disparaît que quand les deux avatars qui le partage ont disparu.
-- pour ne pas être importuné, l'un des 2 peut _déclarer le chat indésirable_, ce qui en efface le contenu pour lui. Le _chat_ ne compte plus pour lui dans le nombre de chats ouverts. L'autre peut toujours continuer à y écrire des textes sans être certain d'être lu ... Le _chat_ n'est plus _indésirable_ dès qu'on y écrit soi-même un texte (et compte à nouveau dans son décompte de chats ouverts).
+- pour ne pas être importuné, l'un des 2 peut _déclarer le chat indésirable_, ce qui en efface le contenu pour lui. Le _chat_ n'est plus décompte plus pour lui dans son nombre de documents. L'autre peut toujours continuer à y écrire des textes sans être certain d'être lu ... Le _chat_ n'est plus _indésirable_ dès que l'avatar qui l'a déclaré tel y écrit un texte (et compte à nouveau dans son décompte de documents).
 - chacun peut attacher au _contact du chat_ ses propres mots clés (par exemple _copain_ ou _important_ ...) que l'autre ne voit pas, et les utiliser pour filtrer les _chats_.
 
-## Établissement d'un contact par une _phrase de contact_
+## Établissement d'un contact par une _phrase de contact_ d'un avatar
 Émilie peut déclarer une _phrase de contact_, unique dans l'application et dont le début n'est pas déjà le début d'une phrase déjà déclarée. Par exemple : `les courgettes sont bleues au printemps`
 - Émilie peut la changer ou la supprimer à tout instant.
 - Émilie peut communiquer, par un moyen de son choix, cette phrase à Julie qui peut ainsi ouvrir un _chat_ avec elle.
-- Julie et Émilie ont un _chat_ ouvert et sont devenues contacts _permanents_. L'une pourra aussi inviter, ou faire inviter, l'autre aux groupes auxquels elles participent.
+- Julie et Émilie ayant un _chat_ ouvert, sont devenues contacts _permanents_. L'une pourra aussi inviter, ou faire inviter, l'autre aux groupes auxquels elles participent.
 
 > Une _phrase de contact_ doit être effacée rapidement afin d'éviter que des personnes non souhaitées, mises au courant de la phrase de contact, n'ouvrent un _chat_: l'impact serait toutefois limité (on n'est pas obligé de le lire).
 
