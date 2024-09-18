@@ -3,7 +3,6 @@ layout: page
 title: Créer, gérer et supprimer ses avatars
 ---
 
-TOD
 ## Les avatars d'un compte
 Un compte a toujours un avatar principal et ne peut pas en changer.
 
@@ -37,3 +36,5 @@ Un avatar peut se déclarer une _phrase de contact_, par exemple `Superman n'aim
 - enfin la phrase peut être détruite afin que personne ne puisse plus l'utiliser pour établir un chat.
 
 > Il se peut qu'en contactant un avatar par sa phrase de contact, on tombe sur un avatar déjà contact, le cas échéant ayant déjà une ardoise de _chat_ ouverte.
+
+TODO: création, suppression

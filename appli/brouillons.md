@@ -26,14 +26,3 @@ Les quotas sont donnés en nombre d'unités ci-dessous :
 - pour V1 : 0,25 MB
 - pour V2 : 25 MB
 
-Les quotas s'étagent de 1 à 255. Certains quotas ont un code symbolique. L'ordre de grandeur du coût mensuel pour l'hébergeur est donné ci-après pour information en centimes d'euro :
-- (1) - XXS - 0,25 MB / 25 MB - 0,09c
-- (4) - XS - 1 MB / 100 MB - 0,35c
-- (8) - SM - 2 MB / 200 MB - 0,70c
-- (16) - MD - 4 MB / 400 MB - 1,40c
-- (32) - LG - 8 MB / 0,8GB - 2,80c
-- (64) - XL - 16 MB / 1,6GB - 5,60c
-- (128) - XXL - 32 MB / 3,2GB - 11,20c
-- (255) - MAX - 64 MB / 6,4GB - 22,40c
-
-Le code _numérique_ d'un quota va de 0 à 255 : c'est le facteur multiplicateur du forfait le plus petit (0,25MB / 25MB). Les codes symboliques sont enregistrés dans la configuration de l'hébergement et peuvent être ajoutés / modifiés sans affecter les données déjà enregistrées.

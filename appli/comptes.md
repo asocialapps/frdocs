@@ -129,3 +129,40 @@ Un compte peut s'auto-résilier : tous ses avatars secondaires doivent avoir ét
 **Un compte qui ne s'est pas connecté pendant 12 mois est déclaré *disparu*** : sa connexion est impossible et ses données seront physiquement détruites afin de ne pas encombrer inutilement l'espace (comme si le compte s'était auto-résilié). 
 
 Comme rien ne raccorde un compte au monde réel, ni adresse e-mail, ni numéro de téléphone ... il n'est pas possible d'informer quiconque de la disparition prochaine de son compte.
+
+# Mutation de comptes "A" en "O" et réciproquement
+
+### Comptes autonomes "A"
+Un compte _autonome_:
+- **paye son abonnement** (qu'il fixe lui-même) **et sa consommation** (sans limite a priori),
+- **ne peut être ni _restreint_, ni _bloqué_** tant que son solde est créditeur.
+
+Un compte "A" _augmente son solde_ en faisant parvenir des _paiements_ que le Comptable va enregistrer sans que personne (sauf le compte lui-même) ne puisse déterminer quel compte a été crédité par quel paiement. 
+
+Un compte "A" peut **faire des dons** à d'autres comptes "A".
+
+### Comptes de l'organisation "O"
+Pour certaines organisations, les comptes "A" ne sont pas acceptables:
+- si un compte "A" quitte l'organisation ou qu'il est devenu nuisible à l'organisation, il ne peut pas être restreint / bloqué.
+- l'organisation peut souhaiter contrôler les ressources utilisées par les comptes et les restreindre,
+- l'organisation peut avoir inclus l'abonnement et la consommation de certains comptes dans ses _frais d'adhésion_ ou équivalents.
+
+Pour répondre à ces objectifs, il est défini une seconde catégorie de compte: **les comptes "O", de l'organisation**.
+
+L'organisation paye de facto l'abonnement et la consommation pour le compte mais en contrepartie,
+- elle lui fixe des limites potentiellement bloquantes d'abonnement et de consommation,
+- elle peut restreindre voire bloquer le compte. 
+
+### Basculement d'un compte
+Le Comptable ou un de ses _délégués_ peut transformer un compte "O" en compte "A" **ayant donné son accord** par la communication de sa _phrase de contact_ au Comptable / délégué.
+- le compte acquiert une liberté totale (il ne peut plus être bloqué) mais en contrepartie paie son abonnement / consommation.
+
+Le Comptable ou un _délégué_, peut transformer un compte "A" **ayant donné son accord** en compte "O":
+- le compte n'a plus à payer son accès,
+- en contrepartie il est contraint en volume et en activité et peut être restreint / bloqué.
+
+### A sa création une organisation _n'accepte pas_ de comptes _autonomes_
+- Le Comptable peut lever cette interdiction et en autoriser la création,
+- il peut aussi supprimer cette autorisation: cela n'a aucun effet sur les comptes _autonomes_ existants et ne vaut que pour les créations ultérieures.
+
+TODO: changement de la phrase secrète
