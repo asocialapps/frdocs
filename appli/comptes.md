@@ -165,4 +165,9 @@ Le Comptable ou un _délégué_, peut transformer un compte "A" **ayant donné s
 - Le Comptable peut lever cette interdiction et en autoriser la création,
 - il peut aussi supprimer cette autorisation: cela n'a aucun effet sur les comptes _autonomes_ existants et ne vaut que pour les créations ultérieures.
 
-TODO: changement de la phrase secrète
+### Changement de la phrase secrète
+Un compte peut changer sa phrase secrète:
+- il doit se connecter avec la phrase actuelle,
+- il donne (deux fois) sa nouvelle phrase dont les 12 premiers signes ne doivent pas être ceux de la phrase secrète d'un autre compte.
+
+> **Remarque**: quand on se connecte depuis un navigateur en mode _avion_ il faut donner la phrase secrète qui était en cours lors de la dernière connexion en mode synchronisé sur ce navigateur.

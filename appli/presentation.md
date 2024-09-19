@@ -269,6 +269,8 @@ Le Comptable procède d'abord à un _découpage en partitions_ des ressources gl
   - fixent pour chaque compte "O" de leur partition des quotas d'abonnement et de consommation,
   - puissent gérer des _notifications_ à ces comptes (avec restriction éventuelle).
 
+[En savoir plus sur les partitions des comptes "O"](./partitions.html)
+
 ## Notifications et restrictions d'accès des comptes
 
 Une _notification_ est un message suffisamment important pour que sa présence soit signalée par une icône dans la barre d'entête de l'écran de l'application.

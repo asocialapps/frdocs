@@ -16,9 +16,37 @@ L'administrateur technique a la possibilité d'ouvrir _instantanément_ un nouve
 - Cette ouverture crée une phrase de _sponsoring_ à destination du Comptable de l'organisation, 
 - Le Comptable créé son compte en utilisant cette phrase de _sponsoring_ et en fixant sa phrase secrète.
 
-_Rappel_; l'administrateur technique peut,
-- émettre une notification d'information visible de tous les comptes,
-- bloquer l'espace de l'organisation en _lecture seule_,
-- détruire les données par clôture de l'espace ne laissant pendant un certain temps qu'une seule information d'explication.
+## Notifications de l'administrateur technique
+L'administrateur technique peut émettre 3 notifications à l'espace d'une organisation.
 
-TODO: export, purge
+#### Informative sans restriction
+Ce peut-être par exemple l'annonce d'une indisponibilité temporaire planifiée, mais aussi l'annonce d'une fermeture définitive.
+
+#### Annonce de _figeage_
+L'espace est strictement en lecture, plus aucune écriture n'est possible.
+
+Quand ce n'est pas une mesure de rétorsion, c'est afin de permettre une exportation des données dans un état cohérent.
+
+#### Annonce de _clôture_
+Le message explique que l'espace n'est plus disponible, que ses données ont été supprimées. Seul ce message subsiste: si l'espace a été réinstallé à une nouvelle adresse, c'est l'occasion de l'indiquer.
+
+## Export d'un espace
+L'exportation d'un espace se fait sur un espace _figé_ et concerne deux aspects: la base de données et l'espace de fichiers.
+
+L'administrateur peut transférer toutes les données de la base de données sur une autre base, en général _locale_ au poste de l'administrateur. A cette occasion le _code_ de l'organisation peut changer.
+
+L'administrateur peut transférer tous les fichiers sur une autre _Storage_ en général _local_ au poste de l'administrateur. A cette occasion le _code_ de l'organisation peut changer.
+
+En toute rigueur la base de données et le _storage_ cible **peuvent** ne pas être sur des supports locaux, mais des restrictions techniques peuvent rendre l'opération impossible (par exemple transfert depuis un compte _Google_ vers un autre compte _Google_).
+
+### Changer de prestataire
+Dans tous les cas de figure l'exportation peut s'effectuer vers un support technique _local_ que tous les prestataires ont configuré. Il suffit alors que le prestataire _origine_ transfère au prestataire _cible_, 
+- un fichier contenant la base de données accompagnée de la clé de cryptage choisie pour le transfert,
+- un _folder_ représentant l'espace de fichiers, où ceux-ci sont cryptés par les clés des comptes (pas par une clé technique de l'administrateur).
+
+> La partie _base de données_ ne peut pas avoir un volume considérable. Il n'en n'est pas de même pour l'espace de fichiers, qui lui peut être énorme (d'où l'intérêt de ne pas l'exporter en _local_)
+
+## Purge d'un espace
+L'opération consiste à supprimer le sous-ensemble de la base de données relative à l'espace à supprimer et le _folder_ racine dans le _storage_.
+
+> **Il n'existe aucune raison technique de bonne foi qui interdise à un prestataire l'exportation d'un espace** dans un format tel qu'un autre prestataire ne puisse le reprendre.

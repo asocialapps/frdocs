@@ -27,6 +27,9 @@ title: Utiliser l'application
 [Abonnement, consommation, tarifs](appli/aboconso.html)
 - Calculer et répartir les coûts d'hébergement.
 
+[Partitions des comptes "O"](appli/partitions.html)
+- Gestion des partitions des comptes "O" d'une "partition" par ses _délégués_ et le Comptable
+
 [Notifications et restrictions d'accès des comptes](appli/notifications.html)
 - Notifier les alertes plus ou moins graves, les restrictions d'accès associées.
 

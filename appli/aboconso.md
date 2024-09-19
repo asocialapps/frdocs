@@ -51,10 +51,49 @@ L'organisation payent donc de facto pour ses comptes "O". Le Comptable est charg
 - soit globalement et périodiquement selon un processus à établir entre eux,
 - soit en encaissant les paiements directement sur un compte du prestataire.
 
-# Gestion de l'espace (_abonnements gratuits_) des comptes "O"
-Le Comptable procède d'abord à un _découpage en tranches_ des ressources globales dont il dispose:
-- chaque _tranche_ a un quota de _nombre de documents_, de _volume de fichiers_ et de _consommation de calcul_.
-- tout compte "O" est attaché à une _tranche_.
-- pour chaque _tranche_ le Comptable peut (ou non) confier une _délégation_ à certains comptes de la tranche afin que ceux-ci,
-  - fixent pour chaque compte "O" de leur tranche des quotas d'abonnement et de consommation,
-  - puissent gérer des _notifications_ à ces comptes (avec restriction éventuelle).
+## Annexe: estimation d'un _tarif_ depuis les prix de marché
+Il n'est considéré ci-après que l'estimation d'un _tarif_ basé sur la seule consommation de services externes de Cloud: chaque prestataire doit ensuite y ajouter le prix de sa valeur ajoutée, commercialisation, support technique, etc.
+
+**Les unités d'œuvre d'abonnement et de consommation ont été simplifiées pour être compréhensible par les comptes**. Par exemple:
+- les coûts de _calcul_ (appel d'une fonction Cloud, heure de serveur ...) sont facturés par le fournisseur Cloud mais sont intégrés dans les coûts des lectures et écritures.
+- les coûts de _download_ comporte une partie fixe par opération et une partie de coût réseau dépendante du volume: la partie fixe est à intégrer dans la part variable liée au volume.
+
+### Prix relevés chez Google (Firestore / Storage)
+Ce sont des ordres de grandeur, les vrais coûts sont complexes, dépendent de la localisation des serveurs, etc.
+
+Prix mensuels du stockage (abonnement)
+  - Base de Données (1GB) : 16c
+  - Storage (1GB) : 2.6c
+
+Prix des consommations:
+  - Lectures en base (1M): 31c
+  - Écritures en base (1M): 94c
+  - Download (1GB): 2c
+
+### Exemple de _tarif_ basé sur ces prix
+Les quotas sont exprimés en _nombre d'unités_ de 0 à 200 (exceptionnellement plus), afin de manipuler des ordres de grandeurs simples: 
+- 1 est un minimum réaliste (XS), 
+- 200 est un quota très important (XXL).
+
+#### Prix d'abonnement mensuel par _document_
+Un document est une note, un chat, une participation à un groupe. Le volume moyen est estimé à 10K par document, englobant les index et les autres documents non décomptés (les comptes, avatars, groupes, etc.).
+
+**Une _unité_ de 250 documents** correspond à un volume en base de 2.5MB: **0,04c mensuels**
+
+#### Prix d'abonnement mensuel par _volume de fichier_
+**Une _unité_ de 100MB de _Storage_** : **0,26c mensuels**
+
+#### Consommations de calcul
+Les prix brut du tarif Google ont été multipliés par 2 pour tenir comptes des parts fixes par opération, des coûts réseaux non décomptés, des coûts des appels de _Cloud function / Heure de serveur_.
+
+Les 4 unités retenues sont, 
+- le nombre de millions de lectures: 60c
+- le nombre de millions d'écritures: 200c
+- le volume en GB de fichiers _descendants_: 4c
+- le volume en GB de fichiers _montants_: 4c
+
+**Le quota de _consommation mensuelle_ d'un compte "0"** est donné en `c` :
+- un million de lectures ou d'écritures par mois correspond à une très très grosse activité.
+- en revanche télécharger quelques GB de fichiers est _plausible_.
+- le quota _minimal_ de 1c correspond, a priori, à une activité faible.
+- un quota de 200c par mois correspond, a priori, à une utilisation intense, surtout en téléchargements.

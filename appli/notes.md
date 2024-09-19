@@ -16,26 +16,36 @@ title: Notes personnelles
 
 > Un avatar peut créer des notes **personnelles**, les mettre à jour, les supprimer et **les indexer par des mots clés personnels**. Elles sont cryptées, comme toutes les données des comptes, et seul le titulaire du compte a, par l'intermédiaire de sa phrase secrète, la clé de cryptage apte à les décrypter.
 
-TODO: révisions, fichiers en mode avion
-
-#### Fichiers attachés à un secret
+### Informations à propos d'un fichiers attaché à une note
 Pour chaque fichier il est enregistré :
-- son numéro identifiant aléatoire.
-- son **nom** : comme un _nom de fichier_, d'où un certain nombre de caractères _interdits_ dont le `/`. Plusieurs fichiers attachés à un même secret peuvent porter le même nom, ce sont des _versions_ pour un nom donné.
-- son **a propos**, texte facultatif d'au plus 250 caractères utile en particulier pour expliciter le nom, donner un _titre_ ou un commentaire qualifiant une _version_ lorsqu'il existe plusieurs fichiers de même nom.
-- sa **date-heure d'enregistrement** dans l'application (pas celles de création ou de dernière modification de son fichier d'origine).
+- son identifiant aléatoire.
+- son **nom** : comme un _nom de fichier_, d'où un certain nombre de caractères _interdits_ dont le `/`. Plusieurs fichiers attachés à une même note peuvent porter le même nom, ce sont des _révisions_ pour un nom donné.
+- son **a propos**, texte facultatif utile en particulier pour qualifier une _révision_ lorsqu'il existe plusieurs fichiers de même nom.
+- sa **date-heure d'enregistrement** dans l'application.
 - son **type MIME** permettant de savoir si c'est une photo, un clip vidéo, un PDF ... Beaucoup de types de fichiers s'affichent directement dans les navigateurs.
 - sa **taille** originale en octets.
 - le **digest SHA-256** de son texte d'origine, permettant de s'assurer si nécessaire de sa non déformation entre sa source primitive et ses restitutions.
 
-**Les fichiers sont stockés dans un espace dédié sur un serveur de fichiers**, ils sont compressés si c'est un fichier de type `text/...`, puis cryptés dans l'application avant d'être envoyés sur le réseau, et décryptés dans l'application après téléchargement depuis le serveur de fichier.
+**Les fichiers sont stockés dans un _storage_ dédié à cet usage**:
+- ils sont compressés quand ce sont des fichiers de type `text/...`, 
+- ils sont cryptés dans l'application avant d'être envoyés sur le réseau, et décryptés dans l'application après téléchargement depuis le serveur de fichier.
 
->On ne peut **qu'ajouter ou supprimer** des fichiers. Quand on ajoute un fichier, il est proposé de supprimer simultanément un ou plusieurs autres fichiers de même nom : ceci donne l'impression d'une mise à jour qui permettrait de plus d'en gérer les _versions_ tout en évitant l'inflation du volume.
+> On ne peut **qu'ajouter ou supprimer** des fichiers. Quand on ajoute un fichier, il est proposé de supprimer simultanément un ou plusieurs autres fichiers de même nom : ceci donne _l'impression_ d'une mise à jour mais permet d'en gérer les _révisions_ (donc un possible retour en arrière) tout en évitant l'inflation du volume.
 
-## Téléchargement d'une sélection de secrets
+## Téléchargement local d'une sélection de notes
+L'application Web peut afficher une sélection de notes selon plusieurs critères de filtrage, éventuellement aucun.
 
-Une opération de téléchargement permet d'écrire en clair sur un disque local une sélection de secrets, **leurs textes et leurs fichiers**. Ceci requiert,
+Une action _locale au poste_ de téléchargement permet d'écrire en clair sur un disque local la sélection affichée, **leurs textes et optionnellement leurs fichiers qui sont alors obtenus du serveur**. Ceci requiert,
 - un PC Linux ou Windows,
-- le téléchargement et l'installation d'un petit utilitaire à lancer avant le d'effectuer le téléchargement et à arrêter ensuite par sécurité. En effet un navigateur n'a pas le droit d'écrire sur l'espace de fichiers de l'appareil, ce que l'utilitaire peut faire.
+- l'utilisation d'un petit utilitaire (téléchargeable et sans installation) à lancer avant d'effectuer le téléchargement et à arrêter ensuite par sécurité.
 
->Les téléchargements peuvent être coûteux en transfert sur le réseau et les hébergeurs du serveur de fichiers peuvent les facturer et / ou les limiter. Ils sont **ralentis** par des temporisations dès que la moyenne des volumes téléchargés sur les 14 derniers jours dépasse le quota V2 d'un compte (d'autant plus que le dépassement est important).
+> Un navigateur n'a pas le droit d'écrire sur l'espace de fichiers de l'appareil, ce que l'utilitaire peut faire.
+
+> Les téléchargements peuvent être coûteux en transfert sur le réseau et les hébergeurs du serveur de fichiers peuvent les facturer et / ou les limiter. Ils peuvent **ralentis** par des temporisations si la consommation de calcul (qui inclut le volume téléchargé) est hors des limites des quotas du compte.
+
+## Fichiers accessibles en mode _avion_ et usage du _presse-papier_
+
+Lire les explications dans la page suivante:
+
+[Modes de connexion synchronisé, avion, incognito](./modessync.html)
+- Les modes de connexion, fichiers accessibles en mode _avion_, le _presse-papier_.

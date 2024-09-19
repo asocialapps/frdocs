@@ -17,7 +17,7 @@ Pour un compte, les compteurs suivants reflètent l'usage de l'espace:
   - la moyenne des volumes journaliers du mois,
   - le volume total des transferts de fichiers dans le mois.
 
-> Un compte _non sponsor_ n'a accès qu'à ses propres statistiques. Le Comptable a accès à toutes celles des comptes et un sponsor à celles des comptes de sa tribu. Cette connaissance leutr permet par exemple d'apprécier :
+> Un compte _non sponsor_ n'a accès qu'à ses propres statistiques. Le Comptable a accès à toutes celles des comptes et un sponsor à celles des comptes de sa tribu. Cette connaissance leur permet par exemple d'apprécier :
 >- quand un sponsor de tribu réclame des quotas supplémentaires, comment le volume est effectivement alloué et utilisé par les comptes,
 >- quand un compte se plaint que son sponsor ne lui donne pas de quotas supplémentaires, ce qu'il utilise réellement de ses quotas.
 
