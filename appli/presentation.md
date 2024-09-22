@@ -321,7 +321,21 @@ Elle est **automatique** lors de la détection d'un solde négatif.
 
 > **En cas de _restriction_ les connexions des comptes ne les maintiennent plus en vie**: au plus tard dans un an, si cette restriction n'est pas levée, les comptes disparaîtront.
 
-[Les notifications et restrictions en détail](./notifications.md).
+[Les notifications et restrictions en détail](./notifications.html).
+
+## Statistiques partagées entre le Comptable et l'administrateur technique
+
+Tous deux ont besoin d'éléments statistiques de consommation afin d'ajuster si nécessaire les bases de facturation en fonction d'un usage réel.
+
+Ces statistiques sont calculées mensuellement et sont des fichiers CSV.
+- elles sont anonymes: les identifiants des comptes concernés n'y figurent pas.
+- pour un mois donné elles sont immuables, calculées à un moment où le mois étant terminé, les compteurs mensuels ne sont plus susceptibles de changer.
+
+**Abonnement / consommation des comptes**
+
+**Archive des _tickets_ de paiement des comptes "A"**
+
+[Détail des statistiques](./stats.html)
 
 ## Gestion des _espaces_
 

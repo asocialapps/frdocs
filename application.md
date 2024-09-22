@@ -33,6 +33,9 @@ title: Utiliser l'application
 [Notifications et restrictions d'accès des comptes](appli/notifications.html)
 - Notifier les alertes plus ou moins graves, les restrictions d'accès associées.
 
+[Statistiques partagées entre le Comptable et l'administrateur technique](appli/stats.html)
+- Détail des compteurs _abonnements / consommations_ et _tickets de paiement du mois_.
+
 [La gestion des espaces par l'administrateur technique](appli/espaces.html)
 - Création d'espaces, notifications, exports et purges.
 
@@ -42,7 +45,7 @@ title: Utiliser l'application
 - Les techniques de cryptographie employés, principes de confidentialité.
 
 [Analyse de la confiance en l'application](appli/confiance.html)
-- Comment avoir confiance, ou non, dans l'application. DRAFT.
+- Avoir confiance, ou non, dans l'application, pourquoi et limites. DRAFT.
 
 [Considérations éthiques](appli/confiance.html)
-- Une application anonyme et cryptée est-elle _éthique_ ?. DRAFT.
+- Une application anonyme et cryptée est-elle _éthique_ / _modérable_?.
