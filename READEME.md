@@ -1,4 +1,4 @@
-## Problème d'installation
+## Problèmes d'installation
 Quand on lance la commande `bundle install` on récupère l'erreur:
 
     Installing wdm 0.1.1 with native extensions
