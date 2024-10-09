@@ -40,8 +40,12 @@ Puis:
 ## Build et test (local)
 
     bundle exec jekyll build
-    npx http-server ./_site -p 8080
+    xcopy /E _site ..\public\fr\
+    cd ..
+    npx http-server -p 8080
 
+    URL: http://localhost:8080/fr
+    
 ## Paths sous Windows
 
     RubyGems Environment:

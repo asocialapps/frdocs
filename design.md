@@ -2,6 +2,8 @@
 layout: page
 title: Design Technique
 ---
+
 # Architecture, développement, déploiements
 
-Table des matières, liens vers les pages
+[Architecture Générale](tech/architecturegen.html)
+- Tous les composants majeurs participant à l'exécution de l'application (17 pages).
