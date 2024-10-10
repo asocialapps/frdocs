@@ -3,6 +3,8 @@ layout: page
 title: Architecture générale
 ---
 
+Présentation des composants majeurs (application Web, serveurs / Cloud Functions, utilitaires ...) constituant _l'application_.
+
 L'ensemble est architecturé en:
 - **une application Web** s'exécutant dans un browser et qui,
   - soumet des requêtes HTTP aux services centraux pour mise à jour des données dans la base et pour synchroniser son état interne avec l'état connu dans la base centrale,

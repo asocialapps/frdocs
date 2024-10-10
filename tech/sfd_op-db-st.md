@@ -1,7 +1,9 @@
 ---
 layout: page
-title: Design du service OP (opérations)
+title: Le service OP des "opérations" d'accès à la base
 ---
+
+Spécifications Fonctionnelles Détaillées du service OP des opérations de mise à jour / consultation de la base de données et du _storage_ des fichiers.
 
 ## Concepts structurants : espaces, comptes, GC
 

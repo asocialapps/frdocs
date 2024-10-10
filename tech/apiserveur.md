@@ -1,12 +1,12 @@
 ---
 layout: page
-title: Design général du _serveur_ et API
+title: Design des "serveurs", leur API
 ---
 
-Le design général permet selon l'option de configuration choisie,
-- d'avoir un serveur HTTP unique assurant les services OP+PUBSUB,
-- soit seulement le service OP,
-- soit seulement le service PUBSUB.
+Ce design a été conçu afin de pouvoir opter entre plusieurs schémas de déploiement selon l'option de configuration choisie:
+- un serveur HTTP unique assurant les services OP+PUBSUB,
+- des serveurs ou des instances de Cloud Function assurant le service OP,
+- un serveur ou une instance de Cloud Function assurant le service PUBSUB.
 
 Les sources sont hébergés dans github sous le nom de projet `asocial-srv`
 

@@ -1,9 +1,9 @@
 ---
 layout: page
-title: Design du service PUBSUB
+title: Le service PUBSUB de "notification" des mises à jour
 ---
 
-Ce service gère les _souscriptions_ des sessions des application Web en cours et la publication vers elles des couples (identifiant / version) des documents de leur périmètre à l'occasion de la fin de chaque opération.
+Le service PUBSUB gère les _souscriptions_ des sessions des application Web en cours et la _publication_ (notifications) vers ces sessions des avis de modification des documents de leur périmètre à la fin de chaque opération.
 
 Il est constitué:
 - d'une mémoire non persistante de l'état des sessions actives,
