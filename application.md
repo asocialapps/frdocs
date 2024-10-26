@@ -47,5 +47,5 @@ title: Utiliser l'application
 [Analyse de la confiance en l'application](appli/confiance.html)
 - Avoir confiance, ou non, dans l'application, pourquoi et limites. DRAFT.
 
-[Considérations éthiques](appli/confiance.html)
+[Considérations éthiques](appli/ethique.html)
 - Une application anonyme et cryptée est-elle _éthique_ / _modérable_?.
