@@ -12,15 +12,15 @@ L'application **AsocialApp** propose des fonctionnalités équivalentes à celle
 
 ### Différences de fond - [En savoir plus ...](differences.html)
 Elles sont importantes : **AsocialApp** permet d'accéder à **des** espaces **a-sociaux**, privés, cryptés de bout en bout pour des comptes _numérotés_ et anonymes, bref pas _sociaux_ du tout. 
-- Public / privé
-- Inscription libre / cooptation
-- Groupes ouverts / groupes sur invitation
-- Textes publics / textes cryptées
-- Fournisseur unique / fournisseurs multiples
+- Comptes publics avec inscription libre vs _privés_ et _création par cooptation_
+- Groupes ouverts vs _sur invitation_
+- Textes publics vs _cryptés_
+- Fournisseur unique / _multiples_
 
-Clairement **AsocialApp** n'est pas _monétisable_ par la publicité ciblée, donc d'une manière ou d'une autre payante, aucune information personnelle / intelligible ne pouvant être captée.
+**AsocialApp** n'est pas _monétisable_ par de la publicité ciblée, les informations personnelles / intelligibles ne pouvant être décryptées que par les intéressés dans leur navigateur.
 
-## Lire aussi
-Les manuels [de présentation et d'utilisation](application.html)
+### _[Présentation générale courte...](appli/presentation.html)_
 
-Les manuels _techniques_ [architecture, design, développement, déploiementsPrésentation de l'application](design.html)
+### _[Pages de présentation, utilisation ...](application.html)_
+
+### _[Manuels techniques (architecture, spécifications détaillées, développements, déploiements) ...](design.html)_

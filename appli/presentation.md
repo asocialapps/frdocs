@@ -56,11 +56,10 @@ C'est le représentant technique du prestataire. **Il n'a pas de compte** mais _
 
 ### Le Comptable
 _Le Comptable_ **est un compte** qui a reçu de l'administrateur technique à la création de l'espace de l'organisation une _phrase de sponsoring_ qui lui a permis de créer son compte. C'est un compte _presque_ normal, toutefois: 
-- mais pour être bien identifiable il a une _carte de visite_ immuable, sans photo et de nom _Comptable_,
-- il ne peut pas se créer des avatars secondaires,
-- il a le pouvoir de gérer **des forfaits gratuits**:
-  - en découpant le forfait global **en tranches**,
-  - en pouvant désigner certains comptes comme _délégués_ et en charge d'accorder des forfaits gratuits à des comptes.
+- pour être bien identifiable il a une _carte de visite_ immuable, sans photo et de nom _Comptable_ et ne peut pas se créer des avatars secondaires,
+- il a le pouvoir de gérer **les quotas de ressources allouées à l'organisation**:
+  - il _partitionne_ les quotas globaux de l'application,
+  - pour chaque _partition_ définie, il _délègue_ à certains comptes la capacité à répartir les quotas de la partition aux comptes.
 
 > Le **Comptable** n'a pas plus que les autres comptes les moyens cryptographiques de s'immiscer dans les notes des avatars des comptes et leurs chats: ce n'est en aucune façon un modérateur et il n'a aucun moyen d'accéder aux contenus, pas plus qu'à l'identité des avatars, sauf de ceux qu'il connaît personnellement.
 
@@ -79,8 +78,8 @@ Pour certaines organisations, les comptes "A" ne sont pas acceptables:
 
 Pour répondre à ces objectifs, il existe une seconde catégorie de compte: **les comptes "O", de l'organisation**.
 
-L'organisation paye de facto l'abonnement et la consommation pour le compte mais en contrepartie,
-- elle lui fixe des limites potentiellement bloquantes d'abonnement et de consommation,
+L'organisation supporte de facto les coûts d'abonnement et de consommation pour le compte mais en contrepartie,
+- elle lui fixe des **quotas** d'abonnement et de consommation contraignants,
 - elle peut restreindre voire bloquer le compte. 
 
 [Information détaillée à propos de la gestion des comptes](./comptes.html)
@@ -94,7 +93,7 @@ L'organisation paye de facto l'abonnement et la consommation pour le compte mais
 **Des fichiers peuvent être attachés à une note**
 - les types de fichiers les plus usuels (`.jpg .mp3 .mp4 .pdf ...`) s'affichent directement dans le navigateur, les autres sont téléchargeables.
 - il est possible d'ajouter et de supprimer des fichiers attachés à une note.
-- quand plusieurs fichiers portant le même _nom_ dans la note, ils sont vus comme des _révisions_ successives, qu'on peut garder, ou ne garder que la dernière, ou celles de son choix.
+- quand plusieurs fichiers portent le même _nom_ dans la note, ils sont vus comme des _révisions_ successives, qu'on peut garder, ou ne garder que la dernière, ou celles de son choix.
 
 ### Vue hiérarchique: note _parent_ d'un note
 - les notes apparaissent à l'écran sous forme hiérarchique, une note _parent_ ayant en dessous d'elle des notes _enfants_ (ou aucune).
@@ -102,14 +101,14 @@ L'organisation paye de facto l'abonnement et la consommation pour le compte mais
 
 > Un avatar peut créer des notes **personnelles**, les mettre à jour, les supprimer et **les indexer par des mots clés personnels**. Elles sont cryptées, comme toutes les données des comptes, et seul le titulaire du compte a, par l'intermédiaire de sa phrase secrète, la clé de cryptage apte à les décrypter.
 
-[Notes personnelles](./notes.html)
+[Plus de détails ici à propos des notes personnelles](./notes.html)
 
 ## Contacts
 
 Un contact est _un avatar_ dont le compte connaît **la carte de visite** cryptée. 
 
 ### Contact _permanent_
-Un contact _permanent_ est établi entre deux avatars quand ils ont ouvert un _chat_ entre eux (un _chat_ ne pouvant pas être supprimé). La clé de la carte de visite a été échangée à la création du _chat_.
+Un contact _permanent_ est établi entre deux avatars quand ils ont ouvert un _chat_ entre eux (un _chat_ ne peut pas être supprimé). La clé de la carte de visite a été échangée à la création du _chat_.
 
 ### Contact _temporaire_
 Lorsque **deux avatars sont membres d'un même groupe**, les clés de leur cartes de visites sont inscrites dans le groupe et sont ainsi accessibles à tous les membres (ayant droit d'accès aux membres). 
@@ -157,7 +156,7 @@ Une fois créé un _chat_ ne disparaît que quand les deux avatars qui le partag
 Un avatar peut créer un **groupe** dont il sera le premier membre _actif_ et y aura un pouvoir _d'animateur_. Un groupe a,
 - un identifiant interne et **une carte de visite** (comme un avatar).
 - un **chat partagé par les membres du groupe**, les membres sont des _avatars_.
-- un **des notes partagées entre les membres** qui peuvent les lire et les éditer.
+- facultativement **des notes partagées entre les membres** qui peuvent les lire et les éditer.
 
 Un avatar connu dans un groupe peut avoir plusieurs états successifs:
 - **simple contact**: il a été inscrit comme contact du groupe mais lui-même ne le sait pas et ne connaît pas le groupe.
@@ -173,7 +172,7 @@ Lors de son invitation il peut aussi recevoir le **pouvoir d'animation**. S'il n
 
 > **Certains groupes peuvent être créés à la seule fin d'être un répertoire de contacts** cooptés par affinité avec possibilités de _chat_. Personne n'y lit / écrit de notes.
 
-> **Certains groupes peuvent être créés afin de partager des notes _anonymes_ de discussion**: par exemple un animateur est seul à avoir droit d'accès aux membres, à les connaître: les notes sont de facto anonymes pour les autres membres.
+> **Certains groupes peuvent être créés afin de partager des notes _anonymes_ de discussion**. Par exemple un animateur est seul à avoir droit d'accès aux membres, à les connaître: les notes sont de facto anonymes pour les autres membres.
 
 En général les groupes sont créés avec le double objectif de réunir des avatars qui se connaissent mutuellement, échangent sur le chat et partagent des notes.
 
@@ -238,15 +237,15 @@ Leur stockage ont des coûts unitaires très différents (variant d'un facteur d
 - les fichiers sont enregistrés dans des _Storage_, des stockages techniques distants ayant une gestion spécifique et économique du fait d'être soumis à peu d'accès (mais de plus fort volume).
 
 ### Abonnement: coût de l'espace occupé en permanence
-Un abonnement correspond aux coûts récurrents mensuels pour un compte:  même quand il ne se connecte pas, le stockage de ses sonnées a un coût.
+Un abonnement correspond aux coûts récurrents mensuels pour un compte:  même quand il ne se connecte pas, le stockage de ses données a un coût.
 
 L'abonnement est décomposé en deux lignes de coûts correspondant à l'occupation d'espace en base de données et en _storage_:
 - **Prix unitaire de stockage d'un document** multiplié par le **nombre total de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels non _indésirables_, nombre de participations actives aux groupes.
 - **Prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **volume total des fichiers attachés aux notes**.
 
-Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _volumes maximaux_ forfaitaires** auquel le compte est abonné (ses _quotas_).
+Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _quotas_ (_volumes maximaux_)** auquel le compte est abonné.
 
-> Les volumes _effectivement utilisés_ ne peuvent pas dépasser les volumes maximum de l'abonnement. Dans le cas où un changement de l'abonnement réduit a posteriori ces maximum en dessous des volumes utilisés, les volumes n'auront plus le droit de croître.
+> Les volumes _effectivement utilisés_ ne peuvent pas dépasser les quotas (volumes maximum) déclaré pour l'abonnement. Dans le cas où un changement de l'abonnement réduit a posteriori ces maximum en dessous des volumes utilisés, les volumes n'auront plus le droit de croître.
 
 ### Consommation : coût de calcul et de transfert des fichiers
 La consommation correspond à l'usage effectif de l'application quand une session d'un compte est ouverte. Elle comporte 4 lignes:
