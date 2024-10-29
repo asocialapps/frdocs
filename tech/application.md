@@ -323,43 +323,84 @@ Un sous folder par langue traduite dont le fichier `index.js` exporte tous les t
 ## Le folder `src/router`
 Inutilisé, à laisser tel quel.
 
-## Les "vues"
-`src/App.vue`
-- La vue racine de l'application, LE layout de LA page de l'application.
+# Les "vues"
 
-`src/pages`
-- les vues de type _page_.
+## Structure des `*.vue`
+La structure actuellement préconisée offre des possibilités nouvelles (comme la possibilité d'avoir des `await` dans le setup) et quelques simplifications.
 
-`src/panels`
-- les vues de type _panel_.
+Trois sections: `<template> <script setup> <style>`
 
-`src/dialogues`
-- les vues de type _dialogues simples_.
+    <template>
+      <div .../>
+      ...
+      </div>
+    </template>
 
-`src/components`
--les vues de composants importés dans les précédents.
+    <script setup>
+      import { ref, computed, watch, onUnmounted } from 'vue'
+      import { edvol, $t } from '../app/util.mjs'
+      
+      import Foo from './Foo.vue'
+      import Bar from './Bar.vue'
 
-# Application
+      const props = defineProps({ foo: String }) // accessible par props.foo
+      const model = defineModel({ type: Object }) // la propriété "v-model"
+      const emit = defineEmits(['change', 'delete'])
+      const var1 = ref() // accessible par var1.value
+      const var2 = computed(() => { ...}) // accessible par var2.value
+      function f1 (x) { ... }
+    </script>
 
-Une première partie décrit la structure visuelle de l'application en App et pages, panels / dalogues / components.
+    <style>
+    ...
+    </style>
 
-La seconde partie décrit les données qui sont affichées, le _modèle_ et les données le cas échéant persistentes localement.
+Voir le détail ici : https://vuejs.org/api/sfc-script-setup.html
 
-La trosième partie décrit les opérations de connexion, synchronisation et les autres opérations d'échanges avec le serveur.
+### Variables déclarées `ref` versus `computed`
 
-# Structure visuelle
-**App** est LE layout unique décrivant LA page de l'application. Elle est constituée des éléments suivants:
+Dans une vue on peut afficher / traiter:
+- **des variables de _store_** déclarées et gérées dans un store en tant que a) getters (éventuellement avec des paramètres ce qui est à peu près une _action_), ou b) actions. Ceci correspond à un état _global_ de la session, indépendant de toute vue.
+- **des variables _locales_ à la vue** déclarées en `ref()` ou en `computed()` dans le _script setup_.
+
+### Variables de _store_
+Elles se déclarent par `computed()`
+
+    const avatar = computed(() => aSt.getAvatar(props.id)) 
+
+et s'utilise ensuite par `avatar.value`
+
+#### ref() NE RÉPERCUTE PAS la réactivité
+Dans l'exemple précédent si on écrit:
+
+    const props = defineProps({ chatc: Object, ...})
+    const aSt = stores.avatar
+    const chatX = ref(aSt.getChat(chatc.value.id, chatc.value.ids))
+
+`chatX` n'est PAS réactif et contient une valeur initiale (qui peut être changée par `chatx.value = ...`): quand le _store_ évolue, `chatX` reste inchangé.
+
+Pour que `chatx` soit _réactif_ aux changements du _store_, il aurait fallu écrire:
+
+    const chatX = computed(() => aSt.getChat(chatc.value.id, chatc.value.ids))
+
+**`ref()` rend réactive une variable locale mais ne transmet pas la réactivité de l'expression qui l'a initialisée.**
+
+Les variables déclarées comme `const v = computed(() => {...})` sont _calculées_, leur contenu `v.value` est lisible mais ne peut pas être changé par affectation.
+
+## `src/App.vue`
+C'est LE layout unique décrivant LA page de l'application. Elle est constituée des éléments suivants:
 - **headaer**
-  - _boutons à gauche_: aide, notifications, menu, accueil.
-  - _titre de la page courante_. Le cas échant une seconde barre affiche les onglets pour les pages ayant des onglets.
-  - _boutons à droite_: fichiers visibles en avion, presse-papier, ouverture du drawer de recherche.
+  - _boutons à gauche_: aide, notifications, menu, accueil, page _back_, fichiers visibles en avion, presse-papier
+  - _titre de la page courante_. Le cas échéant une seconde barre affiche les onglets pour les pages ayant des onglets.
+  - _boutons à droite_: ouverture du drawer de recherche (si la page a une recherche), aide.
 - **footer**:
-  - _boutons à gauche_: aide, langue, mode clair / foncé, outils, statut de la session,
-  - _information du compte_ connecté et son organisation,
+  - _boutons à gauche_: langue, mode clair / foncé, outils, statut de la session,
+  - _information du compte connecté_ son type `D/A/O`, son nom, son organisation,
   - _bouton de déconnexion_.
 - **drawer de filtre à droite** affichant les filtres de recherche pour les pages en ayant. 
   - il s'affiche par appui sur le bouton de recherche (tout en haut à droite).
   - quand la page est assez large, le drawer de filtre reste affiché à côté de la page principale, sinon sur la page principale qui en est partiellement recouverte.
+  - pour chaque page ayant un filtre, la liste des composants constituant le filtre est affichée
 - **container de la page principale**: 
   - il contient à un instant donné une des pages listées dans la section "Pages". 
   - celles-ci sont formées par un tag `<q-page>` qui s'intègre dans le tag `<q-page-container>` de App.
@@ -367,79 +408,81 @@ La trosième partie décrit les opérations de connexion, synchronisation et les
 **App inclut quelques dialogues singletons** afin d'éviter leurs inclusions trop multiples:
 - ces dialogues n'ont pas de propriétés, c'est le contexte courant qui fixe ce qu'ils doivent afficher.
 - chaque dialogue dans App est gardée par un `v-if` de la variable modèle qui l'ouvre.
-- `DialogueErreur DialogueHelp PressePapier PanelPeople PanelMembre OutilsTests ApercuCv PhraseSecrete`
+- `DialogueErreur DialogueHelp PressePapier PanelPeople OutilsTests PhraseSecrete`
 
 **App a quelques dialogues internes simples:**
-- _ui.d.aunmessage_ : Gestion d'un message s'affichant en bas
-- _ui.d.diag_ : Affiche d'un message demandant confirmation 'j'ai lu'
-- _ui.d.confirmFerm_ : demande de confirmation d'une fermeture de dialogue avec perte de saisie
-- _ui.d.dialoguedrc_ : choix de déconnexion. Déconnexion, reconnexion, continuer
+- _ui.d.a.aunmessage_ : Gestion d'un message s'affichant en bas
+- _ui.d.a.diag_ : Affiche d'un message demandant confirmation 'j'ai lu'
+- -ui.d.a.estzombi_ : Affiche l'annonce de suppression proche du compte
+- _ui.d.a.confirmFerm_ : Demande de confirmation d'une fermeture de dialogue avec perte de saisie
+- _ui.d.a.reload_ : Information / option d'installation d'une nouvelle version
+- _ui.d.a.dialoguedrc_ : Choix de déconnexion, reconnexion, continuer
+- _ui.d.a.opDialog_ : Affiche l'opération en cours et propose son interruption
+- _ui.d.a.confirmstopop_ : Confirmation d'interruption de l'opération en cours
+- _ui.d.a.sync_ : Gestion de la synchronisation automatique
 
 La logique embarquée se limite à:
 - détecter le changement de largeur de la page pour faire gérer correctement l'ouverture du drawer de filtre dans stores.ui,
 - gérer le titre des pages,
 - se débrancher vers les pages demandée.
 
-### Pages, panels, dialogues, components
-Chaque page au sens ci-dessus peut importer des _panels, dialogues, components_.
+## Les _pages_ : `src/pages/Page...vue`
+Une page s'installe dans App.vue dans le page-container et occupe tout l'espace (sauf header et footer):
+- il y a TOUJOURS une page courante affichée.
+- on change de page par `ui.setPage('NouvellePage')`
+  - la nouvelle page est affichée.
+  - si la page actuelle est déclarée dans `ui` comme `pageB` (`espace compte groupes groupesac`), quand on appuie sur le bouton _back_, ça renvoie à cette page. Ceci permet par exemple de revenir à la liste des groupes quand on est sur la page d'un groupe: `
+- au changement de page, tous lees dialogues ouverts par la page sont automatiquement fermés (voir plus avant).
 
-#### Panels
-Ce sont dialogues qui s'affichent sur la gauche en pleine hauteur avec une largeur qui peut être `'sm md lg'`.
-- ils se ferment par appui sur le chevron gauche en haut à gauche.
+Une _page_ peut importer des _components_ et importer / ouvrir des _dialogues_:
+- ses propres dialogues.
+- des _panels_.
+- des _dialogues_.
 
-#### Dialogues
-Ce sont des dialogues qui s'affichent sur une partie de la page avec une largeur `'sm md lg'` et pas en pleine hauteur.
-- ils se ferment par appui sur la croix en haut à gauche.
+Voir en annexe la liste des **pages**.
 
-#### Components
-Ils sont simplment incrustés dans le flow d'affichage de la page / panel / dailogue qui les importent.
+## Les _panels_ : `src/panels/...vue`
+Un _panel_ est techniquement un `<q-dialog>`:
+- il occupe presque toute la hauteur et a une largeur importante.
+- il se découvre depuis la gauche et se replie vers la gauche quand il est fermé par son bouton de fermeture en haut à gauche.
+- en génral il correspond à un dialogue de saisie complexe mais peut aussi n'être qu'un affichage volumineux (par exemple un _chat_).
 
-#### Maîtrise des cycles d'importation
+Un _panel_ peut importer des _components_ et importer / ouvrir des _dialogues_:
+- ses propres dialogues.
+- des _dialogues_.
+
+Voir en annexe la liste des **panels**.
+
+## Les _dialogues_ : `src/dialogues/...vue`
+Un _dialogue_ est techniquement un `<q-dialog>`:
+- il occupe une place centrale dans la page.
+- il se découvre progressivement et se cache progressivement quand il est fermé par son bouton de fermeture en haut à gauche.
+- en général il correspond à un dialogue de saisie.
+
+Un _dialogue_ peut importer des _components_ et importer / ouvrir des _dialogues_:
+- ses propres dialogues.
+
+Voir en annexe la liste des **dialogues**.
+
+## Les _components_ : `src/components/...vue`
+Ils sont importés et inclus dans les autres éléments.
+
+Ils peuvent importer d'autres _components_.
+
+Voir en annexe la liste des **dialogues** particuliers.
+
+## Maîtrise des cycles d'importation
 Un tel cycle est une faute de conception que Webpack détecte (il ne sait pas comment faire) mais n'indique malheureusement pas clairement.
 
 Pour chaque composant un numéro de couche est géré:
 - les composants n'important rien ont pour numéro de couche 1.
-- tous composants a pour numéro de couche le plus des numéros de couche des composants importés + 1.
-- la feuille Excem Dépendances.xls en tien attachement ce qui ermet de s'assurer qu'un cycle n'a pas fortuitement été introduit dans la conception.
+- un composant a pour numéro de couche le plus haut des numéros de couche des composants importés + 1.
+- la feuille Excel `Dépendances.xls` en tient attachement ce qui permet de s'assurer qu'un cycle n'a pas fortuitement été introduit dans la conception.
 
-## Styles clairs et foncés
-Le style global peut être clair ou foncé selon la variable de Quasar `$q.dark.isActive`
-
-Quand il y a des listes à afficher, il est souhaiatble d'afficher une ligne sur deux avec un fond légérement différent, donc avec un style dépendant de l'index `idx` de l'item dans la liste qui le contient. D'où les classes suivantes:
-- `sombre sombre0`: fond très sombre, fonte blanche pour les idx pairs (ou absents).
-- `sombre1`: fond un peu moins sombre, fonte blanche pour les idx impairs.
-- `clair clair0`: fond très clair, fonte noire pour les idx pairs (ou absents).
-- `clair1`: fond un peu moins clair, fonte noire pour les idx impairs.
-
-Dans util.js les fonctions suivantes fixent dynamiquement le fond à appliquer selon que le mode sombre est activé ou non et l'index idx éventuel:
-- `dkli (idx)` : fond _dark_ ou _light_ selon idx
-- `sty ()` : fond _dark_ ou _light_
-- `styp (size)` : pour un dialogue, fond _dark_ ou _light_, largeur fixée par size (`'sm' 'md' 'lg'`) et ombre claire ou foncée.
-
-### L'affichage MarkDown par VueShowdown
-Le component VueShowdown affiche le contenu d'un texte MD dans un `<div>`. 
-
-Sa classe de style principal `markdown-body` porte un nom **fixe** de manière assez contraignante (ne supporte pas un nom de class dynamique). Ceci oblige à un avoir un component distinct pour chaque style désiré:
-- `SdBlanc [texte]`: la fonte du texte est blanche (pour des fonds foncés).
-- `SdNoir [texte]`: la fonte du texte est noire (pour des fonds clairs).
-- `SdRouge [texte]`: la fonte du texte est rouge (pour des fonds clairs ou foncés).
-
-Dans ces components le fond N'EST PAS fixé, il est transparent, et suivra celui de l'environnement. Mais celui de la fonte doit l'être, d'où le component suivant:
-- `SdNb [texte idx]`: il choisit entre SdBlanc et SdNoir selon, a) que le mode Quasar _dark_ est actif ou non, b) que idx passé en propriété est absent ou pair ou impair.
-
-> Remarque: de facto seul SdNb est utilisé dans les autres éléments. Et encore car l'affichage d'un MD s'effectue quasiment tout le temps par le component ShowHtml qui englobe SdNb. Toutefois il existe des cas ponctuels d'utilisation de SdBlanc et SdRouge.
-
-### Les mots clés
-Les mots clés sont attachés:
-- à des contacts ou des groupes connus du compte par **McMemo**,
-- à des notes par **NoteMc**.
-
-Ils sont affichés par **ApercuMotscles** qui permet d'éditer le choix par **ChoixMotscles**.
-
-### Gestion des dialogues
+## Gestion des dialogues
 Les objectifs de cette gestion sont:
-- de gérer une pile des dialogiues ouverts et en conséquence de pouvoir les fermer sans avoir à se rappeler de leur empilement éventuel,
-- pouvoir fermer tous les dialogues ouverts à l'occasion d'un changement de page ou d'une déconnexion.
+- de gérer une pile des dialogues ouverts par une page afin de pouvoir les fermer sans avoir à se rappeler de leur empilement éventuel,
+- de pouvoir fermer simplement le dernier dialogue ouvert sans avoir à le citer..
 
 Du fait qu'général un composant _peut_ être instancié plus d'une fois, les modèles gérant ses dialogues doivent être différenciés pour chaque instance.
 
@@ -468,18 +511,432 @@ Le dialogue `d1` est déclaré par:
 - au changement d'une page, tous les dialogues ouverts sont fermés.
 - c'est aussi le cas lors de la déconnexion.
 
+# Styles clairs et foncés
+Le style global peut être clair ou foncé selon la variable de Quasar `$q.dark.isActive`
 
+Quand il y a des listes à afficher, il est souhaitable d'afficher une ligne sur deux avec un fond légèrement différent, donc avec un style dépendant de l'index `idx` de l'item dans la liste qui le contient. D'où les classes suivantes:
+- `sombre sombre0`: fond très sombre, fonte blanche pour les idx pairs (ou absents).
+- `sombre1`: fond un peu moins sombre, fonte blanche pour les idx impairs.
+- `clair clair0`: fond très clair, fonte noire pour les idx pairs (ou absents).
+- `clair1`: fond un peu moins clair, fonte noire pour les idx impairs.
 
-## Components
+Dans `util.js` les fonctions suivantes fixent dynamiquement le fond à appliquer selon que le mode sombre est activé ou non et l'index idx éventuel:
+- `dkli (idx)` : fond _dark_ ou _light_ selon idx
+- `sty ()` : fond _dark_ ou _light_
+- `styp (size)` : pour un dialogue, fond _dark_ ou _light_, largeur fixée par size (`'sm' 'md' 'lg'`) et ombre claire ou foncée.
 
+### L'affichage MarkDown par VueShowdown
+Le component `vue-showdown` affiche le contenu d'un texte MD dans un `<div>`. 
+
+Sa classe de style principal `markdown-body` porte un nom **fixe** de manière assez contraignante (ne supporte pas un nom de classe dynamique). Ceci oblige à un avoir un component distinct pour chaque style désiré:
+- `SdBlanc [texte]`: la fonte du texte est blanche (pour des fonds foncés).
+- `SdNoir [texte]`: la fonte du texte est noire (pour des fonds clairs).
+- `SdRouge [texte]`: la fonte du texte est rouge (pour des fonds clairs ou foncés).
+
+Dans ces components le fond N'EST PAS fixé, il est transparent, et suivra celui de l'environnement. Mais celui de la fonte doit l'être, d'où le component suivant:
+- `SdNb [texte idx]`: il choisit entre `SdBlanc` et `SdNoir` selon, a) que le mode Quasar _dark_ est actif ou non, b) que idx passé en propriété est absent ou pair ou impair (??? pas clair, à vérifier).
+
+> Remarque: de facto seul `SdNb` est utilisé dans les autres éléments. Et encore car l'affichage d'un MD s'effectue quasiment tout le temps par le component `ShowHtml` qui englobe `SdNb`. Toutefois il existe des cas ponctuels d'utilisation de SdBlanc et SdRouge.
+
+# Opérations et synchronisation
+
+(TODO)
+
+# Base locale IDB
+
+(TODO)
+
+Il y a une base par compte.
+
+Elle contient les tables `compte prefs compta avatar groupe couple secret cv` :
+- la clé primaire de chacun est,
+  - pour les singletons `compte prefs compta` : `1`
+  - pour les objets maîtres `avatar groupe couple` le cryptage par la clé K du compte de leur id en base64.
+  - pour les objets secondaires le couple `id id2`:
+    - `id` : le cryptage par la clé K du compte de l'id en base64 de son maître.
+    - `id2` : le cryptage par la clé K du compte de son id relative (`ns` ou `im`) à son maître.
+- la propriété `data` est le cryptage par la clé K du compte de la sérialisation de l'objet.
+
+Les tables ont donc deux 2 propriétés `id data` ou 3 propriétés `id, id2,  data`.
+
+**IDB est toujours cohérente** : les opérations spéciales de mise à jour accumulent dans leur traitement les mises à jour pour IDB dans leur objet `OpBuf` et un seul commitRows() intervient à la fin pour enregistrer toutes les mises à jour en attente dans `OpBuf`.
+
+## `localStorage` et IDB
+**En mode *avion*** dans le `localStorage` les clés `monorg-hhh` donne chacune le numéro de compte `ccc` associé à la phrase de connexion dont le hash est `hhh` : `monorg-ccc` est le nom de la base IDB qui contient les données de la session de ce compte pour l'organisation `monorg` dans ce browser.
+
+**En mode *synchronisé***, il se peut que la phrase secrète actuelle enregistrée dans le serveur (dont le hash est `hhh`) ait changé depuis la dernière session synchronisée exécutée pour ce compte :
+- si la clé `monorg-hhh` n'existe pas : elle est créée avec pour valeur `monorg-ccc` (le nom de la base pour le compte `ccc`).
+- si la base `monorg-ccc` n'existe pas elle est créée.
+- l'ancienne clé, désormais obsolète, pointe bien vers le même compte mais ne permet plus d'accéder à ce compte, dont la clé K a été ré-encryptée par la nouvelle phrase.
+
+#### La table `sessionsync`
+Cette table enregistre les date-heures,
+- de la session synchronisée précédente correctement connectée puis terminée : `dhdebut dhfin`
+- de la session synchronisée en cours : 
+  - `dhlogin` : dh de fin de login,
+  - `dhsync` : date-heure de fin de la dernière opération de synchronisation,
+  - `dhpong` : date-heure de réception du dernier _pong_ reçu sur le websocket attestant que celui-ci n'est pas déconnecté.
+
+Cet objet est disponible dans store/db `sessionsync`, uniquement quand la session courante est _synchronisée_.
+
+# Démon _heartbeat_ et ficavion
+(TODO)
+
+En mode synchronisé un démon tourne en tâche de fond pour obtenir du serveur les fichiers requis pas encore disponibles en IDB
+
+# Annexe: liste des _pages_
+
+### PageLogin (5)
+Login pour un compte déjà enregistré ou auto-création d'un compte depuis une phrase de sponsoring déclarée par un sponsor.
+
+Import: PhraseContact, AcceptationSponsoring
+
+### PageAccueil (3)
+Affiche:
+- un bloc avec tous les accès aux pages s'ouvrant par des icônes de App.
+- un second bloc qui est le menu d'accueil accessible depuis la App.
+
+Import: MenuAccueil, BoutonLangue, NotifIcon2, QueueIcon 
+
+### PageCompte (7)
+Affiche les avatars du compte et les opérations du compte:
+- création d'un nouvel avatar,
+- édition des mots clés du compte,
+- changement de la phrase secrète.
+
+Import: NomAvatar, ApercuAvatar, MotsCles, SupprAvatar
+
+Dialogues:
+- PCnvav: nouvel avatar
+- PCchgps: changement de la phrase secrète
+
+### PageChats (7)
+Affiche la liste des chats des contacts et des groupes.
+- si le filtre filtre.filtre.chats.tous est false, les stores avatar et groupe ne délivrent que ceux de l'avatar courant positionné sur la page d'accueil.
+- exporte les chats sélectionnés dans un fichier MarkDown.
+
+Import: ApercuChat, ContactChat, ApercuChatgr, ApercuGenx
+
+### PageClos (3)
+Page ouverte sur clôture immédiate de la session:
+- blocage intégral par l'administrateur technique,
+- compte résilié par une autre session ou celle courante,
+- ressort toujours par la déconnexion inconditionnelle.
+
+Import: BoutonBulle, ShowHtml
+
+### PageCompta (7)
+Quatre onglets donnant l'état de la comptabilité et des blocages.
+- **Notifications**: liste des notifications en cours (avec leurs blocages éventuels).
+- **Comptabilité**: abonnement et consommation (PanelCompta).
+- **Crédits**: pour les comptes autonomes seulement (PanelCredits).
+- **Chats**: chats d'urgence avec le Comptable et les sponsors.
+
+Import: SdAl, ApercuGenx, ApercuNotif, PanelCompta, PanelCredits, ApercuChat
+
+### PageSession (2)
+Page qui s'affiche pendant l'initilisation de la session, après login et avant la page d'accueil.
+- **Etat général** de la session.
+- **RapportSynchro**: son contenu est dynamique lors du chargement de la session, puis fixe après (synthèse du chargement initial).
+- **Téléchargements en cours**: zone passive d'affichage sans action. En fin d'intialisation d'une session, les chargements des fichiers accessibles en mode avion et qui ne sont pas disponibles dans la base locale, sont chargés en tâche de fond. Cet zone liste les téléchargements restant à effectuer.
+- **Téléchargements en échec**: erreurs survenues dans ces téléchargements. Actions possibles sur chaque fichier en échec: _ré-essai abandon_.
+
+Import: RapportSynchro
+
+### PageEspace (4)
+Affiche le découpage de l'espace en tranches:
+- pour le Comptable, création de tribu et ajustement des paramètres de l'espace pour les transferts de compte O / A.
+
+La page est également invoquée dans un dialogue interne de PageAdmin pour affichage des tranches (mais sans droit d'agir).
+
+Import: ChoixQuotas, TuileCnv, TuileNotif, ApercuNotif
+
+## PageAdmin (5)
+C'est LA page de l'administrateur technique.
+- 2 boutons techniques: lancer un GC, afficher le dernier rapport de GC.
+- un boutons fonctionnel: créer une organisation.
+- un bouton de rafraîchissement.
+
+Liste les organisations existantes:
+- affichage du détail de leurs tranches sur bouton.
+- changement de profil.
+- création / gestion de la notification sur l'espace.
+
+Import: ApercuNotif, PageEspace
+
+### PageTranche (6)
+Affiche en tête la tranche courante,
+- celle du compte
+- pour le comptable celle courante sélectionnée depuis la PageEspace.
+- pour le comptable ouvre le panel NouveauSponsoring pour sponsoriser un compte dans n'importe quelle tranche.
+
+Affiche en dessous les sponsors et pour le Comptable les autres comptes de la tranche.
+
+Import: TuileCnv,TuileNotif, ApercuNotif, ChoixQuotas, ApercuGenx, PanelCompta, QuotasVols, NouveauSponsoring, BarrePeople
+
+Dialogues: 
+- PTcptdial : affichage des compteurs comptables du compte sélectionné
+- PTedq: mise à jour des quotas du compte sélectionné
+
+### PageSponsorings (4)
+Liste les sponsorings actuellement en cours ou récents:
+- boutons de prolongation des sponsorings en cours et d'annulation.
+
+Bouton général pour créer un nouveau sponsoring.
+
+Import: NouveauSponsoring, ShowHtml, QuotasVols
+
+### PageGroupes (8)
+Liste les groupes accédés par le compte, dans lesquels il est actif.
+- synthèse des volumes occupés par les groupes hébergés,
+- bouton de création d'un nouveau groupe,
+- une carte par groupe avec :
+  - un bouton pour ouvrir le chat du groupe,
+  - un bouton pour accéder à la page du groupe.
+
+Import: ChoixQuotas, NomAvatar, ApercuGenx, InvitationsEncours, ApercuChatgr
+
+Dialogue:
+- PGcrgr: création d'un groupe.
+
+### PageGroupe (10)
+Affiche les détails d'un groupe:
+- onglet **Détail du groupe**: entête et participations des avatars du compte au groupe.
+  - bouton d'ajout d'un contact comme contact du groupe.
+- onglet **Membres**: liste des contacts membres du groupe si le compte a accès aux membres.
+
+Import: ApercuMembre, ApercuGroupe
+
+### PagePeople (6)
+Affiche tous les contacts connus avec une courte fiche pour chacun (pouvant ouvrir sur le détail du contact).
+- un bouton rafraîchit les cartes de viste qui en ont besoin.
+
+Import: ApercuGenx
+
+### PageNotes (7)
+Affiche l'arbre des notes avec pour racines les avatars et les groupes:
+- en tête affiche le détail de la note courante, avec les actions qu'elle peut subir.
+- la barre séparatrice petmet de lancer le chragment local des notes sléctionnées et le plier / déplier global de l'arbre.
+- en bas l'arbre des notes selon leur rattachemnt.
+
+Import: ShowHtml, ApercuMotscles, NoteEdit, NoteMc, NotePlus, NoteExclu, NoteFichier, NoteConfirme, ListeAuts
+
+Dialogue:
+- PNdl: dialogue gérant le chargement des notes en local.
+
+### PageFicavion (2)
+Affiche la liste des fichiers visible en mode avion et pour chacun,
+- permet de l'afficher et de l'enregistrer localement,
+- de voir la note à laquelle il est attaché.
+
+# Annexe: liste des _panels_
+
+### DialogueHelp (3)
+Affiche les pages d'aide.
+- la table des matières, le titre de chaque page, les pages à trouver en bas de chaque page d'aide, sont configurés dans `src/app/help.mjs`
+- chaque page d'aide est un fichier par langue dans `src/assets/help`
+- les images dans ces pages sont dans `public/help`
+- ce dialogue est ouvert / géré par `ui-store pushhelp pophelp fermerhelp`.
+- l'ouverture est déclencher par BoutenHelp.
+
+### ApercuChatgr (3)
+Affiche le chat d'un groupe.
+- ajout d'items et supression d'items.
+
+Import: EditeurMd, NoteEcritepar
+
+### ApercuChat (6)
+Affiche le chat d'un avatar du compte avec un contact.
+- ajout d'items et supression d'items.
+- raccrocher le chat/
+
+Import: SdDark1, EditeurMd, ApercuGenx
+
+### SupprAvatar (2)
+Panel de suppression d'un avatar.
+- affiche les conséquences en termes de pertes de secrets, de groupes et de chats avec les volumes associés récupérés.
+- importé **uniquement* par PageCompte.
+
+### OutilsTests (1)
+Trois onglets:
+- **Tests d'accés**: tests d'accès au serveur, ping des bases locales et distantes.
+- OTrunning:
+  - présente la liste des bases synchronisées.
+  - sur demande calcul de leur volume (théorique pour le volume V1).
+  - propose la suppression de la base.
+- **Phrase secrète**: test d'une phrase avec affichage des différents cryptages / encodages associés.
+
+Invoqué par un bouton de la page d'accueil / App.vue
+
+Dialogues:
+- OTrunning: affiche la progression du calcul de la taille de la base.
+- ORsupprbase: dialogue de confirmation de la suppression.
+
+### NouveauSponsoring (3)
+Panel de saisie d'un sponsoring par un compte lui-même sponsor.
+- importé par PageSponsorings et PageTranche.
+
+Import: PhraseContact, ChoixQuotas, NomAvatar, EditeurMd, QuotasVols
+
+### AcceptationSponsoring (4)
+Saisie de l'acceptation d'un sponsoring, in fine création du compte (si acceptation).
+- saisie du nom,
+- saisie du mot de remerciement.
+
+Import: EditeurMd, ShowHtml, BoutonHelp, QuotasVols
+
+## PanelPeople (7)
+Affiche tout ce qu'on sait à propos d'un contact:
+- sa carte de visite et son commentaire / mots clés du compte à son propos.
+- la liste des chats auquel il participe, ouvert ou non.
+- la liste des groupes (dont le compte a accès aux membres) dont il est membre et son statut.
+
+Si le panel a été ouvert pour ajouter le contact comme membre du groupe courant, un cadre donne le statut de faisabilité de cet ajout et un bouton l'ajoute.
+
+Import: ApercuGenx, ApercuMembre
+
+### PanelMembre (8)
+Affiche en panel,
+- l'aperçu du contact / avatar membre,
+- l'aperçu membre qui donne le détail de son rôle dans le groupe.
+
+N'est ouvert que par un BoutonMembre (depuis ApercuGroupe seulement donc). Est hébergé dans App pour éviter des instantiations multiples.
+
+Import: ApercuGenx, ApercuMembre
+
+### PressePapier (3)
+Affiche en panel dans deux onglets,
+- les notes gardées en presse-papier,
+  - ajout, édition, suppression
+- les fichiers gardés en presse-papier
+  - ajout, remplacement, suppression, affichage, enregistrement, copie.
+
+Import: ShowHtml, EditeurMd, NomGenerique
+
+### NoteNouvelle (4)
+Créé une nouvelle note avec le texte saisi:
+- pour un groupe l'auteur de la note est à choisir.
+
+Le rattachement de la note a été défini dans la PageNotes selon l'endroit d'où la nouvelle note a été demandée.
+
+Import: BoutonUndo, EditeurMd, NoteEcritepar
+
+### NoteEdit (6)
+Affiche le texte d'une note pour édition:
+- pour une note de groupe permet de choisir l'auteur.
+
+Import: EditeurMd, ListeAuts, NoteEcritepar, ApercuGenx
+
+### NoteExclu (6)
+Gère l'affichage, l'attribution et le retrait d'exclusivité d'écriture d'une note de groupe à un des membres du groupe.
+
+Import: BoutonBulle, ApercuGenx, ListeAuts
+
+### NoteFichier (3)
+Affiche les fichiers attachés à une note:
+- gère leur affichage, téléchargement local, suppression.
+- gère la gestion en visibilité en mode avion, soirt d'une version spécifique, soit de la version la plus récente.
+
+Import: NouveauFichier, NoteEcritepar
+
+Dialogue:
+- NFsupprfichier: confirmation de suppression de fichier
+- NFconfirmav1: confirmation visible en mode avion par nom
+- NFconfirmav2: confirmation visible en mode avion par version
+
+### NoteMC (6)
+Affiche et attribue les mots clés d'une note, personnelle et du groupe.
+
+Import: BoutonBulle, ApercuGenx, ChoixMotscles, ListeAuts
+
+# Annexe: liste des _dialogues_
+### DialogueErreur (1)
+Affiche une exception AppExc et gère les options de sortie selon sa nature (déconnexion, continuation ...).
+
+### ChoixEmoji (1)
+Dialogue de saisie des émojis à insérer dans un input / textarea.
+- se ferme à la fin de la saisie.
+- singleton, du fait de son inclusion soit dans EditeurMd soit dans Motscles qui n'ont qu'une seule instance en édition à un instant donné (toujours inclus dans des dialogues).
+
+### PhraseSecrete (1)
+Saisie contrôlée d'une phrase secrète et d'une organisation (sur option), avec ou sans vérification par double frappe.
+
+Ce composant héberge *simple-keyboard* qui affiche et gère un clavier virtuel pour la saisie de la phrase. Il utilise pour s'afficher un `<div>` de classe "simple-keyboard" ce qui pose problème en cas d'instantiation en plusieurs exemplaires.
+- Ceci a conduit a avoir une seule instance du dialogue hénergée dans App et commandée par la variable sorres.ui.d.PSouvrir
+- les propritées d'instantiation sont dans stores.ui.ps, dont ok qui est la fonction de callback à la validation de la saisie.
+le dialogue est positionné au *top* afin de laisser la place au clavier virtuel de s'afficher au dessous quand il est sollicité.
+
+PhraseSecrete est ouverte pat :
+- PageLogin: saisie de la pharse de connexion.
+- AcceptationSponsoring: donnée de la phrase par le filleul juste avant sa connexion.
+- PageCompte: changement de phrase secrète.
+- PageCompta: saisie de la phrase secrète du Comptable à la création d'un espace.
+- OutilsTests: pour tester la saisie d'une phrase secrète et la récupération de ses cryptages.
+
+### ApercuCv (4)
+Affiche une carte de visite d'un avatar, contact ou groupe:
+- pour un contact, le bouton refresh recharge la carte de visite depuis le serveur.
+- pour un avatar ou un groupe, le bouton d'édition permet de l'éditer. Pour un groupe, il faut que compte en soit animateur.
+
+Import: ShowHtml, CarteVisite
+
+### CarteVisite (3)
+Dialogue d'édition d'une carte de visite, sa photo et son information.
+- est importé **uniquement** depuis ApercuCv (la photo et l'information y étant présente).
+- sauvegarde les cartes de visite (avatar et groupe).
+
+Import: EditeurMd
+
+### MotsCles (2)
+Edite les mots clés, soit d'un compte, soit d'un groupe.
+
+N'est importé **que** par PageCompte et ApercuGroupe (une seule édition à un instant donné).
+
+Import: ChoixEmoji
+
+### ContactChat (2)
+Dialogue de saisie de la phrase de contact d'un avatar, puis création, éventuelle, d'un nouveau chat avec lui.
+
+Import: PhraseContact
+
+### PanelCredits (3)
+C'est l'onglet "crédits" de PageCompta:
+- affiche les tickets en cours,
+- rafraîchit leur incorporation,
+- bouton de génération d'un nouveau ticket.
+
+Import: ApercuTicket, PanelDeta, PanelDialtk
+
+### ApercuTicket (2)
+Affiche un ticket,
+- plié: donnée synthétique,
+- déplié: son détail et les actions possibles.
+
+Import: PanelDialtk
+
+### NoteConfirme (2)
+Dialogue de confirmation d'une action sur une note:
+- ne s'applique qu'à la suppression d'une note.
+- vérifie l'autorisation d'écriture, dont l'exclusivité d'accès pour une note de groupe.
+
+Import: BoutonConfirm
+
+### NouveauFichier (2)
+Dialogue d'acquisition d'un nouveau fichier, local ou depuis le presse-papier, pour une note.
+- permet de changer son nom,
+- liste les versions antérieures de même nom devant être purgées.
+
+Import: NomGenerique
+
+# Annexe: _components_ particuliers
 ### Les filtres
-La page principale App a un drawze à droite réservé à afficher les filtres de sélection propres à chaque page et permettant de restreindre la liste des éléments à afficher dans la page (par exemple les notes).
+La page principale App a un drawer à droite réservé à afficher les filtres de sélection propres à chaque page et permettant de restreindre la liste des éléments à afficher dans la page (par exemple les notes).
 
 Chaque filtre est un component simple de saisie d'une seule donnée: la valeur filtrée étant stockée en store.
 
 - **FiltreNom**: saisie d'un texte filtrant le début d'un nom ou un texte .contenu dans un string.
 - **FiltreMc**: liste de mots clés (qui peuvent être soit requis, soit interdits).
-- **FiltreNbj**: saise d'un nombre jours 1, 7, 30, 90, 9999.
+- **FiltreNbj**: saisie d'un nombre jours 1, 7, 30, 90, 9999.
 - **FiltreAvecgr**: case à cocher 'Membre d\'un groupe' pour filtre des contacts.
 - **FiltreTribu**: menu de sélection de:
   - '(ignorer)',
@@ -490,7 +947,7 @@ Chaque filtre est un component simple de saisie d'une seule donnée: la valeur f
   - '(ignorer)',
   - 'normale ou importante',
   - 'importante'
-- **FiltreRac**: menu de sélection d'unstatut de chat:  
+- **FiltreRac**: menu de sélection d'un statut de chat:  
   - '(tous, actifs et raccrochés)',
   - 'Chats actifs seulement',
   - 'Chats raccrochés seulement'
@@ -512,7 +969,7 @@ Chaque filtre est un component simple de saisie d'une seule donnée: la valeur f
   - 'ni aux membres ni aux notes',
   - 'aux notes en écriture'
 - **FiltreVols**: menu permettant de sélectionner un volume de fichiers d'une note 1Mo, 19Mo, 100,Mo 1Go
-- **FiltreTri**: sélectionne un crtière de tri dans une des deux listes TRIespace et TRItranche définies au dictionnaire. 
+- **FiltreTri**: sélectionne un critère de tri dans une des deux listes TRIespace et TRItranche définies au dictionnaire. 
   - sur tranche: stores.avatar.ptLcFT tri selon l'une des 9 propriétés des tranches listées en tête de stores.avatar.
   - sur espace: PageEspace effectue un tri selon 17 propriétés des synthèses.
  
@@ -725,893 +1182,10 @@ Affichage / saisie d'une notification, texte et niveau.
 
 Import: EditeurMd, BoutonBulle
 
-## Dialogues
-
-### DialogueErreur (1)
-Affiche une exception AppExc et gère les options de sortie selon sa nature (déconnexion, continuation ...).
-
-### ChoixEmoji (1)
-Dialogue de saisie des émojis à insérer dans un input / textarea.
-- se ferme à la fin de la saisie.
-- singleton, du fait de son inclusion soit dans EditeurMd soit dans Motscles qui n'ont qu'une seule instance en édition à un instant donné (toujours inclus dans des dialogues).
-
-### PhraseSecrete (1)
-Saisie contrôlée d'une phrase secrète et d'une organisation (sur option), avec ou sans vérification par double frappe.
-
-Ce composant héberge *simple-keyboard* qui affiche et gère un clavier virtuel pour la saisie de la phrase. Il utilise pour s'afficher un `<div>` de classe "simple-keyboard" ce qui pose problème en cas d'instantiation en plusieurs exemplaires.
-- Ceci a conduit a avoir une seule instance du dialogue hénergée dans App et commandée par la variable sorres.ui.d.PSouvrir
-- les propritées d'instantiation sont dans stores.ui.ps, dont ok qui est la fonction de callback à la validation de la saisie.
-le dialogue est positionné au *top* afin de laisser la place au clavier virtuel de s'afficher au dessous quand il est sollicité.
-
-PhraseSecrete est ouverte pat :
-- PageLogin: saisie de la pharse de connexion.
-- AcceptationSponsoring: donnée de la phrase par le filleul juste avant sa connexion.
-- PageCompte: changement de phrase secrète.
-- PageCompta: saisie de la phrase secrète du Comptable à la création d'un espace.
-- OutilsTests: pour tester la saisie d'une phrase secrète et la récupération de ses cryptages.
-
-### ApercuCv (4)
-Affiche une carte de visite d'un avatar, contact ou groupe:
-- pour un contact, le bouton refresh recharge la carte de visite depuis le serveur.
-- pour un avatar ou un groupe, le bouton d'édition permet de l'éditer. Pour un groupe, il faut que compte en soit animateur.
-
-Import: ShowHtml, CarteVisite
-
-### CarteVisite (3)
-Dialogue d'édition d'une carte de visite, sa photo et son information.
-- est importé **uniquement** depuis ApercuCv (la photo et l'information y étant présente).
-- sauvegarde les cartes de visite (avatar et groupe).
-
-Import: EditeurMd
-
-### MotsCles (2)
-Edite les mots clés, soit d'un compte, soit d'un groupe.
-
-N'est importé **que** par PageCompte et ApercuGroupe (une seule édition à un instant donné).
-
-Import: ChoixEmoji
-
-### ContactChat (2)
-Dialogue de saisie de la phrase de contact d'un avatar, puis création, éventuelle, d'un nouveau chat avec lui.
-
-Import: PhraseContact
-
-### PanelCredits (3)
-C'est l'onglet "crédits" de PageCompta:
-- affiche les tickets en cours,
-- rafraîchit leur incorporation,
-- bouton de génération d'un nouveau ticket.
-
-Import: ApercuTicket, PanelDeta, PanelDialtk
-
-### ApercuTicket (2)
-Affiche un ticket,
-- plié: donnée synthétique,
-- déplié: son détail et les actions possibles.
-
-Import: PanelDialtk
-
-### NoteConfirme (2)
-Dialogue de confirmation d'une action sur une note:
-- ne s'applique qu'à la suppression d'une note.
-- vérifie l'autorisation d'écriture, dont l'exclusivité d'accès pour une note de groupe.
-
-Import: BoutonConfirm
-
-### NouveauFichier (2)
-Dialogue d'acquisition d'un nouveau fichier, local ou depuis le presse-papier, pour une note.
-- permet de changer son nom,
-- liste les versions antérieures de même nom devant être purgées.
-
-Import: NomGenerique
-
-## Panels
-
-### DialogueHelp (3)
-Affiche les pages d'aide.
-- la table des matières, le titre de chaque page, les pages à trouver en bas de chaque page d'aide, sont configurés dans `src/app/help.mjs`
-- chaque page d'aide est un fichier par langue dans `src/assets/help`
-- les images dans ces pages sont dans `public/help`
-- ce dialogue est ouvert / géré par `ui-store pushhelp pophelp fermerhelp`.
-- l'ouverture est déclencher par BoutenHelp.
-
-### ApercuChatgr (3)
-Affiche le chat d'un groupe.
-- ajout d'items et supression d'items.
-
-Import: EditeurMd, NoteEcritepar
-
-### ApercuChat (6)
-Affiche le chat d'un avatar du compte avec un contact.
-- ajout d'items et supression d'items.
-- raccrocher le chat/
-
-Import: SdDark1, EditeurMd, ApercuGenx
-
-### SupprAvatar (2)
-Panel de suppression d'un avatar.
-- affiche les conséquences en termes de pertes de secrets, de groupes et de chats avec les volumes associés récupérés.
-- importé **uniquement* par PageCompte.
-
-### OutilsTests (1)
-Trois onglets:
-- **Tests d'accés**: tests d'accès au serveur, ping des bases locales et distantes.
-- OTrunning:
-  - présente la liste des bases synchronisées.
-  - sur demande calcul de leur volume (théorique pour le volume V1).
-  - propose la suppression de la base.
-- **Phrase secrète**: test d'une phrase avec affichage des différents cryptages / encodages associés.
-
-Invoqué par un bouton de la page d'accueil / App.vue
-
-Dialogues:
-- OTrunning: affiche la progression du calcul de la taille de la base.
-- ORsupprbase: dialogue de confirmation de la suppression.
-
-### NouveauSponsoring (3)
-Panel de saisie d'un sponsoring par un compte lui-même sponsor.
-- importé par PageSponsorings et PageTranche.
-
-Import: PhraseContact, ChoixQuotas, NomAvatar, EditeurMd, QuotasVols
-
-### AcceptationSponsoring (4)
-Saisie de l'acceptation d'un sponsoring, in fine création du compte (si acceptation).
-- saisie du nom,
-- saisie du mot de remerciement.
-
-Import: EditeurMd, ShowHtml, BoutonHelp, QuotasVols
-
-## PanelPeople (7)
-Affiche tout ce qu'on sait à propos d'un contact:
-- sa carte de visite et son commentaire / mots clés du compte à son propos.
-- la liste des chats auquel il participe, ouvert ou non.
-- la liste des groupes (dont le compte a accès aux membres) dont il est membre et son statut.
-
-Si le panel a été ouvert pour ajouter le contact comme membre du groupe courant, un cadre donne le statut de faisabilité de cet ajout et un bouton l'ajoute.
-
-Import: ApercuGenx, ApercuMembre
-
-### PanelMembre (8)
-Affiche en panel,
-- l'aperçu du contact / avatar membre,
-- l'aperçu membre qui donne le détail de son rôle dans le groupe.
-
-N'est ouvert que par un BoutonMembre (depuis ApercuGroupe seulement donc). Est hébergé dans App pour éviter des instantiations multiples.
-
-Import: ApercuGenx, ApercuMembre
-
-### PressePapier (3)
-Affiche en panel dans deux onglets,
-- les notes gardées en presse-papier,
-  - ajout, édition, suppression
-- les fichiers gardés en presse-papier
-  - ajout, remplacement, suppression, affichage, enregistrement, copie.
-
-Import: ShowHtml, EditeurMd, NomGenerique
-
-### NoteNouvelle (4)
-Créé une nouvelle note avec le texte saisi:
-- pour un groupe l'auteur de la note est à choisir.
-
-Le rattachement de la note a été défini dans la PageNotes selon l'endroit d'où la nouvelle note a été demandée.
-
-Import: BoutonUndo, EditeurMd, NoteEcritepar
-
-### NoteEdit (6)
-Affiche le texte d'une note pour édition:
-- pour une note de groupe permet de choisir l'auteur.
-
-Import: EditeurMd, ListeAuts, NoteEcritepar, ApercuGenx
-
-### NoteExclu (6)
-Gère l'affichage, l'attribution et le retrait d'exclusivité d'écriture d'une note de groupe à un des membres du groupe.
-
-Import: BoutonBulle, ApercuGenx, ListeAuts
-
-### NoteFichier (3)
-Affiche les fichiers attachés à une note:
-- gère leur affichage, téléchargement local, suppression.
-- gère la gestion en visibilité en mode avion, soirt d'une version spécifique, soit de la version la plus récente.
-
-Import: NouveauFichier, NoteEcritepar
-
-Dialogue:
-- NFsupprfichier: confirmation de suppression de fichier
-- NFconfirmav1: confirmation visible en mode avion par nom
-- NFconfirmav2: confirmation visible en mode avion par version
-
-### NoteMC (6)
-Affiche et attribue les mots clés d'une note, personnelle et du groupe.
-
-Import: BoutonBulle, ApercuGenx, ChoixMotscles, ListeAuts
-
-## Pages
-
-### PageLogin (5)
-Login pour un compte déjà enregistré ou auto-création d'un compte depuis une phrase de sponsoring déclarée par un sponsor.
-
-Import: PhraseContact, AcceptationSponsoring
-
-### PageAccueil (3)
-Affiche:
-- un bloc avec tous les accès aux pages s'ouvrant par des icônes de App.
-- un second bloc qui est le menu d'accueil accessible depuis la App.
-
-Import: MenuAccueil, BoutonLangue, NotifIcon2, QueueIcon 
-
-### PageCompte (7)
-Affiche les avatars du compte et les opérations du compte:
-- création d'un nouvel avatar,
-- édition des mots clés du compte,
-- changement de la phrase secrète.
-
-Import: NomAvatar, ApercuAvatar, MotsCles, SupprAvatar
-
-Dialogues:
-- PCnvav: nouvel avatar
-- PCchgps: changement de la phrase secrète
-
-### PageChats (7)
-Affiche la liste des chats des contacts et des groupes.
-- si le filtre filtre.filtre.chats.tous est false, les stores avatar et groupe ne délivrent que ceux de l'avatar courant positionné sur la page d'accueil.
-- exporte les chats sélectionnés dans un fichier MarkDown.
-
-Import: ApercuChat, ContactChat, ApercuChatgr, ApercuGenx
-
-### PageClos (3)
-Page ouverte sur clôture immédiate de la session:
-- blocage intégral par l'administrateur technique,
-- compte résilié par une autre session ou celle courante,
-- ressort toujours par la déconnexion inconditionnelle.
-
-Import: BoutonBulle, ShowHtml
-
-### PageCompta (7)
-Quatre onglets donnant l'état de la comptabilité et des blocages.
-- **Notifications**: liste des notifications en cours (avec leurs blocages éventuels).
-- **Comptabilité**: abonnement et consommation (PanelCompta).
-- **Crédits**: pour les comptes autonomes seulement (PanelCredits).
-- **Chats**: chats d'urgence avec le Comptable et les sponsors.
-
-Import: SdAl, ApercuGenx, ApercuNotif, PanelCompta, PanelCredits, ApercuChat
-
-### PageSession (2)
-Page qui s'affiche pendant l'initilisation de la session, après login et avant la page d'accueil.
-- **Etat général** de la session.
-- **RapportSynchro**: son contenu est dynamique lors du chargement de la session, puis fixe après (synthèse du chargement initial).
-- **Téléchargements en cours**: zone passive d'affichage sans action. En fin d'intialisation d'une session, les chargements des fichiers accessibles en mode avion et qui ne sont pas disponibles dans la base locale, sont chargés en tâche de fond. Cet zone liste les téléchargements restant à effectuer.
-- **Téléchargements en échec**: erreurs survenues dans ces téléchargements. Actions possibles sur chaque fichier en échec: _ré-essai abandon_.
-
-Import: RapportSynchro
-
-### PageEspace (4)
-Affiche le découpage de l'espace en tranches:
-- pour le Comptable, création de tribu et ajustement des paramètres de l'espace pour les transferts de compte O / A.
-
-La page est également invoquée dans un dialogue interne de PageAdmin pour affichage des tranches (mais sans droit d'agir).
-
-Import: ChoixQuotas, TuileCnv, TuileNotif, ApercuNotif
-
-## PageAdmin (5)
-C'est LA page de l'administrateur technique.
-- 2 boutons techniques: lancer un GC, afficher le dernier rapport de GC.
-- un boutons fonctionnel: créer une organisation.
-- un bouton de rafraîchissement.
-
-Liste les organisations existantes:
-- affichage du détail de leurs tranches sur bouton.
-- changement de profil.
-- création / gestion de la notification sur l'espace.
-
-Import: ApercuNotif, PageEspace
-
-### PageTranche (6)
-Affiche en tête la tranche courante,
-- celle du compte
-- pour le comptable celle courante sélectionnée depuis la PageEspace.
-- pour le comptable ouvre le panel NouveauSponsoring pour sponsoriser un compte dans n'importe quelle tranche.
-
-Affiche en dessous les sponsors et pour le Comptable les autres comptes de la tranche.
-
-Import: TuileCnv,TuileNotif, ApercuNotif, ChoixQuotas, ApercuGenx, PanelCompta, QuotasVols, NouveauSponsoring, BarrePeople
-
-Dialogues: 
-- PTcptdial : affichage des compteurs comptables du compte sélectionné
-- PTedq: mise à jour des quotas du compte sélectionné
-
-### PageSponsorings (4)
-Liste les sponsorings actuellement en cours ou récents:
-- boutons de prolongation des sponsorings en cours et d'annulation.
-
-Bouton général pour créer un nouveau sponsoring.
-
-Import: NouveauSponsoring, ShowHtml, QuotasVols
-
-### PageGroupes (8)
-Liste les groupes accédés par le compte, dans lesquels il est actif.
-- synthèse des volumes occupés par les groupes hébergés,
-- bouton de création d'un nouveau groupe,
-- une carte par groupe avec :
-  - un bouton pour ouvrir le chat du groupe,
-  - un bouton pour accéder à la page du groupe.
-
-Import: ChoixQuotas, NomAvatar, ApercuGenx, InvitationsEncours, ApercuChatgr
-
-Dialogue:
-- PGcrgr: création d'un groupe.
-
-### PageGroupe (10)
-Affiche les détails d'un groupe:
-- onglet **Détail du groupe**: entête et participations des avatars du compte au groupe.
-  - bouton d'ajout d'un contact comme contact du groupe.
-- onglet **Membres**: liste des contacts membres du groupe si le compte a accès aux membres.
-
-Import: ApercuMembre, ApercuGroupe
-
-### PagePeople (6)
-Affiche tous les contacts connus avec une courte fiche pour chacun (pouvant ouvrir sur le détail du contact).
-- un bouton rafraîchit les cartes de viste qui en ont besoin.
-
-Import: ApercuGenx
-
-### PageNotes (7)
-Affiche l'arbre des notes avec pour racines les avatars et les groupes:
-- en tête affiche le détail de la note courante, avec les actions qu'elle peut subir.
-- la barre séparatrice petmet de lancer le chragment local des notes sléctionnées et le plier / déplier global de l'arbre.
-- en bas l'arbre des notes selon leur rattachemnt.
-
-Import: ShowHtml, ApercuMotscles, NoteEdit, NoteMc, NotePlus, NoteExclu, NoteFichier, NoteConfirme, ListeAuts
-
-Diaalogue:
-- PNdl: dialogue gérant le chargement des notes en local.
-
-### PageFicavion (2)
-Affiche la liste des fichiers visible en mode avion et pour chacun,
-- permet de l'afficher et de l'enregistrer localement,
-- de voir la note à laquelle il est attaché.
-
-# Données en mémoire _modèle_ et persistantes localement IDB
-
-# Opétrations, connexions, synchronisation et autres
-
-# En chantier
-
-### A développer / revisiter
-- pour la doc (Documents.md) vérifier et écrire les conditions de **Prise d'hébergement**.
-- blocage des accroissements de volume: vérifier le blocage
-- GC à réviser: Tickets Chatgrs à prendre en compte
-
-### Features à développer
-_Arrêtés mensuels des Tickets_ (**CSV**)
-- tickets réceptionnés dans le mois pour le Comptable (gestion des archives mensuelles).
-  - une ligne par ticket dont l'ids débute par le mois.
-  - une fois archivé dans un secret du Comptable, appel d'opération du serveur pour détruire tous les tickets du mois et antérieurs.
-
-_Photos périodiques / sur demande_ des abonnements / consommation des comptes
-- une ligne par comptas d'un extrait des compteurs relatifs au mois M-1 (dès qu'il est figé).
-
-# Boîtes à secrets - Client
-
-## Session d'un compte
-Une session est associée à un compte connecté (ou en connexion). Elle dispose de données :
-- en mémoire store/db, toujours,
-- sur IDB, seulement si la session est synchronisé ou avion.
-
-Les tables suivantes se retrouvent :
-- trois singletons dont la clé est l'id du compte : `compte prefs compta`. L'id en IDB est par convention 1.
-- trois collections d'objets _maîtres_:
-  - les objets `avatar` cités dans le compte : la propriété `mack` donne leur nom / clé (donc id).
-  - les objets `couple` cités dans les avatars cités ci-dessus: la propriété lcpk donne leur clé (donc id).
-  - les objets `groupe`  cités dans les avatars cités ci-dessus: la propriété lgrk donne leur nom / clé (donc id).
-- des collections d'objets secondaires : leur propriété id est l'id d'un objet maître et ils ont une seconde partie de clé pour les distinguer :
-  - objets `membre` secondaires de `groupe`, clé secondaire `im` (indice membre).
-  - objets `secret` secondaires de `avatar, couple, groupe`, clé secondaire `ns` (numéro de secret).
-
-Les objets `invitgr` secondaires de `avatar` sont transients en session : récupérés en synchronisation ils déclenchent une opération de mise à jour de leur avatar pour qu'il référence le groupe dans `lgrk`. Ces objets ne sont ni mémorisés, ni en store/db, ni en IDB.
-
-Les objets contact sont demandés explicitement par une vue et ne sont ni mémorisés, ni en store/db, ni en IDB.
-
-#### Les cartes de visite
-Tout objet maître `avatar / groupe / couple` a un objet `cv` de même id :
-- ils sont créés simultanément.
-- la propriété `x` de `cv` quand elle est > 0, indique que l'objet maître est _disparu_ et a été purgé.
-
-### Structure en mémoire : store/db
-Son `state` (vuex) détient:
-- les singletons : `compte prefs compta`
-- les collections d'objets maîtres : une map de clé id pour donner l'objet correspondant
-  - `avatars[1234]` : donne l'avatar d'id `1234`
-- les collections d'objets secondaires secret membre
-  - `secrets@1234[56]` donne le secret d'id `1234, 56`
-  - `secrets@1234` donne la map de tous les secrets du même maître `1234`
-- un singleton particulier `repertoire` (voir plus loin) qui est une map de toutes les cvs des `avatar / groupe / couple`.
-- un singleton particulier `sessionsync` (voir plus loin)).
-
-Son state détient aussi des _objets courants_ dans les vues :
-- `avatar`: l'avatar courant
-- `groupe`: le groupe courant
-- `groupeplus`: le couple courant [groupe, membre] ou membre est celui de l'avatar courant
-- `couple`: le couple courant
-- `secret`: le secret courant
-
-Si par exemple l'objet du groupe d'id `123` change,
-- `groupes[123]` change et référence la nouvelle valeur de l'objet,
-- `groupe` change et référence la nouvelle valeur de l'objet.
-
-#### Répertoire des CVs
-La classe `Repertoire` est une simple map avec entrée par carte de visite (de clé id de la carte de site).
-
-Chaque entrée a des propriétés additionnelles par rapport à cv :
-- **pour une cv d'avatar:**
-  - `na`: son `NomAvatar` (couple non / clé),
-  - `lgr`: la liste des ids des groupes dont l'avatar est membre,
-  - `lcp`: la liste des ids des couples dont l'avatar est, soit le conjoint _interne_ (avatar du compte), soit le conjoint _externe_ (l'avatar n'est pas un avatar du compte).
-  - `avc`: `true` si c'est un avatar du compte
-- **pour une cv de groupe:**
-  - `na`: son `NomAvatar` (couple non / clé)
-  - `lmb`: la liste des ids des avatars qui en sont membre.
-- **pour une cv de couple:**
-  - `na`: son `NomAvatar` (couple non / clé). Son nom est construit depuis ceux de son ou ses conjoints.
-  - `idE`: l'id du conjoint externe (s'il est connu),
-  - `idI`: l'id du conjoint interne.
-
-**La session détient un objet `rep` qui est l'image, non réactive** (de travail) du répertoire.
-
-**store/db détient la propriété `repertoire`, image réactive du répertoire, stable**, celle qui a été fixée par l'opération commit() du répertoire rep de la session.
-
-### La base locale IDB
-Il y a une base par compte.
-
-Elle contient les tables `compte prefs compta avatar groupe couple secret cv` :
-- la clé primaire de chacun est,
-  - pour les singletons `compte prefs compta` : `1`
-  - pour les objets maîtres `avatar groupe couple` le cryptage par la clé K du compte de leur id en base64.
-  - pour les objets secondaires le couple `id id2`:
-    - `id` : le cryptage par la clé K du compte de l'id en base64 de son maître.
-    - `id2` : le cryptage par la clé K du compte de son id relative (`ns` ou `im`) à son maître.
-- la propriété `data` est le cryptage par la clé K du compte de la sérialisation de l'objet.
-
-Les tables ont donc deux 2 propriétés `id data` ou 3 propriétés `id, id2,  data`.
-
-**IDB est toujours cohérente** : les opérations spéciales de mise à jour accumulent dans leur traitement les mises à jour pour IDB dans leur objet `OpBuf` et un seul commitRows() intervient à la fin pour enregistrer toutes les mises à jour en attente dans `OpBuf`.
-
-#### La table `sessionsync`
-Cette table enregistre les date-heures,
-- de la session synchronisée précédente correctement connectée puis terminée : `dhdebut dhfin`
-- de la session synchronisée en cours : 
-  - `dhlogin` : dh de fin de login,
-  - `dhsync` : date-heure de fin de la dernière opération de synchronisation,
-  - `dhpong` : date-heure de réception du dernier _pong_ reçu sur le websocket attestant que celui-ci n'est pas déconnecté.
-
-Cet objet est disponible dans store/db `sessionsync`, uniquement quand la session courante est _synchronisée_.
-
-## Opérations et cohérence des états store/db et IDB
-#### Trois opérations d'initialisation
-Il y a 3 opérations d'initialisation des données de session :
-- **`ConnexionCompte`**
-  - elle reconstitue en mémoire l'état des données du compte depuis,
-    - IDB si c'est une session _synchronisée_ ou _avion_,
-    - et le serveur si c'est une session _synchronisée_ ou _incognito_,
-    - l'état est cohérent et les objets inutiles ont été purgés,
-    - l'état des données est transcrit sur IDB par une unique transaction (commitRows()) et sur store/db par un unique appel de fonction.
-- **`CreationCompte`** (sans parrain) et **`AcceptationParrainage`** (avec parrain).
-  - elles sont plus simples puisqu'il n'y a par définition aucun état antérieur à prendre en compte et très peu d'objets à commiter dans IDB et store/db.
-
-La propriété state/ui `statutsession` vaut
-- 0 : avant exécution de ces initialisations de sessions,
-- 1 : pendant l'exécution de celles-ci,
-- 2 : après la fin de l'exécution (succès, sinon retour à 0 et pas de session)
-- 0 : en cas de déconnexion accidentelle ou explicite (plus de session).
-
-#### Unique opération de mise à jour : ProcessQueue
-Il n'y a qu'une seule opération de mise à jour (après initialisation), ProcessQueue :
-- elle ne s'exécute que quand l'initialisation complète de la session est faite (statutseesion à 2).
-- les messages de mise à jour reçus sur WebSocket sont stockées en queue dans l'ordre d'arrivée.
-- la queue est traitée (si elle n'est pas vide),
-  - dès que le statut de session passe à 2
-  - dès qu'un message de synchronisation est reçu et que le statut de session est 2.
-Comme pour les opérations d'initialisation, les modifications sont stockées dans OpBuf et validées en un seul appel à la fin.
-
-#### Autres opérations
-Aucune autre opération ne fait de mises à jour des données store/db et IDB, ni ne lit IDB.
-
-> _Remarque_ : les objets courants de navigation store/db avatar groupe ... peuvent changer au gré des navigations mais sans mise à jour de leur contenu.
-
-En conséquence les actions UI peuvent accéder à tout instant à un état cohérent des données en store/db qui n'évolue que par le commit de ProcessQueue (d'état cohérent en état cohérent).
-
-#### Début et fin d'une session, inter-session
-**Une session existe dès qu'une opération de connexion ou de création de compte débute :**
-- l'état de session est disponible dans la variable `data` de `modele.mjs`et subsiste dure jusqu'à la **déconnexion**, explicite ou accidentelle.
-- une session est caractérisée par un compte.
-- dès que l'initialisation (connexion / création de compte) s'est bien terminée l'état de ses données est cohérent.
-- le **traitement des notifications des mises à jour** du serveur par `ProcessQueue` maintient l'état store/db et IDB à jour et cohérent.
-
-Une session a quelques propriétés traduisant son état interne, en plus des données _métier_ en store/db et IDB.
-
-Durant une session les pages peuvent être : `synchro` (durant l'initialisation), puis `compte` ou `avatar`.
-
-#### Inter-session
-Entre 2 sessions, très peu d'information est disponible :
-- `org` : l'organisation choisie (quand elle l'a été).
-- `mode` : `synchronisé incognito avion` (quand il a été choisi).
-
-En inters-session les pages ne peuvent être que `org` ou `login`.
-
-#### Propriétés d'une session
-### Objet OpBuf
-Cet objet créé en début des opérations ci-dessus stocke les mises à jour en attente collectées pendant l'opération afin de pouvoir réaliser à la fin :
-- une mise à jour de store/db en un seul appel,
-- une écriture sur IDB en une seule transaction.
-
-Ceci permet d'éviter de faire apparaître,
-- en store/db des états intermédiaires incohérents propres à perturber l'affichage,
-- en IDB un état fonctionnellement incohérent résultant d'une mise à jour partielle.
-
-### Opération `ConnexionCompte`
-Elle a pour objectifs :
-- de s'assurer que le compte correspondant à la phrase secrète saisie existe,
-- d'alimenter en store/db et en IDB toutes les données du périmètre du compte.
-
-C'est la seule opération qui lit IDB afin de récupérer un maximum de données sans avoir à les obtenir du serveur.
-
-Elle écrit sur IDB les données récupérées du serveur de manière à ce que son état soit cohérent et propre à être utilisé par une connexion ultérieure en mode _avion_.
-
-Elle purge d'IDB les données _inutiles_ (obsolètes ou sorties du périmètre du compte).
-
-- **suppression éventuelle de IDB** si c'est l'option demandée au login.
-- si c'est une connexion en mode _avion_, vérifie qu'une propriété du `localstorage` donne le nom de la base du compte pour la phrase secrète saisie.
-- **connexion effective :**
-  - attribue à la session un `sessionId` aléatoire
-  - ouverture de IDB (sauf en mode _incognito_)
-  - création d'un websocket avec le serveur (sauf en mode _avion_), lancement du ping pong.
-- **phase itérative 0,1,2**
-  - tant que ces trois phases ne se sont pas déroulées sans incident, on boucle (5 fois avant exception).
-  - **phase 0 : récupération de `compte / prefs / compta`** : ceci donne une liste d'avatars (dans `lgrk` de compte). Signature (dans compta) et abonnement au compte.
-  - **phase 1 : pour tous les avatars cités dans le compte**
-    - récupération de `avatar`
-    - signature (dans cv) et abonnement
-    - _si la version du compte a changé_, donc qu'il a pu avoir un avatar en plus ou en moins depuis la phase 0, échec et on reprend la phase 0-1-2
-    - ceci donne la liste des groupes et couples du périmètre du compte.
-  - **phase 2 : pour tous les groupes et comptes du périmètre,**
-    - récupération du `couple groupe`
-    - signature (dans cv) et abonnement
-    - si l'une des versions, du compte ou d'un des avatars récupérés a changé (possibilité de groupe / couple en plus ou en moins), échec et on reprend la phase 0-1-2
-- **phase 3. Récupération des membres et secrets** rattachés aux `avatar / couple / groupe` récupérés ci-dessus. Comme on est abonné à ces objets, s'ils changent les modifications seront traitées en synchronisation.
-- **phase 4. Récupération des cv des objets maîtres et des membres rattachés.**
-  - l'objet `sessionsync` a une propriété `vcv` qui donne la plus haute version des cv récupérées et stockées en IDB.
-  - liste `vp` : ce sont les cv référencées dont on a déjà une copie (soit parce que son x indique une disparition, soit parce qu'une cv a été déclarée). On récupère du serveur celles ayant une version supérieure à `vcv`.
-  - liste `vz` : ce sont les cv référencées dont on n'a jamais eu copie antérieurement. On récupère du serveur celles ayant une version non 0. Une cv avec une version 0 indique seulement que l'objet existe et qu'il n'a jamais eu de cv.
-  - la plus haute version des cv récupérées donne le `vcv` pour la prochaine session.
-- **phase 5. Récupération des fichiers attachés déclarés stockés localement**, manquants ou ayant changé de version.
-- **phase 6. Récupération des invitations aux groupes (invitgr) concernant un des avatars du compte**. Ces objets ne sont pas stockés et donne lieu immédiatement à une requête pour modifier les avatars correspondants et leur faire référencer les avatars du compte.
-- **finalisation :**
-  - les mises à jour store/db sont validées,
-  - les mises à jour dans IDB sont soumises et commitées en une seule opération.
-  - la fin de la connexion est actée : la session passe en statutsession 2 (apte à fonctionner).
-
-### Opération de synchronisation `ProcessQueue`
-Chaque opération traite un ou plusieurs lots de notifications envoyées par le serveur sur websocket.
-- tous les objets modifiés sont collectés et seule la plus haute version pour chaque id est conservée pour traitement.
-- l'objectif est de mettre à jour :
-  - store/db en une seule fois à la fin.
-  - IDB en une seule transaction à la fin.
-
-## Pages
-### Org : `/`
-Page racine permettant de choisir son organisation.  
-On revient à cette page si dans l'URL on n'indique pas de code organisation ou un code non reconnu.
-
-### Login : `/_org_`
-Page de connexion à un compte ou de création d'un nouveau compte.
-
-### Synchro : `/_org_/synchro`
-Dès l'identification d'un compte, cette page s'affiche. Elle ne permet pas d'action mais affiche l'état de chargement / synchronisation du compte.  
-Elle enchaîne, 
-- a) soit sur la page `Compte` an cas de succès, 
-- b) soit en retour vars la page `Login` en cas de déconnexion.
-
-### Compte : `/_org_/compte`
-Dès que les données du compte sont complètement chargées, cette page s'affiche et donne la synthèse du compte, la liste de ses avatars...
-
-Navigations possible :
-- `Login` : en cas de déconnexion
-- `Avatar` : vers l'avatar _sélectionné_
-
-### Avatar : `/_org_/avatar`
-Détail d'un avatar du compte.
-
-Navigations possibles :
-- `Login` : en cas de déconnexion
-- `Compte` : retour à la synthèse du compte.
-
-### Panneau latéral Menu
-Infos et boutons d'actions (affichage de boîtes de dialogue, etc.)
-
-## Actions et opérations
-### Actions
-Elles n'affectent que l'affichage, la visualisation des données. Elles ne changent pas l'état des données du compte, ni sur IDB ni sur le serveur central.
-
-Elles ne font pas d'accès ni à IDB ni au réseau, sauf l'action spéciale de **ping** :
-- _ping du serveur_ : pas en mode _avion_.
-- _ping DB de la base de l'organisation sur le serveur_ : il faut que cette organisation soit connue, pas en mode _avion_.
-- _sélectionné_ : il faut que le compte soit identifié, pas en mode _incognito_.
-
-### Opérations
-Seules les 4 opérations spéciales vues antérieurement modifient l'état des données du compte, en mémoire et **sur IDB et/ou le serveur**.
-
-**Les opérations UI _standard_** ne changent pas létat store/db ni IDB : elles postent des requêtes au serveur.
-
-Une opération s'exécute toujours dans le cadre d'une **session**, c'est à dire avec un **compte identifié ou en cours d'identification** (donc pas forcément encore authentifié ni créé).
-- si la session est en mode synchronisé ou incognito, une session WebSocket est ouverte.
-- si la session est en mode synchronisé ou avion, la base IDB est accessible et ouverte.
-
-#### Opérations `UI` _standard_ initiées par UI
-C'est le cas de l'immense majorité des opérations : elles sont interruptibles par l'utilisateur (quand il en a le temps) par appui sur un bouton.
-
-Aucune action ou nouveau lancement d'opérations ne peut avoir lieu quand une opération UI est déjà en cours, sauf la demande d'interruption de celle-ci.
-
-Trois événements peuvent interrompre une opération UI :
-- l'avis d'une rupture d'accès au réseau (WebSocket ou sur un accès POST / GET).
-- l'avis d'une impossibilité d'accès à IDB.
-- une demande d'interruption de l'utilisateur.
-
-La détection d'un de ces événements provoque une exception BREAK qui n'est traitée que sur le catch final de l'opération (en cas de _catch_ elle doit être re-propagée telle quelle).
-
-Le traitement final du BREAK consiste à dégrader le mode de la session en **Avion** ou **Visio** ou **Incognito** selon les états IDB et NET (s'il ne l'a pas déjà été).
-
-#### Opération `ProcessQueue` `WS` _WebSocket_ initiées par l'arrivée d'un message sur WebSocket
-Une seule opération de ce type peut se dérouler à un instant donné.
-
-Elles ne sont pas interruptibles, sauf de facto par la rupture de la liaison WebSocket (voire en conséquence d'une action de déconnexion).
-
-Deux événements peuvent interrompre une opération WS :
-- l'avis d'une rupture d'accès au réseau (WebSocket ou sur un accès POST / GET).
-- l'avis d'une impossibilité d'accès à IDB.
-
-La détection d'un de ces événements provoque une exception BREAK qui n'est traitée que sur le catch final de l'opération (en cas de _catch_ elle doit être re-propagée telle quelle sans traitement). 
-
-Le traitement final du BREAK consiste à dégrader le mode de la session en **Avion** ou **Visio** selon les états IDB et NET (s'il ne l'a pas déjà été).
-
-> In fine `ProcessQueue` ne sort jamais en exception.
-
-### Boîtes de dialogue
-##### Publiques
-Elles peuvent être commandées d'ailleurs de la vue qui la contient : principalement celles du _layout_ mais aussi quelques autres.
-
-**Leur affichage est toujours commandée par une variable de store/ui** : dans n'importe quel endroit du code il suffit donc de basculer leur variable d'affichage pour que la boîte apparaisse.
-
-Sur la mutation `majstatutsession` avec un statut non 2 (ok), toutes les boîtes publiques sont fermées.
-
-##### Spécifiques d'une vue
-Chaque boîte dépend d'une variable définie au setup() par def() :
-- la variable `sessionok` (ou plus `statutsession`) active est déclarée.
-- `watch` permet de fermer toutes les boîtes.
-
-    setup () {
-    const mcledit = ref(false)
-    const sessionok = computed(() => { return $store.state.ui.sessionok })
-    watch(() => sessionok.value, (ap, av) => {
-      if (ap) {
-        mcledit.value = false
-      }})
-
-Ainsi :
-- dans l'affichage des `v-if="sessionok"` permettent de ne rien afficher lors d'une fermeture de la vue quand les objets qu'elle affiche ont déjà disparu.
-- les boîtes de dialogues se ferment automatiquement en cas de déconnexion.
-
-## Modes
-### Avion
-- pas d'accès au réseau, pas de session WebSocket.
-- les seules opérations possibles mettent à jour IDB : enregistrement de secrets pour mise à jour différée à la prochaine synchronisation.
-- en cas de perte d'accès à IDB, le mode est dégradé en **Visio**.
-
-### Incognito
-- pas d'accès à IDB, session WebSocket ouverte.
-- les seules opérations impossibles sont celles devant lire / écrire IDB (enregistrement de textes en attente, de fichiers à attacher plus tard et de fichiers attachés stockés localement).
-- en cas de perte d'accès au réseau (session WS fermée), le mode est dégradé en **Visio**. 
-
-### Synchronisé
-- accès à IDB, session WebSocket ouverte.
-- toutes opérations possibles.
-- en cas de perte,
-  - d'accès au réseau, le mode est dégradé en mode **Avion**.
-  - d'accès à IDB, le mode est dégradé en mode **Incognito**.
-  - des deux, le mode est dégradé en mode **Visio**.
-
-### Visio : mode dégradé
-- aucun accès, ni à IDB, ni au réseau, pas de session WebSocket.
-- aucune opération possible
-- on ne choisit jamais le mode Visio : il résulte d'une dégradation des trois autres modes.
-
-En cas de tentative de reconnexion d'un compte, celle-ci s'effectue dans le mode initial choisi par l'utilisateur, pas dans le mode _dégradé_.
-
-La session d'un compte comporte donc deux modes :
-- le mode _initial_,
-- le mode _courant_, qui s'il diffère du mode initial, résulte d'une dégradation.
-
-### Dégradation d'un mode
-Elle s'effectue automatiquement. Toutefois l'utilisateur reçoit un avis lui demandant s'il préfère,
-- une déconnexion franche, 
-- tenter une re-connexion,
-- ou rester dans le mode dégradé.
-
-## Session
-Il y a ouverture de session dès qu'il y a une intention d'identification / création d'un compte : c'est une opération qui créé la session (en tout début).
-- la session a une sessionId qui l'identifie (aléatoire sur 6 octets).
-- la session a un compte : mais au début de l'opération créatrice il peut être vide.
-- la session a deux statuts :
-  - IDB : ok ou pas.
-  - NET : ok ou pas.
-- le mode courant de la session est invariant dans sa vie, son mode courant peut évoluer. En mode Visio aucune opération n'est possible.
-
-Une session peut avoir au plus deux opérations en cours : une UI et une WS
-
-Une session est détruite par une action de `deconnexion`.
-
-L'action de `reconnexion` sur une session source recrée une autre session :
-- la session source doit être en statut KO en IDB, NET ou les deux.
-- la nouvelle session a le mode initial de la session source qui est détruite.
-- la nouvelle session a pour compte le compte de la session initiale (donc authentifié).
-
-## `localStorage` et IDB
-**En mode *avion*** dans le `localStorage` les clés `monorg-hhh` donne chacune le numéro de compte `ccc` associé à la phrase de connexion dont le hash est `hhh` : `monorg-ccc` est le nom de la base IDB qui contient les données de la session de ce compte pour l'organisation `monorg` dans ce browser.
-
-**En mode *synchronisé***, il se peut que la phrase secrète actuelle enregistrée dans le serveur (dont le hash est `hhh`) ait changé depuis la dernière session synchronisée exécutée pour ce compte :
-- si la clé `monorg-hhh` n'existe pas : elle est créée avec pour valeur `monorg-ccc` (le nom de la base pour le compte `ccc`).
-- si la base `monorg-ccc` n'existe pas elle est créée.
-- l'ancienne clé, désormais obsolète, pointe bien vers le même compte mais ne permet plus d'accéder à ce compte, dont la clé K a été ré-encryptée par la nouvelle phrase.
-
-## Barre de titre
-A droite :
-- icône menu : ouvre le menu
-- icône home : provoque le retour à Accueil mais demande confirmation de la déconnexion.
-- icône et nom de l'organisation
-
-A gauche :
-- icône donnant le mode _synchronisé incognito avion_ : un clic explique ce que signifient les modes.
-- icône donnant la phase :
-  - pas connecté (carré blanc)
-  - en synchro (flèches tournantes)
-  - en travail :
-    - rond vert : mode actif
-    - verrou rouge : mode passif (mise à jour interdite).
-  - un clic explique ce que signifie l'état
-
-# Gestion des fichiers disponibles en mode avion
-- Chaque fichier est identifié par `idf` (grand nombre aléatoire).
-- Chaque fichier est attaché à un **secret** identifié par `id ns`, ne peut en changer et est immuable.
-- Un fichier peut être détruit, pas mis à jour.
-
-### Cache des fichiers en IDB
-Deux tables gèrent ce stockage en IDB :
-- `fdata` : colonnes `idf, data`. Seulement insertion et suppression
-  - `data` est le contenu du fichier tel que stocké sur le serveur (crypté / gzippé).
-- `fetat` : colonnes `idf, data : {dhd, dhc, lg, nom, info}`. Insertion, suppression et mise à jour.
-  - `dhd` : date-heure de demande de chargement.
-  - `dhc` : date-heure de chargement.
-  - `lg` : taille du fichier (source, son v2).
-  - `nom info` : à titre d'information.
-
-#### Transactions
-- `fetat` peut subir une insertion sans mise à jour de `fdada`.
-- `fetat` peut subir une suppression sans mise à jour de `fdata` si le row indique qu'il était encore en attente (`dhc` 0).
-- `fetat` et `fdata` peuvent subir une suppression synchronisée.
-- quand `fdata` subit une insertion, `fetat` subit dans la même transaction la mise à jour de `dhc`.
-
-La table `fetat` est,
-- lue à l'ouverture d'une session en modes _synchronisé_ et _avion_ (lecture seule),
-- l'état _commité_ est disponible en mémoire durant toute la session.
-
-#### Démon
-En mode synchronisé un démon tourne en tâche de fond pour obtenir du serveur les fichiers requis pas encore disponibles en IDB.
-
-Dans la barre de statut en haut, l'icône du mode synchronisé est en _warning_ quand il y a des fichiers en attente / chargement. Quand on clique sur cette icône, la liste `fetat` est lisible (avec l'indication en tête du fichier éventuellement _en cours de chargement_).
-
-#### État de disponibilité pour le secret _courant_
-Dans db/store, le state `dispofichiers` est synchronisé avec db/secret (le secret _courant_). Le démon maintient dans `dispofichiers` la liste des idf _en cours de chargement_ (en fait demandés mais pas encore chargés). La page des fichiers attachés du secret courant peut ainsi afficher si le fichier est disponible localement ou non :
-- en mode _avion_ ceci indique si il sera ou non affichable,
-- en mode _synchronisé_ ceci indique si son affichage est _gratuit_ (et immédiat).
-
-## Objets Secret et AvSsecret
-Les objets `Secret` sont ceux de classe `Secret` disponibles dans le store/db.
-- Identifiant : `[id, ns]`
-- Propriété `mfa` : c'est une map,
-  - _clé_ : `idf`, l'identifiant d'un fichier attaché,
-  - _valeur_ : `{ nom, lg, dh ... }`, nom externe et taille. Pour un nom donné pour un secret donné il y a donc plusieurs versions de fichier chacune identifiée par son idf et ayant une date-heure d'insertion dh. Pour un nom donné il y a donc un fichier _le plus récent_.
-
-Un objet de classe `AvSecret` existe pour chaque secret pour lequel le compte a souhaité avoir au moins un des fichiers attachés disponible en mode avion.
-- Identifiant : `[id, ns]`
-- Propriétés :
-  - `lidf` : liste des identifiants des fichiers explicitement cités par leur identifiant comme étant souhaité _hors ligne_.
-  - `mnom` : une map ayant,
-    - _clé_ : `nom` d'un fichier dont le compte a souhaité disposer de la _version la plus récente_ hors ligne.
-    - _valeur_ : `idf`, identifiant de cette version constaté dans l'état le plus récent du secret.
-
-Chaque objet de classe `AvSecret` est disponible dans db/store avec la même structure que pour secret :
-- une entrée `avsecret@id` qui donne une map de clé `ns` pour chaque objet `AvSecret`.
-
-`AvSecret` est maintenu en IDB à chaque changement :
-- la clé primaire `id,id2` est comme celle de `Secret` cryptée par la clé K du compte.
-- _data_ est la sérialisation de `{lidf, mnom}` cryptée par la clé K du compte.
-
-En mode _synchronisé_ et _avion_ tous les `AvSecret` sont chargés en mémoire dans db/store.
-
-### Mises à jour des AvSecret
-Il y a deux sources de mise à jour :
--**(a) le compte fait évoluer ses souhaits**, modifie `lidf / mnom` : il peut en résulter,
-  - une liste d'idf à ne plus conserver en IDB,
-  - une seconde liste d'idf qui ne l'étaient pas et doivent désormais l'être. 
-  - Ces deux listes sont calculées par comparaison entre la version _actuelle_ d'un `AvSecret` et sa version _future_ (désormais souhaitée).
--**(b) une mise à jour d'un `Secret`** peut faire apparaître des incohérences avec l'`AvSecret` correspondant (quand il y en a un) et qui doit se mettre en conformité:
-  - des idf cités dans `lidf` n'existent plus : ils doivent être supprimés.
-  - pour un nom dans `mnom`, l'idf cité n'est plus le plus récent (il doit être supprimé **et** un autre devient requis et _peut-être_ non stocké donc inscrit comme _à charger_).
-  - des noms cités dans `mnom` n'existent plus, ce qui entraîne la disparition des idf correspondants (et de l'entrée `mnom`).
-  - en conséquence il résulte de la comparaison entre un `Secret` et son `AvSecret` correspondant :
-    - une liste d'idf à supprimer dans `fetat fdata` ce qui est fait sur l'instant.
-    - une liste d'idf _à charger_ et noté dans `fetat` sur l'instant, le chargement effectif étant effectué à retardement par le démon.
-    - une mise à jour de l'`AvSecret` pour tenir compte des contraintes du nouveau `Secret`, voire sa suppression si Secret est supprimé **ou** que `lidf` et `mnom` sont vides.
-
-**Les traitements (a) sont effectués quand le compte en a exprimé le souhait par action UI**. Ils sont immédiats pour les suppressions mais les chargements de nouveaux idf seront traitées par le démon avec retard.
-
-**Les traitements (b) sont effectués** :
-- en fin d'initialisation de la session en mode _synchronisé_ quand tous les `Secret` sont chargés : il détecte,
-  - les mises à jour éventuelles de chaque `AvSecret` pour chaque objet `Secret` existant correspondant.
-  - les suppressions des `AvSecret` (et donc des idf dans `fdata / fetat`) pour chaque `AvSecret` pour lequel il n'existe plus de `Secret` (existant) associé.
-- **à la synchronisation pour chaque mise à jour / suppression** d'un `Secret` entraînant le cas échéant une mise à jour ou une suppression de l'`AvSecret` correspondant.
-
-# Données en mémoire, réactives (stores) ou non
-#### `config-store`
-Données de configuration récupérées au boot (par `boot/appconfig.js`) de `assets/config/app-config.json`
-
-#### `session-store`
-État courant de la session active (cf ci-dessus).
-
-#### `avatar-store`
-Map par id d'un avatar des avatars du compte (objet de classe Avatar)
-
-## Modèle des données en mémoire
-Il est consitué :
-- des stores, pour toutes les données susceptibles d'être affichées ou surveillées.
-- du répertoire des cartes de visite.
-
-#### Répertoire des cartes de visite
-##### Classe : `NomGenerique`
-- 4 variantes : `NomAvatar`, `NomGroupe`, `NomContact`, `NomTribu`
-- propriétés :
-  - `nom` : nom court immuable de l'objet
-  - `rnd` : u8(32) - clé d'encryption
-  - `id` : 
-    - pour tous les objets sauf le Comptable : `hash(rnd)`. Hash entier _js safe_ de rnd.
-      - type: reste de la division par 4 de l'id: 0:avatar 1:contact 2:groupe 3:tribu
-    - pour le Comptable : `IDCOMPTABLE` de api.mjs : `9007199254740988`
-
-##### Map statique `repertoire` de `modele.mjs`
-Fonctions d'accès
-- `resetRepertoire ()` : réinitialisation
-- `getCle (id)` : retourne le rnd du nom générique enregistré avec cette id
-- `getNg (id)` : retourne le nom générique enregistré avec cette id
-
-`repertoire` a une entrée pour :
-- 1-chaque avatar du compte,
-- 2-chaque groupe dont un avatar du compte est membre
-- 3-chaque contact dont un avatar du compte est conjoint interne
-- 4-chaque avatar externe,
-  - membre d'un des groupes ci-dessus,
-  - conjoint externe d'un des contacts ci-dessus
-
-Chaque entrée a pour clé `id` et pour valeur `{ ng, x }`
-- `ng` : objet `NomGenerique`
-- `x` : statut de disparition, `true` si disparu sinon `undefined` (vivant).
-
-Une entrée de répertoire est quasi immuable : la seule valeur qui _peut_ changer est `x` : inscrite à la connexion du compte, elle n'est mise à jour par synchronisation (c'est le GC qui le positionne au plus une fois).
-
-Le répertoire grossit en cours de session mais ne se réduit jamais. Il contient des objets "obsolètes":
-- avatar du compte détruit.
-- groupe n'ayant plus d'avatars du compte membre.
-- contact quitté par leur conjoint interne.
-- avatar externe n'étant plus membre d'aucun groupe ni conjoint externe d'aucun couple.
-
 # Annexe: l'arbre des notes
+
+(TODO)
+
 Remarques et règles de gestion applicables à l'arbre des notes `note-store.js`
 
 Une note peut être :
