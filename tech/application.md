@@ -12,40 +12,42 @@ L'application est une page Web, _PWA: progressive web app_:
   - vers le _Storage_ pour upload / download de fichiers attachés aux notes.
 
 Elle est structurée,
-- selon le framework `vuejs.org`,
+- selon le framework `vuejs.org (V3) + pinia`,
 - et selon `quasar.dev` en tant que surcouche de `vuejs`.
 
 L'architecture de l'application sépare:
 - sa **mémoire** globale contenant:
   - des constantes de configuration,
-  - les documents du compte courant, _non réactives_ et _réactives_.
+  - les documents du compte courant, mémoires _non réactives_ et _réactives_ (stores).
 - ses **vues** ayant chacune trois parties:
   - `template` : description déclarative HTML+ de ce qui apparaît à l'écran,
-  - `script` : variables affichables dans le template, variables de calcul local à la vue, et fonctions sur ces variables.
+  - `script` : 
+    - variables affichables dans le template: soit des variables de calcul local à la vue, soit _calculées_ depuis les _stores_.
+    - fonctions sur ces variables.
   - `style` SASS : classes de style utilisées dans le template de la vue. 
 
 # Configuration de l'application
 
-## Configuration _custom buildée_
-Quand elle est est adaptée, ce qui n'est pas du tout obligatoire, elle est _buildée_ avec l'application et ne peut pas être modifiée après _build_.
+## Configuration _personnalisée et buildée_
+La _configuration_ peut être personnalisée (ce n'est pas du tout obligatoire), puis l'application est _buildée_, la configuration ne peut pas être modifiée après _build_.
 
-#### Dans le script `src/app/config.mjs`
-Elle peut tout à fait être conservée par défaut, sauf la propriété `BUILD` qui donne la date-heure du build de l'application.
+#### Personnalisation du script `src/app/config.mjs`
+Elle peut être conservée par défaut, sauf la propriété `BUILD` qui donne la date-heure du build de l'application.
 
-#### Dans les scripts `src/i18n/fr-FR/index.js`
+#### Personnalisation des traductions dans les scripts `src/i18n/fr-FR/index.js`
 Les scripts `fr-FR` et `en-EN` donnent les _traductions_ en français et en anglais.
 
-Une customisation est certes possible mais à gérer avec délicatesse: il faut concaténer le script _par défaut_ avec un script de _surcharges ponctuelles_.
+Une personnalisation est possible mais à gérer par concaténation du script _par défaut_ avec un script de _surcharges ponctuelles_.
 
-#### Dans l'aide en ligne `src/assets/help/...`
-L'aide en ligne peut aussi être customisée mais mais à gérer avec délicatesse: les fichiers d'aide _par défaut_ étant à fusionner avec des fichiers de _surcharges ponctuelles_.
+#### Personnalisation de l'aide en ligne `src/assets/help/...`
+L'aide en ligne peut aussi être personnalisée: les fichiers d'aide _par défaut_ sont à fusionner avec des fichiers de _surcharges ponctuelles_.
 
-> Un hébergeur procédant à une _customisation_ doit rendre public une liste de fichiers ayant patché la customisation par défaut et le script de _patch_ associé: n'importe qui sera ainsi en mesure de refaire le _build_ correspondant en s'assurant que les sources _open source_ de départ n'ont pas été altérés par des patchs compromettant la confidentialité.
+> Un hébergeur procédant à une _personnalisation_ doit rendre public une liste de fichiers ayant patché les fichiers par défaut et le script de _patch_ associé afin que n'importe soit en mesure de refaire le _build_ correspondant depuis les sources _open source_ de départ et s'assurer ainsi qu'ils n'ont pas été altérés par des patchs compromettant la confidentialité.
 
 ## Configuration de _runtime_
 L'application une fois _buildée_ (distribuable `[distrib]/`) est un folder comportant peu de fichiers:
-- elle peut être utilisée par tous les hébergeurs ayant cette même customisation de _build_.
-- un seul ficher `[distrib]/etc/urls.json` est spécifique de chaque hébergeur.
+- elle peut être utilisée par plusieurs hébergeurs, tous ceux ayant opté pour cette même personnalisation.
+- chaque hébergeur doit écrire son propre ficher `[distrib]/etc/urls.json` avant distribution par le serveur Web statique mettant à disposition l'application.
 
     {
     "opurl" : "http://localhost:8443",
@@ -57,25 +59,25 @@ L'application une fois _buildée_ (distribuable `[distrib]/`) est un folder comp
 _**Remarques:**_
 - ce fichier _peut_ être téléchargé / affiché par n'importe qui: il ne comporte aucune information confidentielle.
 - ce fichier ne comporte _que_ les informations propres à chaque hébergeur, qui chacun a modifié la distribution sortie de _build_ pour y mettre ses propres URLs.
-- `opurl`: URL du service OP de l'hébergeur.
-- `pubsuburl`: URL du service PUBSUB de l'hébergeur (_peut_ être égal à celui de OP).
-- `docsurls`: URLs dans les différentes langues supportées du site de documentation de l'application. Chaque hébergeur _peut_ proposer son propre site de documentation OU choisir celui standard.
-- `vapid_public_key`: chaque hébergeur _peut_ avoir généré son propre couple de clés VAPID (pour le service web-push), mais peut aussi opter par facilité pour le couple de clés générées pour le test de l'application.
+- `opurl`: URL du service OP de l'hébergement.
+- `pubsuburl`: URL du service PUBSUB de l'hébergement (_peut_ être égal à celui de OP).
+- `docsurls`: URLs dans les différentes langues supportées du site de documentation de l'application. Chaque hébergement _peut_ proposer son propre site de documentation OU choisir celui standard.
+- `vapid_public_key`: chaque hébergement _peut_ avoir généré son propre couple de clés VAPID (pour le service web-push), mais peut aussi opter par facilité pour le couple de clés générées pour le test de l'application.
 
-> Les fichiers de l'application _buildée_ sont, à la limite lisible _en clair_ (du moins à peu près), par n'importe qui. C'est un moyen pour déterminer si elle a subi des transformations depuis le source public _open source_.
+> Les fichiers de l'application _buildée_ sont lisible _en clair_ (à peu près !) par n'importe qui. La comparaison avec les fichiers _certifiés_ permet de déterminer si elle a subi des transformations depuis le source public _open source_.
 
 ## Chargement de la configuration: `config-store.js`
 Il est assuré par le script `src/boot/appconfig.mjs` qui est lancé au boot de l'application, avant affichage de _la_ vue racine `App.vue`.
 
-Par commodité, la configuration _compilée_ est stockée dans le _store_ `src/stores/config-store.js`: c'est peu rationnel, la configuration par principe ne devrait pas changer après chargement initial et n'aurait pas besoin d'être disponible dans un _store_ réactif. Toutefois, par commodité et parce que ce sont les seules données permanentes d'une session du browser, 5 propriétés sont gérées par le _service-worker_ et évoluent donc (rarement) en cours de session: en particulier la propriété `nouvelleVersion` (effectivement réactive) est affichée dans `App.vue`.
+Par commodité, la configuration _compilée_ est stockée dans le _store_ `src/stores/config-store.js`: c'est peu rationnel, la configuration par principe ne devrait pas changer après chargement initial et n'aurait pas besoin d'être disponible dans un _store_ réactif. Toutefois, parce que ce sont les seules données permanentes d'une session du browser, ce _store_ inclut 5 propriétés gérées par le _service-worker_. Celles-ci évoluent donc (rarement) en cours de session: en particulier la propriété `nouvelleVersion` (effectivement réactive) est affichée dans `App.vue`.
 
 Ce _store_ est le seul qui est constant depuis le chargement de l'application et **ne subit pas de _reset_** à la connexion à un nouveau compte.
 
     nouvelleVersion: false, // passe à true quand une nouvelle version est disponible
     registration: null, // objet de registration du SW
-    subJSON: '???', // subscription obtenu de SW sérialisé
-    pageSessionId: '', // rnd, identifiant universel du chargement de la page (session browser)
-    nc: 0, // numéro d'ordre de connexion dans la session
+    subJSON: '???', // objet subscription obtenu de SW sérialisé
+    pageSessionId: '', // identifiant universel aléatoire du chargement de la page (session browser)
+    nc: 0, // numéro d'ordre de connexion dans la session du browser
 
 Ces données sont fondamentales pour la gestion des notifications web-push:
 - `subJSON` est le token web-push obtenu par le _service-worker_ depuis le browser.
@@ -85,14 +87,14 @@ Ces données sont fondamentales pour la gestion des notifications web-push:
 > Le couple `pageSessionId, nc` identifie universellement une session de connexion à un compte dans un browser dont l'exécution est universellement identifiée par `subJSON`.
 
 # `service-worker` et `web-push`
-`quasar` gère le _service-worker_ et met à disposition les scripts de customisation suivants:
+`quasar` gère le _service-worker_ et met à disposition les scripts de personnalisation suivants:
 - `src/pwa/register-service-worker.js` : ce script est invoqué à l'enregistrement du service-worker, donc _dans_ l'application.
-- `src/pwa/custom-service-worker.js` : ce script est une extension du service-worker et s'exécute donc dans le SW lui-même.
+- `src/pwa/custom-service-worker.js` : ce script est une extension du _service-worker_ et s'exécute donc dans le SW lui-même.
 
 ### `src/pwa/register-service-worker.js`
 Le script propose des débranchements lors des évènements:
 - `ready` : à cette occasion l'objet `registration` est transmis pour stockage dans `config-store`.
-- `updatefound updated` : cet événement active une action de `config-store`. La propriété (réactive) `nouvelleVersion` passe à `true` sur réception de `updated` (`updatefound` est ignoré), ce qui provoque l'affichage dans `App.vue` du bouton `Nouvelle version disponible`. 
+- `updatefound updated` : ces événements activent une action de `config-store`. La propriété (réactive) `nouvelleVersion` passe à `true` sur réception de `updated` (`updatefound` est ignoré), ce qui provoque l'affichage dans `App.vue` du bouton `Nouvelle version disponible`. 
 
 > Mis à part l'affichage d'une alerte quand une nouvelle version est disponible, l'application ne gère pas son remplacement effectif effectué automatiquement par `quasar`.
 
@@ -108,7 +110,7 @@ Il faut d'abord indiquer au browser que l'application est à l'écoute de celles
       })
     this.subJSON = JSON.stringify(subscription)
 
-Mais pour cela il faut fournir la clé publique VAPID correspondante, celle dont la clé privée est employée par le service PUBSUB pour émettre les notifications web-push.
+Pour obtenir subJSON il faut fournir la clé publique VAPID correspondant à la clé privée employée par le service PUBSUB pour émettre les notifications web-push.
 
 La clé `subJSON` spécifique de cette session du browser est conservée dans `config-store` et sera communiquée aux service OP et PUBSUB pour leur permettre d'émettre des notifications web-push à cette session du browser (identifiée universellement sur la planète).
 
@@ -172,8 +174,8 @@ Une session sort de l'état _fermée_ par une opération de `connexion` et retou
 # Données d'une session connectée
 Toutes les données sont effacées au début d'une session connectée, il ne reste rien des sessions antérieures (à l'exception de `config-store`).
 
-Toutes ces données sont obtenues depuis deux sources:
-- **à la connexion depuis les documents lus de la base IDB** pour des sessions  ou avion.
+Ces données ne sont issues que depuis deux sources:
+- **à la connexion depuis les documents lus de la base IDB** pour des sessions synchronisée ou avion.
 - **depuis les documents rapportés par l'opération `Sync`**.
 
 Dans les deux cas, les documents sont,
@@ -182,9 +184,9 @@ Dans les deux cas, les documents sont,
 - puis en une seule fois, sans interruption, mémorisés dans les _stores_,
 - in fine en une seule transaction stockés dans IDB (si nécessaire).
 
-L'ensemble des _stores_ présente en conséquence toujours un état _cohérent_ (atomique) représentant exactement un état _passé_ (de peu) mais consistent des documents du périmètre du compte.
+L'ensemble des _stores_ présente en conséquence toujours un état _cohérent_ (atomique) représentant exactement un état _passé_ (de peu) mais consistent des documents du périmètre du compte. Les vues à l'écran reflétant l'état _réactif_ des _stores_, elles ne font apparaître que des vues cohérentes de l'état des documents en base centrale (avec évidemment un léger différé).
 
-> Les données des _stores_ ne sont JAMAIS mises à jour directement depuis les vues ou les opérations et reflètent toujours le résultat de la dernière opération `Sync` (`src/synchro.mjs`) effectuée.
+> Les données des _stores_ ne sont JAMAIS mises à jour directement depuis les vues ou les opérations, elles reflètent **toujours** le résultat de la dernière opération `Sync` (`src/synchro.mjs`) effectuée.
 
 ## Données NON réactives
 Ces données sont immuables après initialisation, plus exactement d'éventuelles réinitialisations donneraient les mêmes valeurs. Elles sont stockées dans de simple `Maps`.
@@ -199,19 +201,29 @@ La clé d'un _chat_ est décryptée, soit par la clé K du compte, soit par la c
 
 ## Données _réactives_, les _stores_ : `src/stores/...`
 `./stores.mjs`
-- répertoire des stores existant avec un getter par store.
+- répertoire des _stores_ existant avec un getter par store.
 
 ### Données issues des _documents_ du périmètre du compte
+**Rappel: le périmètre d'un compte comporte les documents suivants:**
+- les singletons `espace synthese` identifiés par le `ns` de l'espace de l'organisation.
+- les singletons `compte compti compta invits` portant l'identification du compte.
+- un document `partition` pour les comptes O.
+- tous les documents `avatar note chat sponsoring ticket` dont l'identifiant _majeur_ est celui d'un des avatars du compte.
+- tous les documents `groupe note membre` dont l'identifiant _majeur_ est celui d'un des groupes où le compte est _actif_.
+
+Tous ces documents SAUF `synthese compta partition` sont _synchronisés_: toute modification les concernant est signalée par web-push aux browsers dont une session est connectée et faisant partie de leur périmètre.
+- `synthese compta partition` sont a contrario lus sur demande dans les vues qui en affichent le contenu.
+
 `./session-store.js`
 - tous les documents singletons du compte: `compte compta compti espace partition`
 - les id _courantes_ `avatatarId` pour l'avatar courant, etc.
 - les getters sur les états du compte.
 
 `./avatar-store.js`
-- une entrée par avatar donnant aussi ses `chats sponsorings tickets notes` (juste l'ids et le volume de fichier).
+- une entrée par avatar donnant aussi ses `chats sponsorings tickets notes` (pour les notes seulement l'ids et le volume de fichier).
 
 `./groupe-store.js`
-- une entrée par groupe donnant son `chatgr`, ses `membres notes` (juste l'ids et le volume de fichier)
+- une entrée par groupe donnant son `chatgr`, ses `membres notes` (pour les notes seulement l'ids et le volume de fichier).
 - les `invits` du compte.
 
 `./note-store.js`
@@ -228,8 +240,7 @@ La clé d'un _chat_ est décryptée, soit par la clé K du compte, soit par la c
 - une entrée par note ou fichier du presse-papier. 
 
 ### Données UI
-`./ui-store.js`
-- des données reflétant l'état UI de la session.
+`./ui-store.js` : données reflétant l'état UI de la session.
 - page courante / précédente.
 - stack des _dialogues_ actuellement ouverts.
 - phrase secrète en cours de saisie.
@@ -247,9 +258,9 @@ La clé d'un _chat_ est décryptée, soit par la clé K du compte, soit par la c
 
 `/src` : les _sources_ de l'application
 
-`/src-pwa` : les fichiers pour le service-worker
-  - custom-service-worker.js
-  - register-service-worker.js
+`/src-pwa` : les fichiers pour le _service-worker_
+  - `custom-service-worker.js`
+  - `register-service-worker.js`
 
 Fichiers de configuration technique _customisés_
 - `.gitignore`
@@ -265,13 +276,13 @@ Fichiers de configuration technique _customisés_
 - classes utilitaires devant avoir exactement le même comportement.
 
 `base64.mjs`
-- de binaire à base64 et réciproquement. Identique à celui utilisé en service OP / PUBSUB.
+- de binaire à base64 et réciproquement. Identique à celui utilisé en service OP / PUBSUB afin d'éviter d'avoir deux implémentations différentes en environnement Web et node.
 
 `config.mjs`
-- élément de customisation de l'application, constantes de configuration.
+- élément de personnalisation de l'application et _constantes_ de configuration.
 
 `db.mjs`
-- gère la base IDB, la lecture des tables et les écritures synchronisées.
+- gestion de la base IDB, lecture des tables et écritures synchronisées.
 
 `modele.mjs`
 - registres _non réactifs_ des clés.
@@ -283,15 +294,15 @@ Fichiers de configuration technique _customisés_
 `operation.mjs`
 - classe abstraite ancêtre des _opérations_.
 
-`opeartions4.mjs`
+`operations4.mjs`
 - une classe par opération.
 
 `synchro.mjs`
 - classe `Queue` : reçoit les notifications web-push, les met en queue et déclenche les opérations `Sync` correspondantes de remise à niveau des documents du périmètre.
 - classe `SB` : buffer accumulant les documents à ranger en _store_ en une fois et à ranger en IDB en une transaction.
 - fonction de `connexion` / `deconnexion`
-- l'opération `Sync` : récupération du delta des documents mis à jour sur le serveur depuis le dernier Sync.
-- quelques opérations un peu _spéciales_: `AcceptationSponsoring GetEspace GetSynthese GetPartition EchoTexte getPub ErreurFonc PingDB RefusSponsoring ProlongationSponsoring ExistePhrase GetSponsoring GetCompta GetComptaQV GetNotifC GetEspaces`
+- opération `Sync (SyncStd / SyncFull)` : récupération du delta des documents mis à jour sur le serveur depuis le dernier `Sync`.
+- opération `GetEspace` : avec Sync, seule opération utilisée pour gérer connexion / deconnexion / synchronisation.
 
 `util.mjs`
 - diverses fonctions utilitaires.
@@ -304,7 +315,7 @@ Fichiers de configuration technique _customisés_
 - les fontes utilisées dans l'application
 
 `./help`
-- les ressources de l'aide en ligne.
+- les ressources de l'aide en ligne (voir plus avant)
 
 `./*.png *.jpg *.svg *.bin`
 - quelques images et deux sons `beep.bin` `cliccamera.bin`
@@ -312,10 +323,10 @@ Fichiers de configuration technique _customisés_
 ## Le folder `src/boot`
 Scripts exécutés au boot:
 - `appconfig.js` : chargement de la configuration.
-- `axios.js i18n.js` : pour quasar.
+- `axios.js i18n.js` : pour _quasar_.
 
 ## Le folder `src/css`
-- fichiers de style `css` et `sass`, définissant des valeurs par défaut et des customisations à importer sur demande dans les sections `<style>` des vues.
+- fichiers de style `css` et `sass`, définissant des valeurs par défaut et des personnalisations à importer sur demande dans les sections `<style>` des vues.
 
 ## Le folder `src/i18n`
 Un sous folder par langue traduite dont le fichier `index.js` exporte tous les termes traduits.
@@ -326,7 +337,7 @@ Inutilisé, à laisser tel quel.
 # Les "vues"
 
 ## Structure des `*.vue`
-La structure actuellement préconisée offre des possibilités nouvelles (comme la possibilité d'avoir des `await` dans le setup) et quelques simplifications.
+La structure actuellement préconisée offre des possibilités nouvelles par rapport à _l'historique_ (comme la possibilité d'avoir des `await` dans le `setup`) et quelques simplifications / clarifications.
 
 Trois sections: `<template> <script setup> <style>`
 
@@ -358,9 +369,10 @@ Trois sections: `<template> <script setup> <style>`
 Voir le détail ici : https://vuejs.org/api/sfc-script-setup.html
 
 ### Variables déclarées `ref` versus `computed`
-
 Dans une vue on peut afficher / traiter:
-- **des variables de _store_** déclarées et gérées dans un store en tant que a) getters (éventuellement avec des paramètres ce qui est à peu près une _action_), ou b) actions. Ceci correspond à un état _global_ de la session, indépendant de toute vue.
+- **des variables de _store_** déclarées et gérées dans un _store_ en tant que,
+  - a) getters (éventuellement avec des paramètres ce qui est à peu près une _action_), 
+  - b) actions. Ceci correspond à un état _global_ de la session, indépendant de toute vue.
 - **des variables _locales_ à la vue** déclarées en `ref()` ou en `computed()` dans le _script setup_.
 
 ### Variables de _store_
@@ -390,24 +402,24 @@ Les variables déclarées comme `const v = computed(() => {...})` sont _calculé
 ## `src/App.vue`
 C'est LE layout unique décrivant LA page de l'application. Elle est constituée des éléments suivants:
 - **headaer**
-  - _boutons à gauche_: aide, notifications, menu, accueil, page _back_, fichiers visibles en avion, presse-papier
+  - _boutons à gauche_: aide, notifications, menu, accueil, page _back_, statut de la session,fichiers visibles en avion, presse-papier
   - _titre de la page courante_. Le cas échéant une seconde barre affiche les onglets pour les pages ayant des onglets.
   - _boutons à droite_: ouverture du drawer de recherche (si la page a une recherche), aide.
 - **footer**:
-  - _boutons à gauche_: langue, mode clair / foncé, outils, statut de la session,
+  - _boutons à gauche_: langue, mode clair / foncé, outils,
   - _information du compte connecté_ son type `D/A/O`, son nom, son organisation,
   - _bouton de déconnexion_.
 - **drawer de filtre à droite** affichant les filtres de recherche pour les pages en ayant. 
-  - il s'affiche par appui sur le bouton de recherche (tout en haut à droite).
+  - il s'affiche par appui sur le bouton de recherche (en haut à droite).
   - quand la page est assez large, le drawer de filtre reste affiché à côté de la page principale, sinon sur la page principale qui en est partiellement recouverte.
-  - pour chaque page ayant un filtre, la liste des composants constituant le filtre est affichée
+  - pour chaque page ayant un filtre, la liste des composants constituant le filtre est affichée.
 - **container de la page principale**: 
-  - il contient à un instant donné une des pages listées dans la section "Pages". 
+  - il contient à un instant donné une des _pages_ listées dans la section "Pages". 
   - celles-ci sont formées par un tag `<q-page>` qui s'intègre dans le tag `<q-page-container>` de App.
 
 **App inclut quelques dialogues singletons** afin d'éviter leurs inclusions trop multiples:
 - ces dialogues n'ont pas de propriétés, c'est le contexte courant qui fixe ce qu'ils doivent afficher.
-- chaque dialogue dans App est gardée par un `v-if` de la variable modèle qui l'ouvre.
+- chaque dialogue dans App est gardé par un `v-if` de la variable modèle qui l'ouvre.
 - `DialogueErreur DialogueHelp PressePapier PanelPeople OutilsTests PhraseSecrete`
 
 **App a quelques dialogues internes simples:**
@@ -422,17 +434,17 @@ C'est LE layout unique décrivant LA page de l'application. Elle est constituée
 - _ui.d.a.sync_ : Gestion de la synchronisation automatique
 
 La logique embarquée se limite à:
-- détecter le changement de largeur de la page pour faire gérer correctement l'ouverture du drawer de filtre dans stores.ui,
+- détecter le changement de largeur de la page pour faire gérer correctement l'ouverture du drawer de filtre dans `stores.ui`,
 - gérer le titre des pages,
-- se débrancher vers les pages demandée.
+- se débrancher vers les pages demandées.
 
 ## Les _pages_ : `src/pages/Page...vue`
-Une page s'installe dans App.vue dans le page-container et occupe tout l'espace (sauf header et footer):
-- il y a TOUJOURS une page courante affichée.
+Une page s'installe dans `App.vue` dans le `<page-container>` et occupe tout l'espace (sauf _header_ et _footer_):
+- il y a TOUJOURS une page courante affichée (`ui.page`).
 - on change de page par `ui.setPage('NouvellePage')`
   - la nouvelle page est affichée.
-  - si la page actuelle est déclarée dans `ui` comme `pageB` (`espace compte groupes groupesac`), quand on appuie sur le bouton _back_, ça renvoie à cette page. Ceci permet par exemple de revenir à la liste des groupes quand on est sur la page d'un groupe: `
-- au changement de page, tous lees dialogues ouverts par la page sont automatiquement fermés (voir plus avant).
+  - si la page actuelle est déclarée dans `ui` comme `pageB` (`espace compte groupes groupesac`), quand on appuie sur le bouton _back_, ça renvoie à cette page. Ceci permet par exemple de revenir à la liste des groupes quand on est sur la page d'un groupe en venant de la liste. `
+- au changement de page, tous les dialogues ouverts par la page sont automatiquement fermés (voir plus avant).
 
 Une _page_ peut importer des _components_ et importer / ouvrir des _dialogues_:
 - ses propres dialogues.
@@ -445,7 +457,7 @@ Voir en annexe la liste des **pages**.
 Un _panel_ est techniquement un `<q-dialog>`:
 - il occupe presque toute la hauteur et a une largeur importante.
 - il se découvre depuis la gauche et se replie vers la gauche quand il est fermé par son bouton de fermeture en haut à gauche.
-- en génral il correspond à un dialogue de saisie complexe mais peut aussi n'être qu'un affichage volumineux (par exemple un _chat_).
+- en général il correspond à un dialogue de saisie complexe mais peut aussi n'être qu'un affichage volumineux (par exemple un _chat_).
 
 Un _panel_ peut importer des _components_ et importer / ouvrir des _dialogues_:
 - ses propres dialogues.
@@ -455,12 +467,11 @@ Voir en annexe la liste des **panels**.
 
 ## Les _dialogues_ : `src/dialogues/...vue`
 Un _dialogue_ est techniquement un `<q-dialog>`:
-- il occupe une place centrale dans la page.
-- il se découvre progressivement et se cache progressivement quand il est fermé par son bouton de fermeture en haut à gauche.
+- il occupe une place centrale, mais limitée, dans la page.
+- il se découvre progressivement et se cache progressivement (_fade in / out_) quand il est fermé par son bouton de fermeture en haut à gauche.
 - en général il correspond à un dialogue de saisie.
 
-Un _dialogue_ peut importer des _components_ et importer / ouvrir des _dialogues_:
-- ses propres dialogues.
+Un _dialogue_ peut importer des _components_ et importer / ouvrir ses propres dialogues.
 
 Voir en annexe la liste des **dialogues**.
 
@@ -469,10 +480,10 @@ Ils sont importés et inclus dans les autres éléments.
 
 Ils peuvent importer d'autres _components_.
 
-Voir en annexe la liste des **dialogues** particuliers.
+Voir en annexe la liste des **components**.
 
 ## Maîtrise des cycles d'importation
-Un tel cycle est une faute de conception que Webpack détecte (il ne sait pas comment faire) mais n'indique malheureusement pas clairement.
+Un cycle (le composant A inclut le composant B qui inclut composant A) est une faute de conception que Webpack détecte (il ne sait pas comment faire) mais n'indique malheureusement pas clairement.
 
 Pour chaque composant un numéro de couche est géré:
 - les composants n'important rien ont pour numéro de couche 1.
@@ -482,7 +493,7 @@ Pour chaque composant un numéro de couche est géré:
 ## Gestion des dialogues
 Les objectifs de cette gestion sont:
 - de gérer une pile des dialogues ouverts par une page afin de pouvoir les fermer sans avoir à se rappeler de leur empilement éventuel,
-- de pouvoir fermer simplement le dernier dialogue ouvert sans avoir à le citer..
+- de pouvoir fermer simplement le dernier dialogue ouvert sans avoir à le citer.
 
 Du fait qu'général un composant _peut_ être instancié plus d'une fois, les modèles gérant ses dialogues doivent être différenciés pour chaque instance.
 
@@ -538,9 +549,161 @@ Dans ces components le fond N'EST PAS fixé, il est transparent, et suivra celui
 
 > Remarque: de facto seul `SdNb` est utilisé dans les autres éléments. Et encore car l'affichage d'un MD s'effectue quasiment tout le temps par le component `ShowHtml` qui englobe `SdNb`. Toutefois il existe des cas ponctuels d'utilisation de SdBlanc et SdRouge.
 
-# Opérations et synchronisation
+# Opérations
+Toutes les opérations sont rassemblées dans `src/app/operations4.mjs`, sauf `Sync (SyncStd / SyncFull)` et `GetEspace` qui sont dans `src/app/synchro.mjs`:
+- les opérations standard héritent de Operation (src/app/operation.mjs), 
+- les opérations `Sync (SyncStd / SyncFull)` héritent de `OperationS` (`src/app/synchro.mjs`) qui hérite de `Operation`.
+- une opération a un constructeur acceptant son _code_ en paramètre. Le _code_ est une entrée de traduction dans i18n.
+- une opération a une méthode async run ayant des paramètres spécifiques de l'opération.
+  - elle peut retourner un résultat et se termine par appel de la méthode générique finOK().
+  - elle trappe les exceptions et les transmet à la méthode générique finKO().
 
-(TODO)
+  export class MonOp extends Operation {
+    constructor() { super('MonOp') }
+
+    async run (...) {
+      ...
+      this.finOK() // OU return this.finOK(ret)
+    } catch (e) {
+      await this.finKO(e)
+    }
+  }
+
+Une opération _standard_ peut être interrompue par l'utilisateur et sortir en exception.
+
+### Sortie en Exception
+#### Les exceptions _tueuses_
+- ce sont les exceptions de code compris entre 8990 et 9000.
+- pour les opérations Sync, **toutes** les exceptions sont _tueuses_.
+
+Une exception _tueuse_ affiche la page `clos` qui ne laisse aucune autre solution que de sortir de l'application.
+
+Les exceptions _normales_:
+- provoquent l'ouverture du dialogue `DialogueErreur.vue`
+- la sortie de ce dialogue a les options suivantes, selon le type d'exception et le choix de l'utilisateur:
+  - **se déconnecter**,
+  - **se déconnecter et tenter de se reconnecter** au même compte avec la même phrase secrète.,
+  - **ne rien faire**, c'est à dire laisser la session se poursuivre _comme si_ l'opération n'avait pas été lancée. Dans ce cas on peut récupérer cette exception dans l'application (APRES son passage par `DialogueErreur.vue`).
+
+  try {
+    await new ErreurFonc().run('Mon erreur', 1)
+  } catch (e) {
+    console.log(e.toString())
+  }
+
+# Synchronisation
+
+## Fin d'opération de mise à jour de OP `notif`
+Lorsqu'une opération de mise à jour s'exécute dans OP, un certain nombre de documents sont mis à jour, leur version a changé: un objet `trlog` est créé.
+- cet objet a une forme _longue_ qui est transmise à PUBSUB sur la méthode / requête `notif`.
+  - le traitement par PUBSUB a une première phase _synchrone_ qui,
+    - met à jour l'état mémoire des sessions,
+    - prépare la liste des messages de notifications à envoyer: chaque message a pour structure un `trlog` de forme raccourcie.
+  - la second phase est asynchrone et consiste à émettre tous les messages de notification préparés en phase 1.
+  - la méthode / requête `notif` est courte vu du côté de l'appelant OP et ne diffère que de peu le retour de l'opération de mise à jour.
+- l'objet `trlog` a une forme raccourcie quand il parvient dans les sessions:
+  - la session appelante de l'opération: les mises à jour ayant concerné au moins un document du périmètre du compte (sauf exception ?).
+  - les autres sessions enregistrées par PUBSUB _impactées_ c'est à dire ayant au moins un des documents de leur périmètre mis à jour par l'opération (possiblement aucune session). Chaque session recevra en message de notification un `trlog` raccourci.
+
+En session on peut ainsi recevoir des `trlog` depuis deux sources:
+- en résultat d'une opération de mise à jour soumise par la session elle-même,
+- par suite d'une opération de mise à jour déclenchée par une autre session et parvenue en _notification_.
+
+Le traitement est géré par `syncQueue.synchro(trlog)` (ou `syncQueue` est le singleton de la classe `Queue` `src/app/synchro.mjs`):
+- cette méthode empile les `trlog` reçus (les met en _queue_) en ignorant ceux dont la version est plus ancienne que la dernière prise en compte.
+- s'il y a un traitement de Sync en cours, la méthode se limite à cette mise en attente.
+- sinon la méthode invoque en asynchrone un traitement de `sync` qui va demander les données correspondantes aux avis de changements reçus. 
+
+### Objet `trlog`
+- `sessionId`: `rnd.nc`. Permet de s'assurer que ce n'est pas une notification obsolète d'une connexion antérieure.
+- `partId`: ID de la partition si c'est un compte "0", sinon ''.
+- `vpa`: version de cette partition ou 0 si inchangée ou absente.
+- `vce`: version du compte. (utile ?)
+- `vci`: version du document `compti` s'il a changé, sinon 0.
+- `lavgr`: liste `[ [idi, vi], ...]` des Couples des IDs des avatars et groupes ayant été impactés avec leur version.
+- `lper`: **format long seulement**. `liste [ {...}, ...]` des `perimetre` des comptes ayant été impactés par l'opération (sauf celui de l'opération initiatrice).
+
+## L'objet `DataSync`
+Cet objet sert:
+- entre session et _service OP_ a obtenir les documents resynchronisant la session avec l'état de la base.
+- dans une base locale IDB: à indiquer ce qui y est stocké et dans quelle version.
+
+**Les états successifs _de la base_ sont toujours cohérents**: _tous_ les documents de _chaque_ périmètre d'un compte sont cohérents entre eux.
+
+L'état courant d'une session en mémoire et le cas échéant de sa base locale IDB, est consigné dans l'objet `DataSync` ci-dessous:
+- chaque sous-arbre d'un avatar ou d'un groupe est _cohérent_ (tous les documents sont synchrones sur la même version `vs`),
+- en revanche il peut y avoir (plus ou moins temporairement) des sous-arbres à jour par rapport à la base et d'autres en retard.
+
+**L'objet `DataSync`:** (`src/app/api.mjs`)
+- `compte`: `{ vs, vb }`
+  - `vs` : numéro de version de l'image détenue en session
+  - `vb` : numéro de version de l'image en base centrale
+- `avatars`: Map des avatars du périmètre. 
+  - Clé: id de l'avatar
+  - Valeur: `{ id, chg, vs, vb } `
+    - `chg`: true si l'avatar a été détecté changé en base par le serveur
+- `groupes`: : Map des groupes du périmètre. 
+  - Clé: id groupe
+  - Valeur: `{ id, chg, vs, vb, ms, ns, m, n }`
+    - `chg`: true si le groupe a été détecté changé en base par le serveur
+    - `vs` : numéro de version du sous-arbre détenue en session
+    - `vb` : numéro de version du sous-arbre en base centrale
+    - `ms` : true si la session a la liste des membres
+    - `ns` : true si la session a la liste des notes
+    - `m` : true si en base centrale le groupe indique que le compte a accès aux membres
+    - `n` : true si en base centrale le groupe indique que le compte a accès aux membres
+
+**Remarques:**
+- un `DataSync` reflète l'état d'une session, les `vs` (et `ms ns` des groupes) indiquent quelles versions sont connues d'une session.
+- Un `DataSync` reflète aussi l'état en base centrale, du moins quand il a été écrit, les `vb` (et `m n` pour les groupes) indiquent quelles versions sont détenues dans l'état courant de la base centrale.
+- Quand toutes les `vb` et `vs` correspondantes sont égales (et les couples `ms ns / m n` pour les groupes), l'état en session reflète celui en base centrale: il n'y a plus rien à synchroniser ... jusqu'à ce l'état en base centrale change et que l'existence d'une mise à jour soit notifiée par _web push_ à la session.
+
+Chaque appel de l'opération `Sync` :
+- transmet le `DataSync` donnant l'image connue en session,
+- reçoit en retour,
+  - le `DataSync` rafraîchi par le dernier état courant en base centrale.
+  - le dernier état, s'il a changé, des documents `comptes comptis invits` du compte,
+  - zéro, un ou plusieurs lots de mises de sous-arbres _avatar_ et _groupe_ entiers.
+
+Pas forcément les mises à jour de **tous** les sous-arbres:
+- le volume pourrait être trop important,
+- le nombre de sous-arbres mis à jour dépend du volume de la mise à jour.
+- en conséquence si le `DataSync` indique que tous n'ont pas été transmis, une opération `Sync` est relancée avec le dernier `DataSync` reçu.
+
+**Cas particulier de la connexion,** premier appel de `Sync` de la session:
+- c'est le serveur qui construit le `DataSync` depuis l'état du compte et les versions des sous-arbres **qu'il va tous chercher**.
+- au retour, la session va récupérer (en mode _synchronisé_) le `maxim` de documents encore valides et présents dans IDB: 
+  - elle lit depuis IDB le `DataSync` qui était valide lors de la fin de la session précédente et qui donne les versions `vs` (et `ms ns` pour les groupes),
+  - elle lit depuis IDB l'état des sous-arbres connus afin d'éviter un rechargement total: les `vs` (et `ms ns`) sont mis à jour dans le DataSync.
+  - le prochain appel de `Sync` ne provoquera des chargements _que_ de ce qui est nouveau et pas des documents ayant une version déjà à jour en session UI.
+
+**Appels suivants de Sync**
+- le `DataSync` reçu sur le serveur permet de savoir ce que la session connaît.
+- si des avis de mises à jour sont parvenus, la liste de leur `id` est passée à `Sync`: au lieu de relire toutes les versions de tous les sous-arbres `Sync` se contente de lire uniquement les versions des sous-arbres changés donnés par la liste des `id` reçue de la session UI.
+
+A chaque appel de `Sync`, les versions de` comptes comptis invits` sont vérifiées: en effet avant de transmettre les mises à jour des sous-arbres `Sync` s'enquiert auprès du document comptes:
+- des sous-arbres n'ayant plus d'intérêt (avatars et groupes hors périmètre),
+- des nouveaux sous-arbres (nouveaux avatars, nouveau groupes apparaissant dans le périmètre),
+- pour les groupes si les accès _membres_ et _notes_ ont changé pour le compte.
+
+Voir dans src/app/synchro.mjs les opérations de `Connexion...` et `Sync...`.
+
+## Synchronisation _automatique_ versus _sur demande_
+Par défaut la synchronisation est automatique, les avis de changements des documents par les opérations des **autres** sessions sont reçus par web-push et traités.
+
+MAIS le service PUBSUB peut s'interrompre sans que le service OP ne soit interrompu:
+- les opérations peuvent toujours être effectuées MAIS la session ne reçoit plus les avis des autres sessions: son affichage est retardé.
+
+En _synchronisation sur demande_, sauf demande explicite de l'utilisateur quand le service PUBSUB est down, l'utilisateur déclenche une synchronisation forcée par appui sur un bouton.
+- mais le _heartbeat_ qui indique au service PUBSUB que la session est toujours vivante ne fonctionne plus.
+- l'utilisateur peut relancer ce _heartbeat_, du moins tenter de le faire: si le service PUBSUB est _up_ la synchronisation redevient _automatique_.
+
+## Gestion du _heartbeat_
+Elle est assurée dans `session-store` par les actions `startHB` et `stopHB`:
+
+`startHB` émet périodiquement une requête POST au service PUBSUB en incrémentant le numéro d'envoi afin de pouvoir détecter le cas échéant une rupture dans la séquence des web-push d'avis de modification des documents du périmètre de la session.
+
+La déconnexion poste aussi un avis au service PUBSUB pour l'informer de la fin de la session et lui permettre de supprimer les données de la session qu'il conserve.
 
 # Base locale IDB
 
