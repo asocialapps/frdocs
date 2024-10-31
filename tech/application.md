@@ -705,59 +705,213 @@ Elle est assurée dans `session-store` par les actions `startHB` et `stopHB`:
 
 La déconnexion poste aussi un avis au service PUBSUB pour l'informer de la fin de la session et lui permettre de supprimer les données de la session qu'il conserve.
 
+# Mise en place de l'aide en ligne
+Les ressources correspondantes sont toutes dans `/src/assets/help` :
+- `_plan.json` : donne la table des matières des pages de l'aide.
+- des images en PNG, JPG, SVG comme `dessin.svg`.
+- les pages de texte en md : `codepage_lg-LG.md`
+  - `codepage` est le _code_ la page.
+  - `lg-LG` est la locale (`fr-FR` `en-EN` ...).
+  - le _titre_ de la page est une traduction dans `/src/i18n/fr-FR/index.js`
+    - son entrée est: `A_codepage: 'Le beau titre',`
+
+### Plan de l'aide
+Le plan de l'aide en ligne s'affiche dans les pages d'aide, soit en dessous, soit à droite selon que l'écran est en portrait ou paysage.
+
+Le plan apparaît comme un arbre à deux niveaux:
+- des rubriques principales,
+- sous chaque rubrique principale des rubriques secondaires.
+
+Le _code_ d'une page d'aide n'est pas lié à sa place dans l'arbre, c'est un code absolu et le plan peut être changé sans modifier les identifiants des pages.
+
+    [
+      { "id": "DOCpg", "lp": [] },
+      { "id": "page_login", "lp": ["page_login_m", "page_login_fa", "page_login_pp", "nouvelle_version" ]},
+      { "id": "sponsoring", "lp": ["sponsoring_d", "sponsoring_a"] },
+      ...
+    ]
+
+Il donne la liste ordonné des racines dans l'arbre de l'aide. Chaque racine est décrite par:
+- `id`: le _code_ de la page _racine,
+- `lp`: la liste ordonnée des codes des pages _fille_.
+
+### Conventions d'écriture des pages en markdown
+**La page est découpée en _sections_**, chacune est identifiée par une ligne:
+
+    # Titre de ma section
+
+Avec un unique espace entre `#` et le texte du titre.
+
+La partie **avant** la première ligne `# section...` est _l'introduction_.
+
+Chaque section est présentée avec:
+- une _expansion_ dépliable qui permet d'en voir juste le titre, puis le détail une fois dépliée,
+- un _menu_ éventuel listant les autres pages de l'aide référencée.
+
+#### Références vers d'autres pages de l'aide
+Sauf dans l'introduction des lignes comme celle-ci:
+
+    @@crypto
+
+indique une référence vers une autre page de l'aide:
+- `@@` en tête de la ligne,
+- puis le code de la page référencée (sans espaces ni au début, ni à la fin).
+
+#### Images
+Les _images_ apparaissent sous l'une de ces formes:
+
+    SVG dans <img>
+    
+    <img src="dessin.svg" width="64" height="64" style="background-color:white">
+    
+    PNG / JPG dans un <img>
+    
+    <img src="logo.png" width="96" height="96" style="background-color:white">
+
+Ce qui figure dans `src` est le nom du fichier de l'image dans `/src/assets/help`
+
+Le fichier est chargé en tant que ressource en base64 (`src/boot/appconfig.mjs getImgUrl`) et le tag `<img...` est réécrit. En cas d'absence c'est une image par défaut qui est prise.
+- na pas oublier le _background_ pour les SVG et PNG.
+
+#### Hyperliens
+Un hyperlien est à exprimer par un tag <a>:
+
+    <a href="http://localhost:4000/fr/pagex.html" target="_blank">Manuels</a>
+
+Ne pas oublier target="_blank" sinon la page va s'ouvrir sur celle de l'application.
+
+Toutefois si ce lien correspond à une page de manuel de la documentation de l'application, on utile la convention suivante:
+
+    <a href="$$/pagex.html" target="_blank">Manuels</a>
+
+Si la ligne commence exactement par `<a href="$$/` Le terme `$$` sera remplacé par l'URL de la documentation de l'application afin d'avoir une aide en ligne indépendante d'une localisation _en dur_.
+
+Le fichier `/public/etc/urls.json` a cette forme:
+
+    {
+      "opurl" : "http://localhost:8443",
+      "pubsuburl" : "http://localhost:8443",
+      "docsurls" : { "fr-FR": "http://localhost:4000/fr", "en-EN": "http://localhost:4000/en"}
+    }
+
+Ce fichier est défini au déploiement, après _build_.
+
 # Base locale IDB
 
-(TODO)
+Dans le browser il y a une base par compte s'étant connecté en mode synchronisé:
+- nom : `'$asocial$-' + '(id du compte) crypté par sa clé K et édité en base 64'`
+- ce nom est enregistré en _localStorage_ dans la variable de clé `'$asocial$-' + 'hash du début de la phrase secrète'`. Cette clé est remplacée en cas de changement de phrase secrète.
 
-Il y a une base par compte.
+### Objet _nom de base_ / _trigramme_
+- à la création d'une base IDB, l'utilisateur est invité à donner un _trigramme_ (par exemple 'tom').
+- en _localStorage_ la variable `$asocial$-trigrammes` donne un texte en base64, qui mis en binaire et désérialisé, donne un objet `trigs` ayant,
+  - une propriété par nom de base,
+  - dont la valeur est le trigramme associé.
 
-Elle contient les tables `compte prefs compta avatar groupe couple secret cv` :
-- la clé primaire de chacun est,
-  - pour les singletons `compte prefs compta` : `1`
-  - pour les objets maîtres `avatar groupe couple` le cryptage par la clé K du compte de leur id en base64.
-  - pour les objets secondaires le couple `id id2`:
-    - `id` : le cryptage par la clé K du compte de l'id en base64 de son maître.
-    - `id2` : le cryptage par la clé K du compte de son id relative (`ns` ou `im`) à son maître.
-- la propriété `data` est le cryptage par la clé K du compte de la sérialisation de l'objet.
+Cet objet permet au propriétaire du browser dans l'outil de gestion des bases de supprimer les bases qu'il juge obsolète. / encombrantes.
 
-Les tables ont donc deux 2 propriétés `id data` ou 3 propriétés `id, id2,  data`.
+### STORES d'une base IDB
+Une base IDB contient les stores suivants:
 
-**IDB est toujours cohérente** : les opérations spéciales de mise à jour accumulent dans leur traitement les mises à jour pour IDB dans leur objet `OpBuf` et un seul commitRows() intervient à la fin pour enregistrer toutes les mises à jour en attente dans `OpBuf`.
+    const STORES = {
+      singletons: 'n', // La clé est le nom du document
+      collections: '[id+n+ids]', // La clé est le triplet id, nom ,ids du document
+      ficav: 'id', // La clé est l'id du fichier (idf dans une note)
+      loctxt: 'id', // La clé est l'id de la note dans le presse-papier
+      locfic: 'id', // La clé est l'id du fichier dans le presse-papier
+      fdata: 'id' // La clé est l'id du fichier et sa data donne son contenu
+    }
 
-## `localStorage` et IDB
-**En mode *avion*** dans le `localStorage` les clés `monorg-hhh` donne chacune le numéro de compte `ccc` associé à la phrase de connexion dont le hash est `hhh` : `monorg-ccc` est le nom de la base IDB qui contient les données de la session de ce compte pour l'organisation `monorg` dans ce browser.
+#### `singletons`
+Le store `singletons` contient les documents singletons pour le compte: `['', 'boot', 'espaces', 'datasync', 'comptes', 'comptis', 'invits']`
+- un document est accédé par l'indice `n` de son nom dans la liste ci-dessus.
+les deux propriétés sont :
+  - `n` : indice du nom.
+  - `data` : le document sous forme sérialisée _row_ crypté par la clé K du compte, sauf pour `boot`.
 
-**En mode *synchronisé***, il se peut que la phrase secrète actuelle enregistrée dans le serveur (dont le hash est `hhh`) ait changé depuis la dernière session synchronisée exécutée pour ce compte :
-- si la clé `monorg-hhh` n'existe pas : elle est créée avec pour valeur `monorg-ccc` (le nom de la base pour le compte `ccc`).
-- si la base `monorg-ccc` n'existe pas elle est créée.
-- l'ancienne clé, désormais obsolète, pointe bien vers le même compte mais ne permet plus d'accéder à ce compte, dont la clé K a été ré-encryptée par la nouvelle phrase.
+`boot : 1`
+- l'item est le triplet `{ n, dh, data }`
+  - `n` : 1.
+  - `data` est `{ id, clek }` crypté par le PBKFD de la phrase secrète.
+    - id du compte,
+    - clé K du compte.
+  - `dh` : date-heure de dernière écriture.
+- `boot` est réécrit en cas de changement de phrase secrète.
+- il faut avoir la phrase secrète pour obtenir la clé K du compte ET son id.
+- si la date-heure dh est plus ancienne que `IDBOBS` jours, la base est considérée comme perdue et effacée (elle contient un historique trop vieux pour être rafraîchi), aucune connexion ne s'étant opéré depuis `IDBOBS` jours.
+- `IDBOBS` est une constante de api.mjs (usuellement 18 * 30).
 
-#### La table `sessionsync`
-Cette table enregistre les date-heures,
-- de la session synchronisée précédente correctement connectée puis terminée : `dhdebut dhfin`
-- de la session synchronisée en cours : 
-  - `dhlogin` : dh de fin de login,
-  - `dhsync` : date-heure de fin de la dernière opération de synchronisation,
-  - `dhpong` : date-heure de réception du dernier _pong_ reçu sur le websocket attestant que celui-ci n'est pas déconnecté.
+`datasync : 2`
+- `data` est l'objet `datasync` sérialisé et crypté par la clé K du compte.
+- `datasync` donne l'état courant de IDB, le périmètre du compte avec les versions des documents.
 
-Cet objet est disponible dans store/db `sessionsync`, uniquement quand la session courante est _synchronisée_.
+Les autres `singletons` pour `data` le document sous forme sérialisée _row_ crypté par la clé K du compte.
 
-# Démon _heartbeat_ et ficavion
-(TODO)
+#### `collections`
+Un item collections a 4 propriétés:
+- `id`: id du document crypté par la clé K du compte et mis en base 64.
+- `n`: indice du type de documents: `{ avatars: 1, groupes: 2, notes: 3, chats: 4, sponsorings: 5, tickets: 6, membres: 7, chatgrs: 8 }`
+- `ids`: ids du document crypté par la clé K du compte et mis en base 64.
+- `data`: le document sous forme sérialisée _row_ crypté par la clé K du compte.
 
-En mode synchronisé un démon tourne en tâche de fond pour obtenir du serveur les fichiers requis pas encore disponibles en IDB
+#### `ficav`
+Chaque item a les propriétés:
+- `id`: idf du fichier crypté par la clé K du compte et mis en base 64.
+- `data`: le document de la classe `Ficav` (dans `src/app/modele.mjs`) sous forme sérialisée _row_ crypté par la clé K du compte.
+
+#### `loctxt`
+Chaque item a les propriétés:
+- `id`: idf du fichier crypté par la clé K du compte et mis en base 64.
+- `data`: le document de la classe `NoteLocale` (dans `src/app/modele.mjs`) sous forme sérialisée _row_ crypté par la clé K du compte.
+
+#### `locfic`
+Chaque item a les propriétés:
+- `id`: idf du fichier crypté par la clé K du compte et mis en base 64.
+- `data`: le document de la classe `FichierLocal` (dans `src/app/modele.mjs`) sous forme sérialisée _row_ crypté par la clé K du compte.
+
+#### `fdata`
+Chaque item a les propriétés:
+- `id`: idf d'un fichier d'une note, d'un fichier ou d'une note du presse-papier crypté par la clé K du compte et mis en base 64.
+- `data`: contenu binaire crypté par la clé K du compte.
 
 # Annexe: liste des _pages_
 
+### `PageAccueil.vue`
+Page affichée après connexion réussie et par appui sur le bouton _Accueil_ de la barre supérieure.
+- un bloc avec tous les accès aux pages s'ouvrant par des icônes de App.
+- un second bloc qui est le menu d'accueil accessible depuis la App.
+
+Imports:
+- `components/MenuAccueil.vue`
+
+## `PageAdmin.vue`
+LA page de l'administrateur technique. Elle a 2 onglets:
+- **Liste des espaces**: création d'un nouvel espace et un item par espace (organisation) existant.
+- **Tâches en cours**: sélection d'un espace particulier ou sinon tâches du GC.
+  - un item par tâche,
+  - initialisation des tâches du GC pour un hébergement neuf.
+  - bouton de lancement du GC.
+
+Dialogues internes:
+- `PAcreationesp`: Création d'un espace
+- `PAnvspc`: Changement de la phrase de sponsoring du Comptable
+- `PAedprf`: Changement des quotas de l'espace
+
+Imports:
+- `components/PhraseContact.vue`
+- `components/SaisieMois.vue`
+- `components/NotifIcon.vue`
+- `components/QuotasVols.vue`
+- `components/ChoixQuotas.vue`
+
+
+# TODO
 ### PageLogin (5)
 Login pour un compte déjà enregistré ou auto-création d'un compte depuis une phrase de sponsoring déclarée par un sponsor.
 
 Import: PhraseContact, AcceptationSponsoring
 
-### PageAccueil (3)
-Affiche:
-- un bloc avec tous les accès aux pages s'ouvrant par des icônes de App.
-- un second bloc qui est le menu d'accueil accessible depuis la App.
+
 
 Import: MenuAccueil, BoutonLangue, NotifIcon2, QueueIcon 
 
@@ -813,19 +967,6 @@ Affiche le découpage de l'espace en tranches:
 La page est également invoquée dans un dialogue interne de PageAdmin pour affichage des tranches (mais sans droit d'agir).
 
 Import: ChoixQuotas, TuileCnv, TuileNotif, ApercuNotif
-
-## PageAdmin (5)
-C'est LA page de l'administrateur technique.
-- 2 boutons techniques: lancer un GC, afficher le dernier rapport de GC.
-- un boutons fonctionnel: créer une organisation.
-- un bouton de rafraîchissement.
-
-Liste les organisations existantes:
-- affichage du détail de leurs tranches sur bouton.
-- changement de profil.
-- création / gestion de la notification sur l'espace.
-
-Import: ApercuNotif, PageEspace
 
 ### PageTranche (6)
 Affiche en tête la tranche courante,
