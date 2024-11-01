@@ -738,7 +738,7 @@ Il donne la liste ordonné des racines dans l'arbre de l'aide. Chaque racine est
 ### Conventions d'écriture des pages en markdown
 **La page est découpée en _sections_**, chacune est identifiée par une ligne:
 
-    # Titre de ma section
+    # Titre de ma section | page1 page3
 
 Avec un unique espace entre `#` et le texte du titre.
 
@@ -746,16 +746,7 @@ La partie **avant** la première ligne `# section...` est _l'introduction_.
 
 Chaque section est présentée avec:
 - une _expansion_ dépliable qui permet d'en voir juste le titre, puis le détail une fois dépliée,
-- un _menu_ éventuel listant les autres pages de l'aide référencée.
-
-#### Références vers d'autres pages de l'aide
-Sauf dans l'introduction des lignes comme celle-ci:
-
-    @@crypto
-
-indique une référence vers une autre page de l'aide:
-- `@@` en tête de la ligne,
-- puis le code de la page référencée (sans espaces ni au début, ni à la fin).
+- une liste éventuelle d'autres pages donnant des précisions sur certains sujets: les codes des pages sont donnés dans la ligne de titre après le signe `|`.
 
 #### Images
 Les _images_ apparaissent sous l'une de ces formes:
