@@ -78,6 +78,7 @@ Ce _store_ est le seul qui est constant depuis le chargement de l'application et
     subJSON: '???', // objet subscription obtenu de SW sérialisé
     pageSessionId: '', // identifiant universel aléatoire du chargement de la page (session browser)
     nc: 0, // numéro d'ordre de connexion dans la session du browser
+    permState: '???', // granted denied prompt
 
 Ces données sont fondamentales pour la gestion des notifications web-push:
 - `subJSON` est le token web-push obtenu par le _service-worker_ depuis le browser.
@@ -101,14 +102,43 @@ Le script propose des débranchements lors des évènements:
 ### Recevoir les notifications web-push
 Il faut d'abord indiquer au browser que l'application est à l'écoute de celles-ci:
 - quand le SW est `ready` il transmet sur l'évènement qui indique cet état un objet `registration` qui représente l'enregistrement du SW. Cet objet est conservé dans `config-store.regisration`.
+- `permState` est le statut d'acceptation des notifications dans le browser pour l'application:
+  - `prompt`: l'utilisateur ne s'est pas encore prononcé ou a réinitialisé les permissions,
+  - `granted`: l'utilisateur a accepté,
+  - `denied`: l'utilisateur a refusé.
+  - on écoute les changements de ce statut en permanence, l'utilisateur pouvant agir à n'importe quel instant en dehors de tout contrôle de l'application. Uand le statut passe à granted on peut récupérer la `subscription`.
 - on obtient le jeton du browser depuis cet objet `registration`:
 
-    let subscription = await this.registration.pushManager.getSubscription() // déjà faite
-    if (!subscription) subscription = await this.registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: b64ToU8(stores.config.vapid_public_key)
-      })
-    this.subJSON = JSON.stringify(subscription)
+    async setRegistration(registration) {
+      await this.listenPerm()
+      this.registration = registration
+      if (this.permState === 'granted') await this.setSubscription()
+      console.log('SW ready. subJSON: ' + this.subJSON.substring(0, 50))
+    },
+
+    async listenPerm () {
+      const notificationPerm = await navigator.permissions.query({ name: 'notifications' })
+      this.permState = notificationPerm.state
+      notificationPerm.onchange = async () => {
+        console.log("User decided to change his seettings. New permission: " + notificationPerm.state)
+        this.permState = notificationPerm.state
+        if (this.permState === 'granted') await this.setSubscription()
+      }
+    },
+
+    async setSubscription () {
+      if (!this.registration) return
+      try {
+        let subscription = await this.registration.pushManager.getSubscription() // déjà faite
+        if (!subscription) subscription = await this.registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: b64ToU8(this.vapid_public_key)
+          })
+        this.subJSON = JSON.stringify(subscription)
+      } catch (e) {
+        this.subJSON = '???' + e.message
+      }
+    },
 
 Pour obtenir subJSON il faut fournir la clé publique VAPID correspondant à la clé privée employée par le service PUBSUB pour émettre les notifications web-push.
 
@@ -688,15 +718,20 @@ A chaque appel de `Sync`, les versions de` comptes comptis invits` sont vérifi�
 
 Voir dans src/app/synchro.mjs les opérations de `Connexion...` et `Sync...`.
 
-## Synchronisation _automatique_ versus _sur demande_
-Par défaut la synchronisation est automatique, les avis de changements des documents par les opérations des **autres** sessions sont reçus par web-push et traités.
+## Synchronisation _automatique_
+La synchronisation est normalement automatique, les avis de changements des documents par les opérations des **autres** sessions sont reçus par web-push et traités.
 
 MAIS le service PUBSUB peut s'interrompre sans que le service OP ne soit interrompu:
 - les opérations peuvent toujours être effectuées MAIS la session ne reçoit plus les avis des autres sessions: son affichage est retardé.
+- l'indicateur `session.statusHB` est à `true` quand le _heartbeat_ a détecté que le service PUBSUB est fonctionnel:
+  - il est mis à true au lancement du _heartbeat_ et mis à `false` à son arrêt explicite.
+  - il est également mis à `false` quand il a été détecté une rupture dans la numérotation des notifications reçues: a priori une interruption du service (arrêt puis relance) a eyu lieu.
 
-En _synchronisation sur demande_, sauf demande explicite de l'utilisateur quand le service PUBSUB est down, l'utilisateur déclenche une synchronisation forcée par appui sur un bouton.
-- mais le _heartbeat_ qui indique au service PUBSUB que la session est toujours vivante ne fonctionne plus.
-- l'utilisateur peut relancer ce _heartbeat_, du moins tenter de le faire: si le service PUBSUB est _up_ la synchronisation redevient _automatique_.
+Quand, soit `session.statusHB` est `false`, soit `config.permState` est différent de `granted`, la synchronisation automatique **N'EST PLUS ACTIVE**:
+- l'utilisateur peut changer son acceptation des notifications si c'était cela qui bloquait.
+- il peut déclencher une synchronisation complète explicite si c'était statusHB qui bloquait: 
+  - si le service PUBSUB est à nouveau _up_, la synchronisation automatique revient à l'état normal.
+  - sinon, la synchronisation automatique reste inactive, l'utilisateur ayant à redemander une resynchronisation explicite périodiquement ou en cas de doute sur les données affichées.
 
 ## Gestion du _heartbeat_
 Elle est assurée dans `session-store` par les actions `startHB` et `stopHB`:
@@ -704,6 +739,8 @@ Elle est assurée dans `session-store` par les actions `startHB` et `stopHB`:
 `startHB` émet périodiquement une requête POST au service PUBSUB en incrémentant le numéro d'envoi afin de pouvoir détecter le cas échéant une rupture dans la séquence des web-push d'avis de modification des documents du périmètre de la session.
 
 La déconnexion poste aussi un avis au service PUBSUB pour l'informer de la fin de la session et lui permettre de supprimer les données de la session qu'il conserve.
+
+> La détection de tombée du service PUBSUB n'est pas immédiate: elle est détectée, soit au prochain _heartbeat_ (au plus dans 2 minutes, soit au retour de la prochaine opération de mise à jour émise par la session.
 
 # Mise en place de l'aide en ligne
 Les ressources correspondantes sont toutes dans `/src/assets/help` :
