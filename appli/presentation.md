@@ -68,19 +68,20 @@ Un compte _autonome_:
 - **paye son abonnement** (qu'il fixe lui-même) **et sa consommation** (sans limite a priori),
 - **ne peut être ni _restreint_, ni _bloqué_** tant que son solde est créditeur.
 
-Un compte "A" _augmente son solde_ en faisant parvenir des _paiements_ que le Comptable va enregistrer sans qu'il puisse faire le rapprochement entre un _paiement_ et le compte crédité. 
-
 ### Les comptes de l'organisation "O"
 Pour certaines organisations, les comptes "A" ne sont pas acceptables:
-- si un compte "A" quitte l'organisation ou qu'il est devenu nuisible à l'organisation, il ne peut pas être restreint / bloqué.
-- l'organisation peut souhaiter contrôler les ressources utilisées par les comptes et les restreindre,
-- l'organisation peut avoir inclus l'abonnement et la consommation de certains comptes dans ses _frais d'adhésion_ ou équivalents.
+- si un compte "A" quitte l'organisation ou qu'il n'est plus jugé opportun, il ne peut pas être bloqué tant que son solde est créditeur, ce qui être sans limite.
+- l'organisation peut avoir inclus l'abonnement et la consommation de certains comptes dans ses _frais d'adhésion_ ou équivalents et de ce fait vouloir maîtriser les ressources utilisées par les comptes.
 
 Pour répondre à ces objectifs, il existe une seconde catégorie de compte: **les comptes "O", de l'organisation**.
 
 L'organisation supporte de facto les coûts d'abonnement et de consommation pour le compte mais en contrepartie,
 - elle lui fixe des **quotas** d'abonnement et de consommation contraignants,
 - elle peut restreindre voire bloquer le compte. 
+
+> Un compte _augmente son solde_ en faisant parvenir des _paiements_ que le Comptable va enregistrer sans qu'il puisse faire le rapprochement entre un _paiement_ et le compte crédité. 
+
+> Un compte peut _effectuer des dons_ à d'autres comptes à condition de rester créditeur.
 
 [Information détaillée à propos de la gestion des comptes](./comptes.html)
 
@@ -237,92 +238,143 @@ Leur stockage ont des coûts unitaires très différents (variant d'un facteur d
 - les fichiers sont enregistrés dans des _Storage_, des stockages techniques distants ayant une gestion spécifique et économique du fait d'être soumis à peu d'accès (mais de plus fort volume).
 
 ### Abonnement: coût de l'espace occupé en permanence
-Un abonnement correspond aux coûts récurrents mensuels pour un compte:  même quand il ne se connecte pas, le stockage de ses données a un coût.
-
-L'abonnement est décomposé en deux lignes de coûts correspondant à l'occupation d'espace en base de données et en _storage_:
-- **Prix unitaire de stockage d'un document** multiplié par le **nombre total de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels non _indésirables_, nombre de participations actives aux groupes.
-- **Prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **volume total des fichiers attachés aux notes**.
+L'abonnement couvre les frais fixes d'un compte:  même quand il ne se connecte pas, le stockage de ses données a un coût. Il est décomposé en deux lignes de coûts correspondant à l'occupation d'espace en _base de données_ et en _storage_:
+- **Prix unitaire de stockage d'un document** multiplié par le **nombre de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels non _indésirables_, nombre de participations actives aux groupes.
+- **Prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **volume des fichiers attachés aux notes**.
 
 Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _quotas_ (_volumes maximaux_)** auquel le compte est abonné.
 
-> Les volumes _effectivement utilisés_ ne peuvent pas dépasser les quotas (volumes maximum) déclaré pour l'abonnement. Dans le cas où un changement de l'abonnement réduit a posteriori ces maximum en dessous des volumes utilisés, les volumes n'auront plus le droit de croître.
+> Les volumes _effectivement utilisés_ ne peuvent pas dépasser les quotas (volumes maximum) déclarés pour l'abonnement. Dans le cas où un changement de l'abonnement réduit a posteriori ces maximum en dessous des volumes utilisés, les volumes n'auront plus le droit de croître.
 
 ### Consommation : coût de calcul et de transfert des fichiers
-La consommation correspond à l'usage effectif de l'application quand une session d'un compte est ouverte. Elle comporte 4 lignes:
+Le coût de calcul apparaît lors de l'usage effectif de l'application quand une session d'un compte est ouverte. Elle comporte 4 lignes:
 - **nombre _de lectures_** (en base de données).
 - **nombre _d'écritures_** (en base de données).
 - **volume _descendant_** (download) de fichiers téléchargés en session depuis le _storage_.
 - **volume _montant_** (upload) de fichiers envoyés dans le _storage_ pour chaque création / mise à jour d'un fichier.
 
-### Coût total mensuel
-Il correspond au total de l'abonnement (2 lignes) et de la consommation (4 lignes) valorisées par un **tarif** fixé par le prestataire:
-- un tarif est simplement la données des 6 coûts unitaires des 6 éléments d'abonnement (2) et de consommation (4).
+### Coûts réel et facturé
+Le coût _réel_ d'un compte sur une période donnée correspond à la somme du coût _d'abonnement_ et du coût de _consommation_ pendant cette période.
 
->_L'ordre de grandeur_ du prix de revient total pour un compte varie en gros de **0,5€ à 3€ par an**. Individuellement ça paraît faible mais n'est plus du tout négligeable pour une organisation assurant les frais d'hébergement d'un millier de comptes ...
+Le coût _facturé_ sur une période est nul pour un compte "O" et est le coût _réel_ pour un compte "A".
+
+Le solde d'un compte est calculé à tout instant,
+- en le créditant des paiements et dons reçus dans la période,
+- en le débitant des dons effectués et des coûts _facturés_ dans la période.
+
+> Les tarifs peuvent changer d'un mois à l'autre, mais sont fixes dans un mois donné.
+
+Un compte peut afficher à tout instant,
+- l'état de sa comptabilité **calculée à l'instant de l'affichage**: quotas, nombre de documents et volumes de fichiers effectivement occupés, **solde courant**.
+- l'historique de l'évolution mois par mois sur les 12 derniers mois: moyennes des quotas, des consommations, coût total sur le mois (réel et facturé), débits et crédits, soldes en début et fin de mois.
+
+> L'unité monétaire interne est le _centime_ (c). Son ordre de grandeur est voisin d'un centime d'euro en appliquant des tarifs proches des coûts _de base_ des hébergements sur le marché. Chaque fournisseur a bien entendu ses propres tarifs qui peuvent être significativement éloignés des coûts _de base_.
+
+>_L'ordre de grandeur_ pour un compte varie en gros de **0,5€ à 3€ par an**. Individuellement ça paraît faible mais n'est plus du tout négligeable pour une organisation assurant les frais d'hébergement d'un millier de comptes ...
 
 ### Gestion des _abonnements gratuits_ des comptes "O"
-Le Comptable procède d'abord à un _découpage en partitions_ des ressources globales dont il dispose:
-- chaque _partition_ a un quota de _nombre de documents_, de _volume de fichiers_ et de _consommation de calcul_.
-- tout compte "O" est attaché à une _partition_.
-- pour chaque _partition_ le Comptable peut (ou non) confier une _délégation_ à certains comptes de la tranche afin que ceux-ci,
-  - fixent pour chaque compte "O" de leur partition des quotas d'abonnement et de consommation,
-  - puissent gérer des _notifications_ à ces comptes (avec restriction éventuelle).
+Le Comptable procède d'abord à un _découpage en partitions_ des ressources globales dont il dispose: chaque _partition_ est dotée de trois quotas, 
+- un quota QN de _nombre de documents_ qu'il ne doit pas dépasser, 
+- un quota QV de _volume de fichiers_ qu'il ne doit pas dépasser,
+- un quota QC de _coût calcul_: c'est en _centime_ le coût calcul maximal sur un mois.
+
+Tout compte "O" est attaché à une _partition_.
+
+Pour chaque _partition_ le Comptable peut (ou non) confier une _délégation_ à certains comptes de la partition afin que ceux-ci fixent aux comptes "O" de leur partition leurs quotas personnels QN / QV / QC.
+
+> Remarque: un compte "A" se fixe lui-même ses 3 quotas QN / QV / QC et en assume les conséquences sur ses coûts facturés.
 
 [En savoir plus sur les partitions des comptes "O"](./partitions.html)
 
-## Notifications et restrictions d'accès des comptes
+## Alertes et restrictions d'accès des comptes
+### Alertes de _comptabilité des coûts_
+Le décompte des coûts est susceptible de **lever des alertes** à chaque compte en fonction de sa situation personnelle.
 
-Une _notification_ est un message suffisamment important pour que sa présence soit signalée par une icône dans la barre d'entête de l'écran de l'application.
+#### Coût de calcul excédant son quota (QC): ralentissements
+Les coûts de calcul relevés sur le mois en cours et le précédent sont ramenés à un _mois de 30 jours_. Il y a excès quand ce coût moyen de calcul excède le quota QC.
+- les opérations sont artificiellement ralenties par un délai d'attente d'autant plus grand que l'excès est fort.
+- les transferts de fichiers le sont également selon le même coefficient mais proportionnellement au volume du fichier.
 
-Une _notification_ **peut être porteuse d'une restriction d'accès**: quand une session a une ou des restrictions d'accès, ses actions sont plus ou moins limitées.
+> Remarque: un compte "A" étant lui-même maître de son quota QC peut éviter les ralentissements en augmentant fortement son quota QC: ce faisant il inhibe une alerte de surconsommation de calcul qui peut s'avérer coûteuse.
 
-### Notification de _l'administrateur technique_ à l'espace de l'organisation
-**Elle peut n'être une simple information** (_arrêt programmé ..._) sans restriction mais peut aussi fixer l'une de ces deux restrictions:
+> Remarque: à tout instant un compte peut voir le nombre de jours estimé en solde positif en considérant la prolongation de sa situation actuelle (mêmes quotas, même consommation moyenne de calcul).
+
+#### Nombre de documents excédant son quota (QN): blocage de l'ajout de documents
+Le compte ne peut pas créer de nouvelles notes, de chats ou participer à de nouveaux groupes. Il est ainsi invité à,
+- supprimer des notes,
+- déclarer des chats _indésirables_,
+- se résilier de certains groupes,
+- OU ... demander une augmentation de son quota QN au Comptable ou à un de ses délégués si c'est un compte "O", procéder lui-même à cette augmentation si c'est un compte "A".
+
+#### Volume de fichiers attachés aux notes excédant son quota (QV): blocage du volume
+Le compte ne peut pas ajouter de fichiers ou remplacer un fichier par un autre de taille supérieure. Il est ainsi invité à,
+- supprimer des fichiers et/ou des révisions de fichiers,
+- remplacer les gros fichiers par des révisions plus compressés,
+- OU ... demander une augmentation de son quota QV au Comptable ou à un de ses délégués si c'est un compte "O", procéder lui-même à cette augmentation si c'est un compte "A".
+
+#### Solde négatif: le compte est mis en ACCÈS RESTREINT
+Le compte ne peut plus ni lire ses données, ni les mettre à jour. Toutefois il conserve les possibilités de:
+- visualiser ses alertes et sa comptabilité,
+- effectuer des versements et les enregistrer afin que le Comptable les créditent,
+- discuter sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O" de sa situation, voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
+
+## Alerte de l'Administrateur Technique à l'organisation
+**Cette alerte porte toujours un message d'information** (_arrêt programmé ..._).
+
+Elle _peut_, soit ne porter aucune restriction, soit porter l'une de celles-ci:
 - **Espace figé**. Aucune écriture ne peut être faite, typiquement afin de procéder à une opération technique d'export, verrouillage d'une archive d'un espace ... mais peut aussi être une mesure de rétorsion.
-- **Espace clos**. L'administrateur technique a effacé les données de l'espace: il ne subsiste plus que cette notification dont le texte donne la raison et le cas échéant indique si l'espace est accessible à une autre adresse.
+- **Espace clos**. L'Administrateur Technique a effacé les données de l'espace dont il ne subsiste plus que cette alerte dont le texte donne la raison et le cas échéant indique si l'espace est accessible à une autre URL.
+- **Connexions bloquées à partir d'une date d**: les comptes ne seront pas détruits à cette date mais plus aucune connexion ne pourra être faite à partir de d.
 
-### Notification du _Comptable_ ou de ses _délégués_ pour les comptes "O"
-Le Comptable ou ses délégués peuvent inscrire une _notification_:
-- adressée à tous les comptes d'un _partition_,
-- adressée à un compte "O" spécifique.
+### Alerte du _Comptable_ ou de ses _délégués_ aux comptes "O"
+Le Comptable ou ses délégués peuvent inscrire une _alerte_:
+- adressée à TOUS les comptes d'un _partition_,
+- adressée à UN compte "O" spécifique.
 
-Une notification **peut ne porter qu'un message d'information**, sans restriction.
+Chaque compte "O" est en conséquence potentiellement la cible de deux alertes.
 
-Elle **peut aussi porter une des deux restrictions**: _lecture seule_ et _accès minimal_.
+Une telle alerte **porte un message d'information**, et peut être associé ou non à une restriction.
 
-#### Lecture seule
-En lecture seule une session **ne peut que consulter les données** (comme en mode _avion_).
-- les échanges sont toutefois possibles sur les _chats d'urgence_ avec le Comptable et les _délégués de sa partition_.
+#### Accès en LECTURE SEULEMENT
+Le compte **ne peut que consulter les données** (comme en mode _avion_).
 
-#### Accès minimal
-En accès minimal une session **ne peut plus ni lire ni mettre à jour** ses données.
-- les échanges sont toutefois possibles sur les _chats d'urgence_ avec le Comptable et pour un compte "O" les _délégués de sa partition_.
+#### ACCÈS RESTREINT
+Le compte ne peut plus ni lire ses données, ni les mettre à jour. 
 
-**Les connexions du compte ne le maintiennent plus en vie**: au plus tard dans un an, si cette restriction n'est pas levée, le compte disparaîtra.
+Dans tous les cas il conserve toutefois les possibilités de:
+- visualiser ses alertes et sa comptabilité,
+- effectuer des versements et les enregistrer afin que le Comptable les créditent,
+- discuter sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O" de sa situation, voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
 
-Une telle restriction pour un compte "O" est causée par:
-- déclaration explicite du Comptable ou un de ses délégués.
-- automatiquement quand la consommation mensuelle moyenne dépasse la limite fixée.
+## Date limite de vie d'un compte
+Cette date, toujours le dernier jour d'un mois, signifie que le jour suivant le compte sera irrémédiablement détruit sans possibilité de récupération.
 
-#### Volume en réduction
-Cette restriction bloque toutes les actions menant à une augmentation de volume:
-- _création_ d'une note, d'un chat, ou acceptation d'une invitation à un groupe,
-- _remplacement_ d'un fichier attaché à une note par un autre plus important.
+Cette date est fixée lorsqu'un compte se connecte: en conséquence le compte en est immédiatement informé.
 
-Cette restriction est **automatique**, causée par le dépassement des limites d'abonnements (nombre de documents, volume des fichiers).
+Quand le compte **N'EST PAS en ACCÈS RESTREINT** elle est fixée à 12 mois plus tard. En d'autres termes le compte a toujours un an de vie après sa dernière connexion.
 
-### Restriction _accès minimal_ pour excès de consommation d'un compte "A"
-En accès minimal une session ne peut plus ni lire ni mettre à jour ses données, toutefois:
-- les échanges sont possibles sur les _chats d'urgence_ avec le Comptable.
-- les opérations de crédit / gestion des volumes maximaux restent autorisées.
+Quand le compte **EST en ACCÈS RESTREINT** elle est fixée à 6 mois après que le compte a basculé en ACCÈS RESTREINT.
 
-Elle est **automatique** lors de la détection d'un solde négatif.
+A chaque connexion un compte voit la date limite de vie de son compte et le nombre de jours à partir du jour courant. Si ce nombre est faible (inférieur à 30), l'alerte est **rouge**.
 
-> **En cas de _restriction_ les connexions des comptes ne les maintiennent plus en vie**: au plus tard dans un an, si cette restriction n'est pas levée, les comptes disparaîtront.
+> Remarque: un compte n'a de facto que 6 mois de vie assurée après la dernière connexion où il a constaté de na pas être en ACCÈS RESTREINT. Un compte "A" est maître de cette durée en s'assurant que son compte restera créditeur. Un compte "O" peut à l'inverse faire l'objet d'un ACCÈS RESTREINT imposé par le Comptable ou un de ses délégués, et ce en dehors de son contrôle.
 
-[Les notifications et restrictions en détail](./notifications.html).
+[Les alertes et restrictions en détail](./alertes.html).
 
-## Statistiques partagées entre le Comptable et l'administrateur technique
+## Enregistrement de crédits
+Afin de préserver l'anonymat dans le _vrai_ monde des comptes, la procédure de _paiement_ et d'enregistrement des crédits s'effectue de la manière suivante.
+
+Le compte, 
+- ouvre la fenêtre des paiements et déclare un paiement avec son montant. Il en résulte un _numéro de ticket de paiement_ et un paiement enregistré en attente.
+- il fait parvenir au Comptable par le moyen prévu par l'organisation (typiquement un virement d'une banque, mais aussi tout autre procédé accepté par l'organisation) le montant correspondant accompagné du numéro du ticket obtenu ci-avant.
+
+Quand le Comptable reçoit un paiement avec un numéro qui l’anonymise, il enregistre le montant reçu pour le ticket (qu'il trouve dans la liste des tickets en attente).
+- si le compte était _en rouge_ pour solde négatif, dès l'enregistrement par le Comptable, l'indicateur s'efface si le crédit est suffisant.
+- les tickets enregistrés par le Comptable restent visibles pour lui jusqu'à M+2 de leur création.
+
+> Les _tickets_ étant enregistrés cryptés par la clé des comptes, aucune corrélation ne peut être faite entre la source d'un _paiement_ et le compte qui en bénéficie.
+
+## Statistiques partagées entre le Comptable et l'Administrateur Technique
 
 Tous deux ont besoin d'éléments statistiques de consommation afin d'ajuster si nécessaire les bases de facturation en fonction d'un usage réel.
 
@@ -353,5 +405,6 @@ L'administrateur technique a la possibilité d'ouvrir _instantanément_ un nouve
 
 _Rappel_; l'administrateur technique peut,
 - émettre une notification d'information visible de tous les comptes,
+- interdire toute connexion à partir d'une date donnée,
 - bloquer l'espace de l'organisation en _lecture seule_,
 - détruire les données par clôture de l'espace ne laissant pendant un certain temps qu'une seule information d'explication.

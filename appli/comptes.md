@@ -81,34 +81,30 @@ Un _hashtag_ est une suite courte de lettres minuscules non accentuées et de ch
 - il suffit d'en saisir un nouveau si aucun ne convient.
 - quand un _hashtag_ n'est plus utilisé nulle part dans le compte, il disparaît de la liste.
 
-### Pour un compte "A", ajuster son abonnement
+## Compte "A": ajustement de ses quotas
 Son abonnement à la création correspond à un minimum de _documents_ et de _volume de fichiers attachés_: il est opportun d'y mettre des valeurs réalistes.
-- le quota du nombre de documents est un entier de 0 à 250: l'unité correspond à 250 documents.
-- le quota du volume de fichiers est un entier de 0 à 250: l'unité correspond à 100MB.
+- le quota du nombre de documents est un entier dont l'unité correspond à 100 documents.
+- le quota du volume de fichiers est un entier dont l'unité correspond à 100MB.
 
 [Abonnement, consommation, tarifs](/appli/tarifs.html)
 
-### Pour un compte "O" _délégué
-Un compte _délégué peut ajuster les quotas des comptes "O" de sa partition, et en conséquence les siens.
-
-Pour un compte"O" son quota comporte, en plus dues quotas nombre de documents et volume des fichiers, le coût calcul mensuel maximal décompté avec les unités suivantes:
-- 1 million de lectures,
-- 1 million d'écritures,
-- 1GB de volume montant de fichiers,
-- 1GB de volume descendant de fichiers.
-
-Les prix unitaires de ces unités est fixé par le prestataire: il en résulte un montant en _unité monétaire_ c (un centime).
+## Compte "O" _délégué_: ajustements des quotas des comptes de sa partition
+Un compte _délégué_ peut ajuster les quotas des comptes "O" de sa partition, et en conséquence les siens.
 
 [Gestion des comptes d'une "partition" par ses _délégués_ et le Comptable](./partitions.html)
 
-### Pour un compte "A", effectuer un paiement
-Le compte est en général, _peu_ approvisionné. 
-- on ouvre la fenêtre des paiements et on déclare un paiement avec son montant.
-- il en résulte un _numéro de ticket de paiement_ et un paiement en attente.
-- on fait parvenir au Comptable par le moyen prévu par l'organisation le montant correspondant accompagné du numéro du ticket obtenu ci-avant.
+## Enregistrement de crédits
+Afin de préserver l'anonymat dans le _vrai_ monde des comptes, la procédure de _paiement_ et d'enregistrement des crédits s'effectue de la manière suivante.
 
-Quand le Comptable recevra un paiement avec un numéro qui l’anonymise, il enregistre le montant reçu pour le ticket (qu'il trouve dans la liste des tickets en attente).
-- si le compte était _en rouge_ pour insuffisance de crédit, dès l'enregistrement par le Comptable, l'indicateur s'efface. 
+Le compte, 
+- ouvre la fenêtre des paiements et on déclare un paiement avec son montant. Il en résulte un _numéro de ticket de paiement_ et un paiement enregistré en attente.
+- il fait parvenir au Comptable par le moyen prévu par l'organisation (typiquement un virement d'une banque, mais aussi tout autre procédé accepté par l'organisation) le montant correspondant accompagné du numéro du ticket obtenu ci-avant.
+
+Quand le Comptable reçoit un paiement avec un numéro qui l’anonymise, il enregistre le montant reçu pour le ticket (qu'il trouve dans la liste des tickets en attente).
+- si le compte était _en rouge_ pour solde négatif, dès l'enregistrement par le Comptable, l'indicateur s'efface si le crédit est suffisant.
+- les tickets enregistrés par le Comptable restent visibles pour lui jusqu'à M+2 de leur création.
+
+> Les _tickets_ étant enregistrés cryptés par la clé des comptes, aucune corrélation ne peut être faite entre la source d'un _paiement_ et le compte qui en bénéficie.
 
 # Pour information: la création du _Comptable_
 A l'initialisation de l'espace d'une organisation, l'administrateur technique déclare une _phrase de sponsoring_ pour le Comptable de l'espace.

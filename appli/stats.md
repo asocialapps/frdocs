@@ -12,33 +12,38 @@ Ces statistiques sont calculées mensuellement et sont des fichiers CSV décrits
 ## Abonnement / consommation des comptes
 Une ligne (anonyme) par compte comportant les colonnes suivantes:
 
-    qc, qn, qv, nl, ne, vm, vd, nn, nc, ng, v, nj, ca, cc
+    'NJ', 
+    'QC', 'QN', 'QV', 
+    'NL', 'NE', 'VM', 'VD', 
+    'NN', 'NC', 'NG', 'V', 
+    'AC', 'AF', 'CC', 'CF'
 
-Abonnement:
-- `qc` : moyenne de la consommation mensuelle de calcul dans le mois en `c`. Une valeur à 0 correspond à un compte "A" qui n'a pas par principe d'abonnement de _calcul_.
-- `qn` : moyenne de l'abonnement en nombre de documents (en unité de 250 documents).
-- `qv` : moyenne de l'abonnement en volume de fichiers (en unité de 100Mo).
+    - NJ 0 : nombre de jours d'existence du compte dans le mois.
+    moyennes des quotas:
+    - QC 1 : moyenne de qc dans le mois (en c)
+    - QN 2 : moyenne de qn dans le mois (en nombre de documents)
+    - QV 3 : moyenne de qv dans le mois (en bytes)
+    - cumuls des consommations:
+    - NL 4 : nb lectures cumulés sur le mois (L),
+    - NE 5 : nb écritures cumulés sur le mois (E),
+    - VM 6 : total des transferts montants (B),
+    - VD 7 : total des transferts descendants (B).
+    - moyennes des compteurs:
+    - NN 8 : nombre moyen de notes existantes.
+    - NC 9 : nombre moyen de chats existants.
+    - NG 10 : nombre moyen de participations aux groupes existantes.
+    - V 11 : volume moyen effectif total des fichiers stockés.
+    - compteurs monétaires
+    - AC 12 : coût de l'abonnement (dans le mois)
+    - AF 13 : abonnement facturé (dans le mois)
+    - CC 14 : coût de consommation (dans le mois)
+    - CF 15 : consommation facturée (dans le mois)
 
-Consommation:
-- `nl` : nombre de lectures cumulés sur le mois.
-- `ne` : nombre d'écritures cumulés sur le mois.
-- `vm` : volume total des transferts de fichiers montants.
-- `vd` : volume total des transferts de fichiers descendants.
+> La somme des AF+CF indique ce que les comptes devraient avoir payé (tant qu'ils étaient compte A dans ce mois).
 
-Moyennes d'usage:
-- `nn` : nombre moyen de notes.
-- `nc` : nombre moyen de chats.
-- `ng` : nombre moyen de participations aux groupes.
-- `v` : volume moyen effectif total des fichiers stockés.
+> La somme des AC+CC indique ce que les comptes _ont coûté_ à l'organisation.
 
-Compteurs spéciaux:
-- `nj` : nombre de jours d'existence du compte dans le mois.
-- `ca` : coût de l'abonnement pour le mois.
-- `cc` : coût de la consommation pour le mois.
-
-> La somme des ca et cc indique ce que les comptes ont payé (pour les comptes "A") ou _coûté_ à l'organisation (pour les comptes "O").
-
-> Le rapprochement de `nn + nc + ng` avec `qn` permet de comparer l'usage effectif par rapport à l'abonnement. De même entre `qv` et `v`.
+> Le rapprochement de `NN+NC+NG` avec `QN` permet de comparer l'usage effectif par rapport aux quotas (de même entre `V` et `QV`).
 
 ## Archive des _tickets_ de paiement des comptes "A"
 Cette archive contient une ligne par _ticket de paiement_ émis / reçu dans le mois. Le ticket est anonyme, il n'est pas possible d'effectuer un rapprochement avec le compte qui l'a émis.

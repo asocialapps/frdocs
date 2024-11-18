@@ -30,8 +30,8 @@ title: Utiliser l'application
 [Partitions des comptes "O"](appli/partitions.html)
 - Gestion des partitions des comptes "O" d'une "partition" par ses _délégués_ et le Comptable
 
-[Notifications et restrictions d'accès des comptes](appli/notifications.html)
-- Notifier les alertes plus ou moins graves, les restrictions d'accès associées.
+[Alertes et restrictions d'accès des comptes](appli/alertes.html)
+- Liste des alertes plus ou moins graves et des restrictions d'accès éventuellement associées.
 
 [Statistiques partagées entre le Comptable et l'administrateur technique](appli/stats.html)
 - Détail des compteurs _abonnements / consommations_ et _tickets de paiement du mois_.
