@@ -20,7 +20,7 @@
 
 title: L'application "AsocialApp"
 logo: logo.png
-email: your-email@example.com
+email: daniel@sportes.fr
 description: >- # this means to ignore newlines until "baseurl:"
   Une application aux antipodes des principes et objectifs des réseaux sociaux...
 
@@ -40,7 +40,7 @@ minima:
   skin: dark
   date_format: "%Y-%m-%d"
   social_links:
-    - { platform: github,  user_url: "https://github.com/dsportes/asocial-manuels" }
+    - { platform: github,  user_url: "https://github.com/dsportes" }
 
 author:
   name: Daniel Sportès
