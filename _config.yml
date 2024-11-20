@@ -23,8 +23,11 @@ logo: logo.png
 email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
   Une application aux antipodes des principes et objectifs des réseaux sociaux...
+
+domain: dsportes.github.io
+url: https://dsportes.github.io/asocial-man
 baseurl: "/fr" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+
 # twitter_username: jekyllrb
 github_username:  dsportes
 
