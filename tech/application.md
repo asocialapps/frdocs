@@ -907,6 +907,24 @@ Chaque item a les propriétés:
 - `id`: idf d'un fichier d'une note, d'un fichier ou d'une note du presse-papier crypté par la clé K du compte et mis en base 64.
 - `data`: contenu binaire crypté par la clé K du compte.
 
+### Purge des micro bases locales inutiles
+A la première ouverture d'une session synchronisée pour un compte, il est demandé au titulaire du compte des initiales en 3 lettres (ou ce qu'il veut) : ce code est associé au nom effectif de la base locale.
+
+Avant de se connecter à une session, le titulaire d'un compte peut demander à voir la liste des micro bases locales installées dans le navigateur et pour chacun voit:
+- les 3 lettres d'initiales données préalablement,
+- le nom technique de la micro base locale du compte correspondant.
+
+Il peut pour chacune,
+- demander le calcul de son volume utile : le volume technique réel est probablement de près du double, donc savoir si sa suppression libérera ou non un espace significatif.
+- en demander la suppression. Elle ne sera plus accessible en mode avion jusqu'à ce qu'une reconnexion en mode synchronisé ne la recharge et elle aura perdu la liste des fichiers accessibles en mode _avion_ (qu'il faudra citer à nouveau).
+
+### Espace privé dans les navigateurs
+Chaque navigateur (Firefox, Chrome, etc.) a son propre espace privé pour héberger ces données, **compartimenté** par domaine : si l'application est invoquée par `https://srv1.monhergeur.net/#/monreseau` il y a un espace dédié à `srv1.monhergeur.net`. Pour en voir le contenu,
+- passer en mode _debug_ du navigateur (Ctrl-Shift-I pour Chrome et Firefox) et aller sur l'onglet `Application`. La liste des bases y figure.
+- on y voit alors les bases listées sur la page de gestion des purges des bases. On peut aussi la supprimer ici ... et en consulter l'état de ses tables totalement abscons car crypté.
+
+Pour faire plus vite, ouvrir la page de gestion des purges des micro bases locales, c'est affiché en clair.
+
 # Annexe: liste des _pages_
 
 ### `PageAccueil.vue`
