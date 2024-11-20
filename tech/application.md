@@ -269,6 +269,9 @@ Tous ces documents SAUF `synthese compta partition` sont _synchronisés_: toute 
 `./pp-store.js`
 - une entrée par note ou fichier du presse-papier. 
 
+`./hb-store.js`
+- gère le _heartbeat_ avec le service PUBSUB.
+
 ### Données UI
 `./ui-store.js` : données reflétant l'état UI de la session.
 - page courante / précédente.
@@ -718,29 +721,31 @@ A chaque appel de `Sync`, les versions de` comptes comptis invits` sont vérifi�
 
 Voir dans src/app/synchro.mjs les opérations de `Connexion...` et `Sync...`.
 
-## Synchronisation _automatique_
+## Synchronisation _automatique_, gestion du _heartbeat_
 La synchronisation est normalement automatique, les avis de changements des documents par les opérations des **autres** sessions sont reçus par web-push et traités.
+
+La gestion du _heartbeat_ est assurée dans `hb-store` par les actions `startHB stopHB retry`.
 
 MAIS le service PUBSUB peut s'interrompre sans que le service OP ne soit interrompu:
 - les opérations peuvent toujours être effectuées MAIS la session ne reçoit plus les avis des autres sessions: son affichage est retardé.
-- l'indicateur `session.statusHB` est à `true` quand le _heartbeat_ a détecté que le service PUBSUB est fonctionnel:
-  - il est mis à true au lancement du _heartbeat_ et mis à `false` à son arrêt explicite.
+- l'indicateur `hb.statusHB` est à `true` quand le _heartbeat_ a détecté que le service PUBSUB est fonctionnel:
+  - il est mis à `true` au lancement du _heartbeat_ et mis à `false` à son arrêt explicite.
   - il est également mis à `false` quand il a été détecté une rupture dans la numérotation des notifications reçues: a priori une interruption du service (arrêt puis relance) a eyu lieu.
+  - un `pingHB` teste que le service PUBSUB est disponible et un `retry` tente en boucle a vec temporisation de ré-initialiser le contexte de la session dans le service PUBSUB.
 
-Quand, soit `session.statusHB` est `false`, soit `config.permState` est différent de `granted`, la synchronisation automatique **N'EST PLUS ACTIVE**:
+Quand, soit `hb.statusHB` est `false`, soit `config.permState` est différent de `granted`, la synchronisation automatique **N'EST PLUS ACTIVE**:
 - l'utilisateur peut changer son acceptation des notifications si c'était cela qui bloquait.
-- il peut déclencher une synchronisation complète explicite si c'était statusHB qui bloquait: 
+- il peut déclencher une _synchronisation complète_ explicite si c'était `statusHB` qui bloquait: 
   - si le service PUBSUB est à nouveau _up_, la synchronisation automatique revient à l'état normal.
   - sinon, la synchronisation automatique reste inactive, l'utilisateur ayant à redemander une resynchronisation explicite périodiquement ou en cas de doute sur les données affichées.
-
-## Gestion du _heartbeat_
-Elle est assurée dans `session-store` par les actions `startHB` et `stopHB`:
 
 `startHB` émet périodiquement une requête POST au service PUBSUB en incrémentant le numéro d'envoi afin de pouvoir détecter le cas échéant une rupture dans la séquence des web-push d'avis de modification des documents du périmètre de la session.
 
 La déconnexion poste aussi un avis au service PUBSUB pour l'informer de la fin de la session et lui permettre de supprimer les données de la session qu'il conserve.
 
-> La détection de tombée du service PUBSUB n'est pas immédiate: elle est détectée, soit au prochain _heartbeat_ (au plus dans 2 minutes, soit au retour de la prochaine opération de mise à jour émise par la session.
+Quand le `statusHB` tombe à `false` de manière inattendue un `retry` est lancé: en d'autres termes la session tente automatiquement de rétablir le _heartbeat_ (ce qui indirectement provoquera une synchronisation complète): les interruptions _temporaires_ sont normalement surmontées.
+
+> La tombée du service PUBSUB est détectée, soit au prochain _heartbeat_ (au plus dans 2 minutes), soit au retour de la prochaine opération de mise à jour émise par la session.
 
 # Mise en place de l'aide en ligne
 Les ressources correspondantes sont toutes dans `/src/assets/help` :
