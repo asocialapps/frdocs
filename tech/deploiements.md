@@ -23,16 +23,21 @@ Après _build_ on obtient un folder _presque_ prêt à distribuer:
 Par convention, si les services OP et PUBSUB sont fournis par le **même** serveur que celui distribuant l'application Web les URLs sont simplifiées:
 
     {
-      "opurl" : "https://test.sportes.fr:8443",
-      "pubsuburl" : "https://test.sportes.fr:8443",
-      "docsurls": { "fr-FR": "http://localhost:4000/fr", "en-EN": "http://localhost:4000/en" },
+      "BUILD": "24",
+      "opurl": "http://localhost:8443",
+      "pubsuburl": "http://localhost:8443",
+      "docsurls": { 
+        "fr-FR": "https://asocialapps.github.io/frdocs", 
+        "en-EN": "https://asocialapps.github.io/frdocs" 
+      },
+      "vapid_public_key": "BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew"
     }
 
-    Cas où le _serveur_ délivre aussi l'application Web:
+    Cas particulier où le _serveur_ délivre aussi l'application Web:
     {
       "opurl": "https",
-      "pubsuburl" : "https",
-      "docsurls": { "fr-FR": "http://localhost:4000/fr", "en-EN": "http://localhost:4000/en" },
+      "pubsuburl": "https",
+      ...
     }
     Si ce serveur est seulement un `http` (en test), `http` remplace `https` ci-dessus.
 
@@ -60,11 +65,51 @@ On la met à jour par la commande:
 
     npx update-browserslist-db@latest
 
+### Distribution par _github pages_
+
+Un _repository_ `github.com` peut aussi gérer un site Web de distribution.
+- créer un dépôt `github.com` pour la distribution: par exemple ici `asocialapps` (`https://github.com/asocialapps`).
+- créer un repository par distribution à effectuer: par exemple ici `t1`.
+
+Sur le poste qui génère la distribution,
+- créer un folder t1 et y copier les fichiers récupérés du build.
+- y ajouter un fichier `README.md`, purement informatif, ayant typiquement ce contenu:
+
+    Application "asocial":
+    - distribution: t1
+    - build: 24
+    - url: https://asocialapps.github.io/t1
+
+    Sources: 
+    - dépôt: https://dsportes.github.com/asocial-app
+    - tag: V2.4
+    - patchs: _aucun_
+
+    URLS externes: /etc/urls.json
+
+Ce README permet à n'importe qui de reconstituer l'application Web distribuée depuis les sources:
+- le dépôt des sources est cité ainsi que la tag qui pointe exactement la révision utilisée.
+- la section `patchs` indique avec précision ce qui a été modifié dans ces sources avant build. Le cas échéant des fichiers peuvent être cités et retrouvés dans `etc/...`
+
+Effectuer un `commit + publish` de `t1` vers le dépôt de distribution.
+
+La première fois il faut indiquer dans `github.com` que ce repository doit être diffusé sur `github.io`:
+- ouvrir le repository, et sa page de `settings`.
+- sélectionner la section `Pages` (à gauche) et fixer les paramètres donnant la branche à distribuer (`master` par défaut).
+
+C'est tout.
+
+Lors de la distribution d'une nouvelle version ultérieure, la configuration de _Pages_ n'a pas à être refaite: le seul fait d'effectuer un `commit + publish` suffira à régénérer le site qui sera accessible par l'URL:
+
+    https://asocialapps.github.io/t1
+
+(C'est bien `.io` pas `.com`).
+
 # Tests externes depuis `localhost` par `ngrok`
 
 `ngrok` permet de créer un _tunnel_ entre _localhost_ et Internet en rendant accessible un serveur HTTP (écoutant le port 8443 par exemple) s'exécutant sur le poste de développement comme s'il était accessible publiquement sur Internet.
 
-Dans sa version gratuite, ngrok demande une inscription et permet d'obtenir un _authtoken_.
+Dans sa version gratuite, `ngrok` demande une inscription et permet d'obtenir un _authtoken_.
 
 Sur son compte dans `ngrok` on demande aussi une URL dédiée: celle-ci est générée par `ngrok` et n'est pas au choix. Par exemple:
 
@@ -82,43 +127,43 @@ Pour ouvrir un _tunnel_, il faut ouvrir un terminal et lancer:
 
     ngrok http --domain=exactly-humble-cod.ngrok-free.app 8443
 
-En retour il apparaît une URL https://... 
+En retour il apparaît l'URL https://... d'accès.
 
 Pour fermer le _tunnel_, interrompre la session en cours dans ce terminal.
 
-Cette URL peut être utilisée n'importe où, en particulier depuis un mobile, pour joindre le serveur s'exécutant sur le localhost du poste de développement, grâce à un tunnel établi par Ngrok.
+Le tunnel établi par Ngrok permet d'utiliser cette URL depuis n'importe où, en particulier depuis un mobile, pour joindre le serveur s'exécutant sur le `localhost` du poste de développement.
 
 # Déploiements des services OP et PUBSUB
 
 ## _Obfuscation_ des données sensibles
 ### Certificats du serveur
-Si le serveur n'est pas géré par un provider qui le gère, il est démarré comme une simple application node à qui il faut fournir les certificats https `fullchain.pem` et `privkey.pem`.
+Si le serveur n'est pas géré par un provider externe (Google, AWS, Azure ...), il est à démarrer comme une simple application `node` à qui il faut fournir les certificats https `fullchain.pem` et `privkey.pem`.
 - ces données **NE DOIVENT PAS** être exposées dans `git`. Elles sont stockées dans le folder `./keys` qui DOIT figurer en `.gitignore`.
 - le build des services **NE CONTIENT PAS** ce folder car les certificats doivent être renouvelés assez souvent et indépendamment du build d'une nouvelle version des services.
 - c'est sur le host de production directement que le folder `./keys` est installé, avec en général un script de renouvellement automatique des certificats.
 
 ### Tokens divers
-Ces tokens sont des autorisations d'usage d'API, des authentifications diverses. Ils sont inscrits comme des entrées majeures dans le fichier `.keys.json`. Les entrées actuelles sont:
-- `app_keys` : les clés de cryptage des _sites_, le mot de passe de l'administrateur technique (en fait son PBKFD) et les clés vapid de notification _web push_.
+Ces tokens sont des autorisations d'usage d'API, des authentifications diverses. Ils sont inscrits comme des entrées majeures dans le fichier `./keys.json`. Les entrées actuelles sont:
+- `app_keys` : les clés de cryptage des _sites_, le mot de passe de l'administrateur technique (en fait son PBKFD) et les clés `vapid` de notification _web push_.
 - `service_account` : l'authentification d'un compte Google.
 - `s3_config` : l'authentification du fournisseur d'accès au _storage_ S3.
 
-Ce fichier NE DOIT PAS être exposé dans git, il figure dans .gitignore (d'ailleurs dans le cas contraire github par exemple envoie des alertes).
+Ce fichier NE DOIT PAS être exposé dans git, il figure dans `.gitignore` (d'ailleurs dans le cas contraire github par exemple envoie des alertes).
 
-Mais ses données doivent être intégrées dans la _build_ des services:
+Mais ces données doivent être intégrées dans la _build_ des services:
 - il n'est pas souhaitable que cette _build_ les fasse apparaître en clair. L'hébergeur qui installe les services n'a pas à les voir passer explicitement dans les fichiers de _build_.
 
 Le fichier `./keys.json` est _obfusqué_ par la commande:
 
-    node src/genicon.mjs
+    node src/gensecret.mjs
 
-qui en génère le fichier `./src/icon.mjs`:
+qui en génère le fichier `./src/secret.mjs`:
 - le fichier `./keys.json` est parsé, l'objet Javascript résultant est sérialisé et crypté (par un couple clé / salt généré dans le code) et encodé en base64.
-- le résultat est écrit dans `./src/icon.mjs`
+- le résultat est écrit dans `./src/secret.mjs`
 
 A l'initialisation des services, l'import de ce fichier expose l'encodage en base64 généré. Ce texte est converti en binaire, décrypté et l'objet correspondant disponible dans la configuration interne.
 
-> Le fichier `./src/icon.mjs` porte un nom qui n'a rien à voir avec son objet. Il **N'EST PAS** communiqué à `git`. Il est a régénérer à chaque fois que `keys.json` change (et à la première installation).
+> Le fichier `./src/secret.mjs` **N'EST PAS** communiqué à `git`. Il est a régénérer à chaque fois que `keys.json` change (et à la première installation).
 
 > Certes la lecture des sources permet de comprendre comment l’obfuscation a été réalisée. Mais le _hacking_ en est compliqué pour l'hébergeur des services qui doit écrire du code pour l'extraire et avoir lu le code de la build pour en saisir le procédé et les clés. 
 
@@ -126,36 +171,36 @@ A l'initialisation des services, l'import de ce fichier expose l'encodage en bas
 
 Selon les configurations choisies, on peut effectuer des _build_ et déployer les services OP et PUBSUB selon plusieurs options. Ci-après la liste des options documentées, et celles a priori non pertinentes avec la raison associée.
 
-### Déploiements pour un site NON géré
+### Déploiements pour un site NON géré par un provider externe
 Un serveur NON géré est un serveur dont on assure soi-même la configuration et la surveillance d'exploitation. Typiquement:
 - un site de production sur une ou des VMs hébergés chez un fournisseur standard.
 - un serveur de test _personnel_ pour une exploitation de démonstration ou de test, en ayant un nom de domaine spécifique.
 
 Sur un site non géré, il faut installer:
-- éventuellement un `nginx` (ou équivalent) capable d'effectuer un _load balancing_ entre plusieurs instances de serveur HTTP assurant un service OP afin d'accroître la puissance disponible.
-- éventuellement une base de données, Sqlite ou Postgresql, locale, et en gérer la sécurité / backup / restore. Mais il est aussi possible d'utiliser un service d'hébergement Firestore (ou par extension DynamoDB -Amazon-, ou CosmoDB -Microsoft Azure-).
+- _éventuellement_ un `nginx` (ou équivalent) capable d'effectuer un _load balancing_ entre plusieurs instances de serveur HTTP assurant un service OP afin d'accroître la puissance disponible.
+- _éventuellement_ une base de données, `Sqlite` ou `Postgresql`, locale, et en gérer la sécurité / backup / restore. Mais il est aussi possible d'utiliser un service d'hébergement `Firestore` (ou par extension DynamoDB -Amazon-, ou CosmoDB -Microsoft Azure-) où un service d'hébergement externe `Postgresql`.
 
 Les déploiements documentés sont les suivants:
 - **Serveur OP**: serveur assurant le seul service OP.
 - **Serveur PUBSUB**: serveur assurant le seul service PUBSUB.
 - **Serveur SRV**: serveur assurant les deux services OP+PUBSUB.
-  - optionnellement, SRV peut aussi assurer la distribution de l'application Web,
-  - optionnellement, SRV peut aussi assurer la distribution d'un site Web purement statique (par exemple documentaire).
+  - optionnellement, SRV _pourrait_ aussi assurer la distribution de l'application Web,
+  - optionnellement, SRV _pourrait_ aussi assurer la distribution d'un site Web purement statique (par exemple documentaire).
 
 ### Déploiement pour un site GAE géré
-Google App Engine (GAE) est une solution pour déployer un _serveur_  assurant les mêmes fonctionnalités qu'un site NON géré avec les remarques suivantes.
+Google App Engine (GAE) est une solution pour déployer un _serveur_ assurant les mêmes fonctionnalités qu'un site NON géré avec les remarques suivantes.
 
-**GAE est un _faux_ serveur:** une ou plusieurs instances peuvent s'exécuter en parallèle, le nombre pouvant est borné à 1 instance. Au bout d'un certain temps sans réception de requête, l'instance est arrêtée et sera relancé à l'arrivée d'une nouvelle requête:
-- c'est exactement le même comportement qu'un Cloud Function, si ce n'est que la durée de vie en l'absence de requête est plus long (une heure au lieu de 5 minutes pour fixer les idées).
+**GAE est une _ferme_ de serveurs:** une ou plusieurs instances peuvent s'exécuter en parallèle, le nombre pouvant est borné à 1 instance. Au bout d'un certain temps sans réception de requête, l'instance est arrêtée et sera relancée à l'arrivée d'une nouvelle requête:
+- c'est exactement le même comportement qu'un _Cloud Function_, si ce n'est que la durée de vie en l'absence de requête est plus long (une heure au lieu de 5 minutes pour fixer les idées).
 
-**Déployer le service OP seul sur GAE n'a pas d'intérêt a priori:** plutôt utiliser un Cloud Function.
+**Déployer le service OP _seul_ sur GAE n'a pas d'intérêt a priori:** plutôt utiliser un Cloud Function.
 
-**Déployer le service PUSUB seul sur GAE n'a pas d'intérêt a priori:** plutôt utiliser un Cloud Function.
+**Déployer le service PUSUB _seul_ sur GAE n'a pas d'intérêt a priori:** plutôt utiliser un Cloud Function.
 
 **Déployer les deux services OP+PUBSUB sur GAE à un intérêt** de simplification d'administration:
 - la comparaison des coûts avec un mix de Cloud Functions n'a pas été faite.
 - il faut borner le nombre d'instances à 1, PUBSUB ne peut pas être multi-instances: en conséquence c'est **une option de _faible_ puissance**.
-- le mot _faible_ est flou: le débit potentiel peut cependant être suffisant dans les cas d'usager par des organisations de taille modeste ou moyenne.
+- le mot _faible_ est flou: le débit potentiel peut cependant être suffisant dans les cas d'usage par des organisations de taille modeste ou moyenne.
 - dans les cas de faible trafic, le coût tombe facilement en dessous du minimum facturable, l'hébergement devenant gratuit.
 
 GAE _pourrait_ assurer la distribution de l'application Web (et du site documentaire statique) mais **ce n'est pas une bonne idée**:
@@ -169,12 +214,12 @@ GAE _pourrait_ assurer la distribution de l'application Web (et du site document
 
 **Le service PUBSUB peut être déployé par CF**, avec contrainte d'une instance au plus.
 
-Il n'est documenté ici que l'usage de Google Cloud Functions: les deux autres options chez Amazon et Azure sont à tester et documenter, même si en théorie les adaptations de code à effectuer semblent marginales.
+Il n'est documenté ici que l'usage de _Google Cloud Functions_: les deux autres options chez AWS et Azure sont à tester et documenter, même si en théorie les adaptations de code à effectuer semblent marginales.
 
 # Choix de la _base de données_
 
 ### Autogestion de la base de données
-C'est possible pour les _providers_ SQLite et PostgreSQL.
+C'est possible pour les _providers_ `SQLite` et `PostgreSQL`.
 
 C'est une gestion lourde et humainement contraignante pour une organisation.
 
@@ -182,15 +227,15 @@ C'est une gestion lourde et humainement contraignante pour une organisation.
 #### Firestore
 Service géré par Google. Si le débit est faible on peut tomber sous le seuil de facturation.
 
-En pratique ceci impose _naturellement_ à opter pour Google Storage.
+En pratique ceci impose _naturellement_ à opter pour _Google Storage_ pour le _storage_ des fichiers.
 
 ### PostgreSQL
-Il ya plusieurs offres sur le marché avec un coût d'entrée minimal d'une vingtaine d'euros mensuels: certes le débit va être important, mais c'est une solution à réserver si le coût de Firestore devient prohibitif.
+Il ya plusieurs offres sur le marché avec un coût d'entrée minimal d'une vingtaine d'euros mensuels: certes le débit va être important, mais c'est une solution à réserver si le coût de _Firestore_ devient prohibitif.
 
-### DynamoDB CosmoDB
+### DynamoDB (AWS) et CosmoDB (Azure)
 Les classes _providers_ n'ont pas été écrites:
-- sur le papier il n'y a pas d contradictions avec les contraintes à respecter pour l'interface _provider_.
-- les autres _providers_ ont environ 500 lignes de code: le temps à psser en compréhension / test des API, puis en création des comptes Amazon ou Azure, puis en tests, est plus important que l'effort d'écriture à proprement parlé du code.
+- sur le papier il n'y a pas de contradictions avec les contraintes à respecter pour l'interface _provider_.
+- les autres _providers_ ont environ 500 lignes de code: le temps à passer en compréhension / test des API, puis en création des comptes Amazon ou Azure, puis en tests, est plus important que l'effort d'écriture à proprement parlé du code.
 
 # Choix du _storage_
 
@@ -202,15 +247,11 @@ A choisir si les options GAE et CF chez Google sont prises.
 
 ### Amazon S3
 S3 est un _interface_, le _provider_ a été testé avec `minio`.
-- S3 est bien entendu disponible chez Amazon.
-- d'autres fournisseurs existent sur le marché, la comparaions des coûts n'a pas été faite.
-- gérer soi-même S3 avec `minio` n'est pas réaliste en production.
+- S3 est bien entendu disponible chez AWS.
+- d'autres fournisseurs existent sur le marché, la comparaison des coûts n'a pas été faite.
+- gérer soi-même S3 avec `minio` n'est pas vraiment réaliste en production.
 
 Le Storage de Azure serait à écrire: environ 500 lignes de code.
-
-- **Serveur OP**: serveur assurant le seul service OP.
-- **Serveur PUBSUB**: serveur assurant le seul service PUBSUB.
-- **Serveur SRV**: serveur assurant les deux services OP+PUBSUB.
 
 # Fichiers de configuration
 
@@ -251,9 +292,9 @@ Les _clés_ de l'administrateur technique et des sites A, B ... sont obtenus ain
 
     ZgHxc7BeHgR7z5HLpidsMd4XmSJmfCCulgu7cfwB9V8=
 
-Ceci donne une clé à mettre dans les propriétés de app_keys:
+Ceci donne une clé à mettre dans les propriétés de `app_keys`:
 
-`admin` : c'est la clé qui permet d'authentifier le login de l'administrateur technique. Dans cet exemple:
+`admin` : c'est la clé qui permet d'authentifier le login de l'administrateur technique. Dans cet exemple c'est la clé générée avec les paramètres:
 
     Organisation: `admin`
     Phrase secrète: `les framboises sont bleues cette année`
@@ -433,7 +474,7 @@ Commande dans un terminal (à la racine du projet):
 
 **Il faut renommer la directive ""typeX" en "type"** sinon le développement ne marche plus.
 
-Dans le folder `dist/op` insérer un fichier package.json ne contenant que `{}`:
+Dans le folder `dist/op` insérer un fichier `package.json` ne contenant que `{}`:
 
     echo "{}" > dist/op/package.json
 
@@ -744,13 +785,11 @@ Voir en annexe les arguments de `tools`.
 
 > **Attention:** `tools.js` est le _vrai_ exécutable et écrit vraiment dans la _vraie_ base et le _vrai_ storage.
 
-# Déploiement _GAE_
+# Déploiement _GAE_ 
+(TODO)
 
 # Déploiements _Cloud Function_ des services OP et PUBSUB
-
-## Déploiement du service OP
-
-## Déploiement du service PUBSUB
+(TODO)
 
 # L'utilitaire `upload`
 
@@ -787,7 +826,8 @@ _Génération des exécutables_
 
 Créé des exécutables pour linux `upload` et windows (en x64) `upload.exe`.
 
-_Remarque_: problème avec node16 sous windows 10.
+### Distribution
+TODO: solution simple à proposer pour disposer depuis une URL de `upload` et `upload.exe`.
 
 # Annexe I: CLI `tools`
 
@@ -802,7 +842,6 @@ Les commandes sont:
 - `export-st`: exporter un _espace_ d'un Storage sur un autre _espace_ d'un autre Storage.
 - `purge-db`: purge d'un _espace_ d'une base de données.
 - `vapid`: génération d'un nouveau couple de clés privée / publique VAPID. Pas d'arguments, résultat dans `./vapid.json`.
-- `icon` : génération de `./src/icon.mjs` depuis `./keys.json`. Pas d'options.
 
 ### `export-db -s --in ... --out ...`
 - `-s` : optionnel. Simulation, rien n'est écrit.
