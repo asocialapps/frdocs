@@ -827,7 +827,30 @@ _Génération des exécutables_
 Créé des exécutables pour linux `upload` et windows (en x64) `upload.exe`.
 
 ### Distribution
-TODO: solution simple à proposer pour disposer depuis une URL de `upload` et `upload.exe`.
+Dans un dépôt de distribution (par exemple `github.com/asocialapps`):
+- créer un repository `upload`
+
+Localement publier dans ce repository:
+- `index.html`
+- `upload.exe`
+- `upload`
+
+Dans le settings de ce repository, rubrique Pages, donner main comme branche de publication.
+
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Utilitaires "upload"</title>
+      </head>
+      <body>
+        <div><a href="./upload.exe">Pour Windows (x86): upload.exe</a></div>
+        <div><a href="./upload">Pour Linux (x86): upload</a></div>
+      </body>
+    </html>
+
+Cette page permet de télécharger les exécutables. 
+
+On _pourrait_ être un peu plus bavard dans `index.html` et y inscrire un minimum de manuel d'utilisation.
 
 # Annexe I: CLI `tools`
 
