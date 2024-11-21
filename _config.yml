@@ -29,7 +29,7 @@ url: https://asocialapps.github.io/frdocs
 # baseurl: "/fr" # the subpath of your site, e.g. /blog
 
 # twitter_username: jekyllrb
-github_username:  dsportes
+# github_username:  dsportes
 
 header_pages:
   - application.md
@@ -40,7 +40,7 @@ minima:
   skin: dark
   date_format: "%Y-%m-%d"
   social_links:
-    - { platform: github,  user_url: "https://github.com/dsportes" }
+    - { platform: github,  user_url: "https://github.com/asocialapps" }
 
 author:
   name: Daniel Sportès
