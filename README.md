@@ -1,4 +1,4 @@
-Documentation en français de l'application "Asocial"..
+Documentation en français de l'application "Asocial".
 
 Le site est formaté par Jekyll.
 
