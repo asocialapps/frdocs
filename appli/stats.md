@@ -45,20 +45,21 @@ Une ligne (anonyme) par compte comportant les colonnes suivantes:
 
 > Le rapprochement de `NN+NC+NG` avec `QN` permet de comparer l'usage effectif par rapport aux quotas (de même entre `V` et `QV`).
 
-## Archive des _tickets_ de paiement des comptes "A"
-Cette archive contient une ligne par _ticket de paiement_ émis / reçu dans le mois. Le ticket est anonyme, il n'est pas possible d'effectuer un rapprochement avec le compte qui l'a émis.
+## Archive des _tickets_ de paiement
+Cette archive (un fichier CSV) contient une ligne par _ticket de paiement_ émis / reçu dans le mois. Le ticket est anonyme, il n'est pas possible d'effectuer un rapprochement avec le compte qui l'a émis.
 
 Elle permet au Comptable de totaliser ce qu'il a reçu en paiement, du moins ce qu'il a enregistré avoir reçu.
 
 Colonnes:
 
-    ids, dg, dr, ma, mc, refa, refc
+    IDS,TKT,DG,DR,MA,MC,REFA,REFC
 
-- `ids` : identifiant du ticket commençant par `aamm` (l'année et le mois)
-- `dg` : date de génération sous la forme `aaaammjj`
-- `dr`: date de réception / enregistrement sous la forme `aaaammjj`. Si 0 le ticket est _en attente_.
-- `ma`: montant en `c` déclaré émis par le compte A.
-- `mc` : montant en `c` déclaré reçu par le Comptable.
-- `refa` : référence facultative écrite par le compte A à l'émission.
-- `refc` : référence facultative écrite par le Comptable à la réception.
+- `IDS` : identifiant du ticket commençant par `aamm` (l'année et le mois)
+- `TKT` : numéro du ticket.
+- `DG` : date de génération sous la forme `aaaammjj`
+- `DR`: date de réception / enregistrement sous la forme `aaaammjj`. Si 0 le ticket est _en attente_.
+- `MA`: montant en `c` déclaré émis par le compte A.
+- `MC` : montant en `c` déclaré reçu par le Comptable.
+- `REFA` : référence facultative écrite par le compte A à l'émission.
+- `REFC` : référence facultative écrite par le Comptable à la réception.
 
