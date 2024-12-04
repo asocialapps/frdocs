@@ -879,17 +879,22 @@ _data_ :
 - `privK` : clé privée RSA de son avatar principal cryptée par la clé K du compte.
 
 - `dhvuK` : date-heure de dernière vue des notifications par le titulaire du compte, cryptée par la clé K.
-- `qv` : `{ qc, qn, qv, pcc, pcn, pcv, nbj }`
-  - `pcc, pcn, pcv, nbj` : remontés de `compta` en fin d'opération quand l'un d'eux passe un seuil de 5% / 5j, à la montée ou à la descente.
-    - `pcc` : pour un compte O, pourcentage de sa consommation mensualisée sur M/M-1 par rapport à son quota `qc`.
-    - `nbj` : pour un compta A, nombre de jours estimés de vie du compte avant épuisement de son solde en prolongeant sa consommation des 4 derniers mois et son abonnement `qn qv`.
-    - `pcn` : pourcentage de son volume de notes / chats / groupes par rapport à son quota qn.
-    - `pcv` : pourcentage de son volume de fichiers par rapport à son quota qv.
-  - `qc qn qv` : mise à jour immédiate en cas de changement des quotas.
-    - pour un compte "O" identiques à ceux de son entrée dans partition.
-    - pour un compte "A", `qn qv` donné par le compte lui-même.
-    - en cas de changement, les compteurs de consommation sont remontés. 
-    - permet de calculer en session les alertes de quotas et de consommation.
+- `qv` : `{ qc, qn, qv, nn, nc, ng, v, cjm }`. Recopiés de `compta.compteurs.qv` en fin d'opération quand l'un d'eux passe un seuil de 5% (sans seuil pour `qc, qn, qv`), à la montée ou à la descente.
+  - `qc`: limite de consommation
+  - `qn`: quota du nombre total de notes / chats / groupes.
+  - `qv`: quota du volume des fichiers.
+  - `nn`: nombre de notes existantes.
+  - `nc`: nombre de chats existants.
+  - `ng` : nombre de participations aux groupes existantes.
+  - `v`: volume effectif total des fichiers
+  - `cjm`: coût journalier moyen de calcul sur M et M-1.
+- `flags` : flags courants. Recopiés de `compta.compteurs.flags` en fin d'opération en cas de changement.
+  - `RAL` : ralentissement (excès de calcul / quota)
+  - `NRED` : documents en réduction (excès de nombre de documents / quota)
+  - `VRED` : volume de fichiers en réduction (excès de volume / quota)
+  - `ARSN` : accès restreint pour solde négatif
+
+- `lmut` : liste des `ids` des chats pour lesquels le compte (son avatar principal) a une demande de mutation (`mutI` != 0)
 
 _Comptes "O" seulement:_
 - `clePK` : clé P de la partition cryptée par la clé K du compte. Si cette clé a une longueur de 256, la clé P a été cryptée par la clé publique de l'avatar principal du compte suite à une affectation à une partition APRÈS sa création (changement de partition, passage de compte A à O)
@@ -1149,6 +1154,12 @@ _data_ (de l'exemplaire I):
 - `st` : deux chiffres `I E`
   - I : 0:indésirable, 1:actif
   - E : 0:indésirable, 1:actif, 2:disparu
+- `mutI` :
+  - 1 - I a demandé à E de le muter en compte "O"
+  - 2 - I a demandé à E de le muter en compte "A"
+- `mutE` :
+  - 1 - E a demandé à I de le muter en compte "O"
+  - 2 - E a demandé à I de le muter en compte "A"
 - `idE idsE` : identifiant de _l'autre_ chat.
 - `cvE` : `{id, v, ph, tx}` carte de visite de E au moment de la création / dernière mise à jour du chat (textes cryptés par sa clé A).
 - `cleCKP` : clé C du chat cryptée,
