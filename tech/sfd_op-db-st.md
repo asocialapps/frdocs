@@ -869,6 +869,8 @@ _data_ :
 - `hk` : `hXR`, hash du PBKFD d'un extrait de la phrase secrète (en base précédé de `ns`).
 - `dlv` : dernier jour de validité du compte.
 
+- `dharF dhopf dharC dhopC dharS dhopS`: dh des ACCES RESTREINT (F, C, S).
+
 - `vpe` : version du périmètre
 - `vci` : version de `comptis`
 - `vin` : version de `invits`
