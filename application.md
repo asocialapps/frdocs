@@ -33,6 +33,9 @@ title: Utiliser l'application
 [Alertes et restrictions d'accès des comptes](appli/alertes.html)
 - Liste des alertes plus ou moins graves et des restrictions d'accès éventuellement associées.
 
+[Mutations de compte "A" en "O" et de "O" en "A"](appli/mutations_oa.html)
+- Comment un compte peut changer de catégorie et pourquoi.
+
 [Statistiques partagées entre le Comptable et l'administrateur technique](appli/stats.html)
 - Détail des compteurs _abonnements / consommations_ et _tickets de paiement du mois_.
 

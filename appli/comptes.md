@@ -12,28 +12,30 @@ La création de comptes se fait par _cooptation_ : un compte _sponsor_ prépare 
 ### Qui peut être _sponsor_ ?
 - Le Comptable peut sponsoriser des comptes "A" et des comptes "O".
 - Un compte "A" ne peut sponsoriser que des comptes "A",
-- un compte "O" que le Comptable à introniser _délégué de sa partition_ peut sponsoriser,
+- un compte "O" que le Comptable à intronisé _délégué de sa partition_ peut sponsoriser,
   - des comptes "O" dans sa partition, en les intronisant ou non, eux-mêmes _délégué_ de la partition.
   - des comptes "A".
 
 ### La fiche de _sponsoring_
-- Elle est identifiée par une phrase de sponsoring que sponsor communique à son sponsorisé. 
+- Elle est identifiée par une phrase de sponsoring que le sponsor communique à son sponsorisé. 
   - elle fait au moins 24 signes, les 12 premiers devant être uniques.
 - Elle fixe un premier nom pour le sponsorisé que ce dernier pourra changer ultérieurement.
-- Si le sponsorisé est un compte "A", il doit pouvoir commencer à utiliser son compte tout de suite:
-  - si le sponsor est un compte "A", il fait un don _modique_ au sponsorisé: ce don est prélevé sur son solde, mais le sponsorisé pourra le lui rendre plus tard.
-  - si le sponsor est un compte "O", le sponsorisé reçoit de l'organisation un don de démarrage de 2c.
-- Si le sponsorisé est un compte "O", le délégué ou le Comptable sponsor, lui attribue un quota de _documents_, de _volume de fichiers_ et de quota de calcul mensuel. Ces quotas sont prélevés sur les quotas inutilisés de la partition (ils pourront être ajustés plus tard).
+- Le sponsor peut faire un _don_ au sponsorisé, pour autant que le solde du sponsor le permette. Quand le sponsorisé est un compte "A", ce don lui permet de commencer à utiliser son compte tout de suite sans attendre un premier versement.
+- Le sponsor attribue au sponsorisé trois _quotas_:
+  - un quota QN de _nombre de documents_ (nombre de notes + nombre de chats + nombre de participations actives aux groupes), 
+  - un quota QV de _volume de fichiers_,
+  - et un quota QC de calcul mensuel. 
+- Ces quotas sont prélevés sur les quotas inutilisés de la partition pour un compte "O" ou sur le quota global de l'espace réservé aux comptes "A".
 
 La fiche de sponsoring est complétée par un _mot de bienvenu_ du sponsor au sponsorisé:
-- habituellement ce mot initialisera un _chat_ entre sponsor et sponsorisé, qui seront ainsi des _contacts_ et connaîtront leurs cartes de visite mutuelles.
-- toutefois, le sponsor peut refuser que ce _chat- s'établisse.
+- habituellement ce mot initialise un _chat_ entre sponsor et sponsorisé, qui seront ainsi mutuellement _contacts_ et connaîtront leurs cartes de visite.
+- toutefois, le sponsor peut refuser que ce _chat_ (et ce contact) s'établisse..
 
 La _fiche de sponsoring_ a une durée de validité de 30 jours. Si elle n'a pas été acceptée / refusée dans ce délai elle s'autodétruit.
 
 ### Création du compte _sponsorisé_
 Le futur titulaire accède à sa fiche de sponsoring en citant la phrase que le sponsor lui a communiqué:
-- il peut revoir les conditions qui s'y trouve, la carte de visite du sponsor, les quotas attribués, le mot de bienvenu.
+- il peut revoir les conditions qui s'y trouvent, la carte de visite du sponsor, les quotas attribués, le mot de bienvenu.
 - s'il n'est pas satisfait de ces conditions, il peut refuser le _sponsoring_ en inscrivant par politesse un mot d'explication.
 - s'il est satisfait, le sponsorisé:
   - choisit sa phrase secrète qu'il saisit deux fois,
@@ -67,13 +69,13 @@ Le _sponsorisé_ a un compte opérationnel et il peut y effectuer des opération
 ## Exemples d'opérations usuelles au démarrage
 
 ### Changer sa _carte de visite_
-Typiquement y mettre une photo et plus d'information à propos de soi-m^me que le simple nom donné par le _sponsor_.
+Typiquement y mettre une photo et plus d'information à propos de soi-même que le simple nom donné par le _sponsor_.
 
 ### Accéder à sa _liste de contacts_
-A cet instant elle a **un** contact, son _sponsor_, sauf si l'un des deux sponsor / sponsorisé n'ont pas voulu de ce contact.
+A cet instant elle a (au plus) **un** contact, son _sponsor_, sauf si l'un des deux sponsor / sponsorisé n'ont pas voulu de ce contact.
 - il est possible / souhaitable d'attacher donner à son sponsor un _commentaire_ qui rappelle au moins comment il s'appelait au moment du sponsoring: le sponsor peut en effet changer sa carte de visite quand il veut. En attribuant un nom / commentaire personnel le sponsor pourra être retrouvé par filtrage sur le contenu du commentaire personnel attaché au sponsor.
 - il est possible de lui attacher des _hashtags_, qui facilitent les filtrages par _catégorie_ de contact.
-- on peut aussi ouvrir le _chat_ d'un contact: on y voir pour l'instant le mot de bienvenu du sponsor et le mot de remerciement du sponsorisé.
+- on peut aussi ouvrir le _chat_ d'un contact: on y voit pour l'instant le mot de bienvenu du sponsor et le mot de remerciement du sponsorisé.
 
 #### _Hashtags_
 Un _hashtag_ est une suite courte de lettres minuscules non accentuées et de chiffres, sans espaces.
@@ -82,9 +84,10 @@ Un _hashtag_ est une suite courte de lettres minuscules non accentuées et de ch
 - quand un _hashtag_ n'est plus utilisé nulle part dans le compte, il disparaît de la liste.
 
 ## Compte "A": ajustement de ses quotas
-Son abonnement à la création correspond à un minimum de _documents_ et de _volume de fichiers attachés_: il est opportun d'y mettre des valeurs réalistes.
-- le quota du nombre de documents est un entier dont l'unité correspond à 100 documents.
-- le quota du volume de fichiers est un entier dont l'unité correspond à 100MB.
+Son abonnement à la création correspond à un minimum de _documents_, de _volume de fichiers attachés_ et de _ressource de calcul_: il est opportun d'y mettre des valeurs réalistes.
+- le quota QN du nombre de documents est un entier dont l'unité correspond à 100 documents.
+- le quota QV du volume de fichiers est un entier dont l'unité correspond à 100MB.
+- le quota QC est en unités monétaires (en _centimes_). Chaque lecture / écriture / transfert de fichier a un coût en centimes.
 
 [Abonnement, consommation, tarifs](/appli/tarifs.html)
 
@@ -106,19 +109,30 @@ Quand le Comptable reçoit un paiement avec un numéro qui l’anonymise, il enr
 
 > Les _tickets_ étant enregistrés cryptés par la clé des comptes, aucune corrélation ne peut être faite entre la source d'un _paiement_ et le compte qui en bénéficie.
 
+## A sa création une organisation _n'accepte pas_ de comptes _autonomes_
+- Le Comptable peut lever cette interdiction et en autoriser la création,
+- il peut aussi supprimer cette autorisation: cela n'a aucun effet sur les comptes _autonomes_ existants et ne vaut que pour les créations / mutations ultérieures.
+
+## Changement de la phrase secrète
+Un compte peut changer sa phrase secrète:
+- il doit se connecter avec la phrase actuelle,
+- il donne (deux fois) sa nouvelle phrase dont les 12 premiers signes ne doivent pas être ceux de la phrase secrète d'un autre compte.
+
+> **Remarque**: quand on se connecte depuis un navigateur en mode _avion_ il faut donner la phrase secrète qui était en cours lors de la dernière connexion en mode synchronisé sur ce navigateur.
+
 # Pour information: la création du _Comptable_
 A l'initialisation de l'espace d'une organisation, l'administrateur technique déclare une _phrase de sponsoring_ pour le Comptable de l'espace.
 - tant que le Comptable n'a pas créé son compte, l'espace n'est pas utilisable.
 - le Comptable _accepte_ son sponsoring et déclare sa phrase secrète.
 
-Étant le seul compte, il est à ce moment le seul à pouvoir sponsorisé des comptes.
+Étant le seul compte, il est à ce moment le seul à pouvoir sponsoriser des comptes.
 
 # Auto résiliation d'un compte
 Un compte peut s'auto-résilier : tous ses avatars secondaires doivent avoir été supprimés.
 - Si c'est un compte "O" ses quotas d'abonnement / consommation sont rendus à sa partition.
 - Toutes ses données sont effacées, sauf ...
   - _ses notes de groupe_: dans un groupe une note _appartient_ au groupe et reste normalement accessible aux autres membres.
-  - pour ses chats personnels: son exemplaire disparaît mais l'exemplaire de son contact reste accessible, quoique sans mise à jour. Si le contact déclare le chat _indésirable_, le contenu du chat disparaît.
+  - pour ses chats personnels: son exemplaire disparaît mais l'exemplaire de son contact reste accessible, quoique sans mise à jour. Si le contact déclare le chat _passif / raccroché_, le contenu du chat disparaît.
 
 # Disparition d'un compte
 
@@ -126,44 +140,8 @@ Un compte peut s'auto-résilier : tous ses avatars secondaires doivent avoir ét
 
 Comme rien ne raccorde un compte au monde réel, ni adresse e-mail, ni numéro de téléphone ... il n'est pas possible d'informer quiconque de la disparition prochaine de son compte.
 
+> Attention: un compte en _ACCÈS RESTREINT_, typiquement parce que son solde est débiteur, s'auto-détruit 6 mois après la date de son passage en _ACCÈS RESTREINT_.
+
 # Mutation de comptes "A" en "O" et réciproquement
 
-### Comptes autonomes "A"
-Un compte _autonome_:
-- **paye son abonnement** (qu'il fixe lui-même) **et sa consommation** (sans limite a priori),
-- **ne peut être ni _restreint_, ni _bloqué_** tant que son solde est créditeur.
-
-Un compte "A" _augmente son solde_ en faisant parvenir des _paiements_ que le Comptable va enregistrer sans que personne (sauf le compte lui-même) ne puisse déterminer quel compte a été crédité par quel paiement. 
-
-Un compte "A" peut **faire des dons** à d'autres comptes "A".
-
-### Comptes de l'organisation "O"
-Pour certaines organisations, les comptes "A" ne sont pas acceptables:
-- si un compte "A" quitte l'organisation ou qu'il est devenu nuisible à l'organisation, il ne peut pas être restreint / bloqué.
-- l'organisation peut souhaiter contrôler les ressources utilisées par les comptes et les restreindre,
-- l'organisation peut avoir inclus l'abonnement et la consommation de certains comptes dans ses _frais d'adhésion_ ou équivalents.
-
-Pour répondre à ces objectifs, il est défini une seconde catégorie de compte: **les comptes "O", de l'organisation**.
-
-L'organisation paye de facto l'abonnement et la consommation pour le compte mais en contrepartie,
-- elle lui fixe des limites potentiellement bloquantes d'abonnement et de consommation,
-- elle peut restreindre voire bloquer le compte. 
-
-### Basculement d'un compte
-Le Comptable ou un de ses _délégués_ peut transformer un compte "O" en compte "A" **ayant donné son accord** par la communication de sa _phrase de contact_ au Comptable / délégué.
-- le compte acquiert une liberté totale (il ne peut plus être bloqué) mais en contrepartie paie son abonnement / consommation.
-
-Le Comptable ou un _délégué_, peut transformer un compte "A" **ayant donné son accord** en compte "O":
-- le compte n'a plus à payer son accès,
-- en contrepartie il est contraint en volume et en activité et peut être restreint / bloqué.
-
-### A sa création une organisation _n'accepte pas_ de comptes _autonomes_
-- Le Comptable peut lever cette interdiction et en autoriser la création,
-- il peut aussi supprimer cette autorisation: cela n'a aucun effet sur les comptes _autonomes_ existants et ne vaut que pour les créations ultérieures.
-
-### Changement de la phrase secrète
-Un compte peut changer sa phrase secrète:
-- il doit se connecter avec la phrase actuelle,
-- il donne (deux fois) sa nouvelle phrase dont les 12 premiers signes ne doivent pas être ceux de la phrase secrète d'un autre compte.
-
-> **Remarque**: quand on se connecte depuis un navigateur en mode _avion_ il faut donner la phrase secrète qui était en cours lors de la dernière connexion en mode synchronisé sur ce navigateur.
+Voir cette section [Mutations de compte "O" en "A" et de "A" en "O"](./mutations__oa.html)
