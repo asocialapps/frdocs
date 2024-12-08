@@ -1219,6 +1219,25 @@ Le nombre de chats dans la compta de I est incrémenté.
 
 > Un chat _indésirable_ pour un avatar reste un chat _écouté_, les items écrits par E arrivent, mais sur lequel I n'écrit pas. Il redevient _actif_ pour I dès que I écrit un item et ne redevient _indésirable_ que quand il fait une _déclaration d'indésirable_.
 
+## Mutation des comptes O<->AR
+### Compte "O"
+Le compte doit donner son autorisation à un ou plusieurs comptes Comptable / délégués de sa partition. Pour chacun:
+- le chat avec lui est marqué `mutI / mutE` 1 (autorisation de mutation en compte A).
+- l'`ids` du chat est ajouté à `lmut` de son compte.
+
+### Compte "A"
+Le compte doit donner son autorisation à un ou plusieurs comptes Comptable / délégués _d'une_ partition. Pour chacun:
+- le chat avec lui est marqué `mutI / mutE` 2 (autorisation de mutation en compte "O").
+- l'`ids` du chat est ajouté à `lmut` de son compte.
+
+### Pour les Comptable / délégués (_d'une_ partition)
+Les actions de mutation sont accessibles depuis un _chat_ ayant un `mutE` à 1 ou 2. L'action de mutation, en plus de muter le compte,
+- liste tous les chats de `lmut` du compte,
+- efface les `mutI` de ces chats,
+- supprime `lmut`.
+
+L'opération d'auto-mutation d'un délégué en compte A est plus simple.
+
 # Documents `sponsorings`
 
 P est le parrain-sponsor, F est le filleul-sponsorisé.
