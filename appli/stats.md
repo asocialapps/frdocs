@@ -12,12 +12,14 @@ Ces statistiques sont calculées mensuellement et sont des fichiers CSV décrits
 ## Abonnement / consommation des comptes
 Une ligne (anonyme) par compte comportant les colonnes suivantes:
 
+    'IP',
     'NJ', 
     'QC', 'QN', 'QV', 
     'NL', 'NE', 'VM', 'VD', 
     'NN', 'NC', 'NG', 'V', 
     'AC', 'AF', 'CC', 'CF'
 
+    - IP : ID de la partition du compte ou '' pour un compte "A".
     - NJ 0 : nombre de jours d'existence du compte dans le mois.
     moyennes des quotas:
     - QC 1 : moyenne de qc dans le mois (en c)
