@@ -160,9 +160,13 @@ Un avatar peut créer un **groupe** dont il sera le premier membre _actif_ et y 
 - facultativement **des notes partagées entre les membres** qui peuvent les lire et les éditer.
 
 Un avatar connu dans un groupe peut avoir plusieurs états successifs:
-- **simple contact**: il a été inscrit comme contact du groupe mais lui-même ne le sait pas et ne connaît pas le groupe.
+- **simple contact**: il a été inscrit comme contact du groupe le sait et peut voir la _carte de visite_ du groupe.
 - **contact invité**: un membre actif ayant pouvoir d'animateur a invité le contact à devenir membre actif. L'avatar invité voit cette invitation et s'il l'accepte deviendra membre actif, sinon il retournera à l'état de simple contact. Nul ne devient membre actif à son insu.
 - **membre actif**: il peut participer à la vie du groupe.
+
+Par défaut le mode d'invitation dans un groupe est **simple**: il suffit **qu'un** animateur invite un contact pour que ce dernier soit invité.
+- un second mode dit **unanime** peut être fixé: dans ce cas il faut que **tous** les animateurs aient invité un contact pour qu'il soit effectivement invité.
+- en mode unanime, le cercle fermé des animateurs contrôle strictement qui peut être invité. Un _couple_ ne peut ainsi pas devenir un _trouple_ sans l'accord des deux membres du couple.
 
 ### Accès aux membres et / ou aux notes
 Un membre actif _peut_ recevoir lors de son invitation deux _droits_:
@@ -201,7 +205,7 @@ Ceci fait apparaître visuellement à l'écran une hiérarchie.
 **Une note personnelle peut avoir pour _parent_ une note de groupe** pour la compléter / commenter: toutefois l'avatar propriétaire de la note personnelle sera seul à la voir (puisqu'elle est _personnelle_).
 
 ### Membre _hébergeur_ d'un groupe
-_L'hébergeur du groupe_ est un membre qui s'est dévoué pour supporter les coûts d'abonnement de stockage (nombres de notes et volume des fichiers) des notes du groupe.
+_L'hébergeur du groupe_ est un membre qui s'est dévoué pour supporter les coûts d'abonnement de stockage (nombres de notes et volume des fichiers) des notes du groupe mais peut en limiter le nombre / volume.
 
 [Information détaillée à propos des groupes et de leurs notes](./notes.html)
 
