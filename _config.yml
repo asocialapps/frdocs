@@ -34,6 +34,7 @@ url: https://asocialapps.github.io/frdocs
 header_pages:
   - application.md
   - design.md
+  - posts.md
   - about.md
 
 minima:
