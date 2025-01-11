@@ -70,14 +70,18 @@ Un compte _autonome_:
 
 ### Les comptes de l'organisation "O"
 Pour certaines organisations, les comptes "A" ne sont pas acceptables:
-- si un compte "A" quitte l'organisation ou qu'il n'est plus jugé opportun, il ne peut pas être bloqué tant que son solde est créditeur, ce qui être sans limite.
+- si un compte "A" quitte l'organisation ou qu'il n'est plus jugé opportun, il ne peut pas être bloqué tant que son solde est créditeur, ce qui peut être sans limite.
 - l'organisation peut avoir inclus l'abonnement et la consommation de certains comptes dans ses _frais d'adhésion_ ou équivalents et de ce fait vouloir maîtriser les ressources utilisées par les comptes.
 
 Pour répondre à ces objectifs, il existe une seconde catégorie de compte: **les comptes "O", de l'organisation**.
 
 L'organisation supporte de facto les coûts d'abonnement et de consommation pour le compte mais en contrepartie,
 - elle lui fixe des **quotas** d'abonnement et de consommation contraignants,
-- elle peut restreindre voire bloquer le compte. 
+- elle peut restreindre voire bloquer le compte.
+
+Toutefois il peut être compliqué pour le Comptable de gérer les quotas de _tous_ les compte:
+- beaucoup d'organisations ont une structure décentralisée en sous-organisations géographiques ou thématiques ayant une part d'autonomie de gestion de leurs adhérents.
+- il existe aussi des structures _clanique_, où un ou quelques représentants du clan ont toute liberté pour sponsoriser de nouveaux comptes et leur distribuer des quotas. Le cas échéant un protocole, non géré par l'application, définit comment chaque clan participe aux frais d'hébergement sur la base des quotas qui lui sont attribués.  
 
 > Un compte _augmente son solde_ en faisant parvenir des _paiements_ que le Comptable va enregistrer sans qu'il puisse faire le rapprochement entre un _paiement_ et le compte crédité. 
 
@@ -191,13 +195,12 @@ La recherche d'un groupe quand on est membre de beaucoup de groupes en est facil
 - hormis les membres actifs du groupe ayant droit d'accès aux notes, personne ne peut accéder aux notes du groupe.
 - quand un nouveau membre accepte une invitation au groupe avec droits d'accès aux notes, il a immédiatement accès à toutes les notes existantes du groupe. S'il redevient _simple contact_ ou perd son droit d'accès aux notes (de par sa volonté ou celle d'un _animateur_), il n'a plus accès à aucune de celles-ci (ce qui allège ses sessions).
 - pour écrire / modifier / supprimer une note du groupe, il faut avoir le droit d'accès en écriture aux notes.
-- chaque note contient la succession des membres qui y sont intervenu.
+- chaque note détient la liste des membres qui y sont intervenus.
 
 ### _Hashtags_ d'un membre à une note d'un groupe
-Ceci facilite les recherches d'un compte dans ses notes.
-- Le filtrage par _hashtags_ s'effectue en session tous groupes confondus. 
-- Les autres membres ne savant pas quels sont ces _hashtags_.
-- Un _animateur_ peut attacher des _hashtags publics_ à une note: ils sont visibles de tous les membres.
+Chaque membre d'un groupe peut attacher à la note ses _propres hashtags_ que les autres membres ne sont pas en mesure de décrypter. Ceci facilite les recherches d'un compte dans ses notes, le filtrage par _hashtags_ s'effectuant sur l'ensemble des notes auxquelles le compte a accès.
+
+Par ailleurs, un _animateur_ peut attacher des _hashtags publics_ à une note: ils sont lisibles de tous les membres.
 
 ### Vue hiérarchique: note de groupe _parent_ d'une autre note du même groupe
 Ceci fait apparaître visuellement à l'écran une hiérarchie.
@@ -236,14 +239,15 @@ Pour que ce mode fonctionne il faut qu'une session antérieure en mode _synchron
 
 Le coût d'usage de l'application pour une organisation correspond aux coûts d'hébergement des données et de traitement de celles-ci. Selon les techniques et les prestataires choisis, les coûts unitaires varient mais existent dans tous les cas.
 
-### _Base de données_ et _fichiers_ (Storage)
+### _Base de données_ et _Storage_
+- la _bases de données_ enregistre toutes les données de l'application **SAUF** les fichiers attachés aux notes. Elle requiert des accès très rapides.
+- les fichiers attachés aux notes sont enregistrés dans un _Storage_, stockage distant ayant une gestion spécifique et économique du fait d'être soumis à peu d'accès mais de plus fort volume.
+
 Leur stockage ont des coûts unitaires très différents (variant d'un facteur de 1 à 6).
-- les _bases de données_ requièrent un stockage proche du serveur et des accès très rapides,
-- les fichiers sont enregistrés dans des _Storage_, des stockages techniques distants ayant une gestion spécifique et économique du fait d'être soumis à peu d'accès (mais de plus fort volume).
 
 ### Abonnement: coût de l'espace occupé en permanence
-L'abonnement couvre les frais fixes d'un compte:  même quand il ne se connecte pas, le stockage de ses données a un coût. Il est décomposé en deux lignes de coûts correspondant à l'occupation d'espace en _base de données_ et en _storage_:
-- **Prix unitaire de stockage d'un document** multiplié par le **nombre de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels non _indésirables_, nombre de participations actives aux groupes.
+L'abonnement couvre les frais fixes d'un compte: même quand il ne se connecte pas, le stockage de ses données a un coût. Il est décomposé en deux lignes de coûts correspondant à l'occupation d'espace en _base de données_ et en _storage_:
+- **Prix unitaire de stockage d'un document** multiplié par le **nombre de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels, nombre de participations actives aux groupes.
 - **Prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **volume des fichiers attachés aux notes**.
 
 Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _quotas_ (_volumes maximaux_)** auquel le compte est abonné.
@@ -260,7 +264,7 @@ Le coût de calcul apparaît lors de l'usage effectif de l'application quand une
 ### Coûts réel et facturé
 Le coût _réel_ d'un compte sur une période donnée correspond à la somme du coût _d'abonnement_ et du coût de _consommation_ pendant cette période.
 
-Le coût _facturé_ sur une période est nul pour un compte "O" et est le coût _réel_ pour un compte "A".
+> Le coût _facturé_ sur une période est nul pour un compte "O" et est le coût _réel_ pour un compte "A".
 
 Le solde d'un compte est calculé à tout instant,
 - en le créditant des paiements et dons reçus dans la période,
@@ -272,19 +276,19 @@ Un compte peut afficher à tout instant,
 - l'état de sa comptabilité **calculée à l'instant de l'affichage**: quotas, nombre de documents et volumes de fichiers effectivement occupés, **solde courant**.
 - l'historique de l'évolution mois par mois sur les 12 derniers mois: moyennes des quotas, des consommations, coût total sur le mois (réel et facturé), débits et crédits, soldes en début et fin de mois.
 
-> L'unité monétaire interne est le _centime_ (c). Son ordre de grandeur est voisin d'un centime d'euro en appliquant des tarifs proches des coûts _de base_ des hébergements sur le marché. Chaque fournisseur a bien entendu ses propres tarifs qui peuvent être significativement éloignés des coûts _de base_.
+> L'unité monétaire interne est le _centime_ (c). Son ordre de grandeur est voisin d'un centime d'euro en appliquant des tarifs proches des coûts _de base_ des hébergements sur le marché. Chaque fournisseur a ses propres tarifs qui peuvent être significativement éloignés des coûts _de base_.
 
 >_L'ordre de grandeur_ pour un compte varie en gros de **0,5€ à 3€ par an**. Individuellement ça paraît faible mais n'est plus du tout négligeable pour une organisation assurant les frais d'hébergement d'un millier de comptes ...
 
 ### Gestion des _abonnements gratuits_ des comptes "O"
-Le Comptable procède d'abord à un _découpage en partitions_ des ressources globales dont il dispose: chaque _partition_ est dotée de trois quotas, 
-- un quota QN de _nombre de documents_ qu'il ne doit pas dépasser, 
-- un quota QV de _volume de fichiers_ qu'il ne doit pas dépasser,
+Le principe est pour le Comptable de confier la distribution fine des quotas à des _délégués_ responsables eux-mêmes de les répartir entre les comptes qui dépendent d'eux en procédant à un _découpage en partitions_ des ressources globales dont il dispose. Chacune _partition_ est dotée de trois quotas, 
+- un quota QN de _nombre de documents_ qui ne doit pas être dépassé, 
+- un quota QV de _volume de fichiers_ qui ne doit pas être dépassé,
 - un quota QC de _coût calcul_: c'est en _centime_ le coût calcul maximal sur un mois.
 
-Tout compte "O" est attaché à une _partition_.
+Tout compte "O" est attaché à une _partition_ à son sponsoring, le Comptable seul pouvant ensuite éventuellement le basculer dans une autre _partition_.
 
-Pour chaque _partition_ le Comptable peut (ou non) confier une _délégation_ à certains comptes de la partition afin que ceux-ci fixent aux comptes "O" de leur partition leurs quotas personnels QN / QV / QC.
+Pour chaque _partition_ le Comptable _peut_ confier une _délégation_ à certains comptes de la partition afin que ceux-ci fixent aux comptes "O" de leur partition leurs quotas personnels QN / QV / QC.
 
 > Remarque: un compte "A" se fixe lui-même ses 3 quotas QN / QV / QC et en assume les conséquences sur ses coûts facturés.
 
