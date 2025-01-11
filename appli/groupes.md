@@ -5,8 +5,8 @@ title: Les groupes et leurs notes
 
 Un avatar peut créer un **groupe** dont il sera le premier membre _actif_ et y aura un pouvoir _d'animateur_. Un groupe a,
 - un identifiant interne et **une carte de visite** (comme un avatar).
-- un **chat partagé par les membres du groupe**, les membres sont des _avatars_.
-- un **des notes partagées entre les membres** qui peuvent les lire et les éditer.
+- **un chat partagé par les membres du groupe**, les membres sont des _avatars_.
+- **des notes partagées entre les membres** qui peuvent les lire et les éditer.
 
 Un avatar connu dans un groupe peut avoir plusieurs états successifs:
 - **simple contact**: il a été inscrit comme _contact_ du groupe, le sait et peut voir la _carte de visite_ du groupe. 
