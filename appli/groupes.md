@@ -125,11 +125,15 @@ Ceci fait apparaître visuellement à l'écran une hiérarchie.
 **Un avatar peut attacher une note personnelle à une note de groupe** pour la compléter / commenter: toutefois il sera seul à la voir (puisqu'elle est _personnelle_).
 
 ## Exclusivité d'écriture à une note
-Il est intéressant que certaines notes ne puissent être écrites / mises à jour que par un seul membre.
+Il est intéressant que certaines notes ne puissent être écrites / mises à jour que par un seul membre, du moins pour une période donnée (ou tout le temps).
 
-**On peut conférer à un membre le droit exclusif d'écrire une note donnée:**
-- un animateur peut créer / changer / retirer cette exclusivité.
-- le membre ayant l'exclusivité peut se la retirer et en confier l'exclusivité à un autre (ou à personne).
+**On peut conférer à un membre le _droit exclusif d'écriture_ à une note donnée:**
+- à la création d'une note l'auteur peut fixer cette exclusivité.
+- un animateur peut créer / changer / retirer cette exclusivité, sauf si le détenteur de l'exclusivité est lui-même animateur.
+- le membre ayant _l'exclusivité d'écriture d'une note_ peut se la retirer et en confier l'exclusivité à un autre (ou à personne).
+- quand aucun avatar n'a l'exclusivité d'écriture sur une note, un membre _NON ANIMATEUR_ peut attribuer cette exclusivité à un de ses avatars **à condition d'avoir été le seul auteur de la note**. Bref on peut se réserver les notes qu'on est seul à avoir écrit, pas celles résultant d'une écriture collective (seul un animateur peut le décider).
+
+> Il est ainsi simple dans un groupe pour chaque membre de maîtriser les évolutions de _ses_ notes, tout en permettant aux autres de les lire à loisir.
 
 ## Membre _hébergeur_ d'un groupe
 _L'hébergeur du groupe_ est un membre qui s'est dévoué pour supporter les coûts d'abonnement de stockage (nombres de notes et volume des fichiers) des notes du groupe.
