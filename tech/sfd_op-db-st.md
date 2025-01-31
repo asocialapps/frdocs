@@ -123,7 +123,7 @@ L'écriture et la suppression de fichiers du _Storage_ ne sont pas soumises à l
 - **considérés comme _logiquement_ détruits dans la base**, mais n'ayant pas encore été physiquement purgés du _Storage_. Il faudra, un jour, achever d'effectuer ces _purges_ physiques du _Storage_. C'est l'objet des documents `fpurges`.
 
 ## Documents `transferts`
-- `id` : identifiant _majeur_ du fichier, une ID d'avatar ou de groupe.
+- `id` : identifiant _majeur_ du fichier, l'ID alias d'un avatar ou d'un groupe.
 - `ids` : identifiant du fichier relativement à son ID majeure (mais de facto universels).
 - `dlv` : jour d'écriture, du début de _l'upload_ + 1
 
@@ -1014,6 +1014,7 @@ _data_:
 - `v` : 1..N.
 - `vcv` : version de la carte de visite afin qu'une opération puisse détecter (sans lire le document) si la carte de visite est plus récente que celle qu'il connaît.
 - `hk` : `hZR` hash du PBKFD de la phrase de contact réduite (précédé du `ns` en base).
+- `alias` : ID alternative générée à la création de l'avatar. Identifie l'avatar sur Storage pour éviter d'y faire figurer son ID réelle.
 
 - `idc` : id du compte de l'avatar (égal à son id pour l'avatar principal).
 - `cleAZC` : clé A cryptée par ZC (PBKFD de la phrase de contact complète).
@@ -1564,6 +1565,7 @@ _data_:
 - `v` :  1..N
 - `dfh` : date de fin d'hébergement.
 
+- `alias` : ID alternative générée à la création du groupe. Identifie le groupe sur Storage pour éviter d'y faire figurer son ID réelle.
 - `nn qn vf qv`: nombres de notes actuel et maximum autorisé par l'hébergeur, volume total actuel des fichiers des notes et maximum autorisé par l'hébergeur.
 - `idh` : id du compte hébergeur (pas transmise aux sessions).
 - `imh` : indice `im` du membre dont le compte est hébergeur.
