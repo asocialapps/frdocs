@@ -7,7 +7,7 @@ L'application comporte plusieurs _composants_ (application Web, serveurs / Cloud
 
 # Déploiement l'application Web
 L'objectif est d'obtenir une page Web, `index.html` et les ressources associées, dans un folder à distribuer:
-- soit sur un CDN, par exemple _github pages_,
+- soit sur un CDN, par exemple **_github pages_: c'est l'option retenue et décrite ci-après**.
 - soit dans un serveur Web hébergé,
 - soit dans le serveur SRV décrit ci-après quand il héberge les services OP+PUBSUB.
 
@@ -24,8 +24,8 @@ Par convention, si les services OP et PUBSUB sont fournis par le **même** serve
 
     {
       "BUILD": "24",
-      "opurl": "http://localhost:8443",
-      "pubsuburl": "http://localhost:8443",
+      "opurl": "http://localhost:8080",
+      "pubsuburl": "http://localhost:8080",
       "docsurls": { 
         "fr-FR": "https://asocialapps.github.io/frdocs", 
         "en-EN": "https://asocialapps.github.io/frdocs" 
@@ -33,13 +33,24 @@ Par convention, si les services OP et PUBSUB sont fournis par le **même** serve
       "vapid_public_key": "BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew"
     }
 
-    Cas particulier où le _serveur_ délivre aussi l'application Web:
+Si le serveur est déployé sur GAE, par exemple:
+
+    "opurl": "https://asocial-test1.ew.r.appspot.com",
+    "pubsuburl": "https://asocial-test1.ew.r.appspot.com",
+
+> L'URL du serveur (pas spécialement fun) est masquée ici et l'utilisateur ne connaît que l'URL de son application donnée par son _provider_ de l'application comme:
+
+    https://asocialapps.github.io/XX?demo
+
+> Cas particulier où le _serveur_ délivre aussi l'application Web:
+
     {
       "opurl": "https",
       "pubsuburl": "https",
       ...
     }
-    Si ce serveur est seulement un `http` (en test), `http` remplace `https` ci-dessus.
+    
+Si ce serveur est seulement un `http` (en test), `http` remplace `https` ci-dessus.
 
 ### Build
 La commande est: 
@@ -69,29 +80,29 @@ On la met à jour par la commande:
 
 Un _repository_ `github.com` peut aussi gérer un site Web de distribution.
 - créer un dépôt `github.com` pour la distribution: par exemple ici `asocialapps` (`https://github.com/asocialapps`).
-- créer un repository par distribution à effectuer: par exemple ici `t1`.
+- créer un repository par distribution à effectuer: par exemple ici `XX`.
 
 Sur le poste qui génère la distribution,
-- créer un folder t1 et y copier les fichiers récupérés du build.
+- créer un folder `asocialapps-XX` et y copier les fichiers récupérés du build (dans `./dist/pwa`).
 - y ajouter un fichier `README.md`, purement informatif, ayant typiquement ce contenu:
 
-    Application "asocial":
-    - distribution: t1
-    - build: 24
-    - url: https://asocialapps.github.io/t1
+      Application "asocial":
+      - distribution: XX
+      - build: 24
+      - url: https://asocialapps.github.io/XX
 
-    Sources: 
-    - dépôt: https://dsportes.github.com/asocial-app
-    - tag: V2.4
-    - patchs: _aucun_
+      Sources: 
+      - dépôt: https://dsportes.github.com/asocial-app
+      - tag: V2.4
+      - patchs: _aucun_
 
-    URLS externes: /etc/urls.json
+      URLS externes: /etc/urls.json
 
 Ce README permet à n'importe qui de reconstituer l'application Web distribuée depuis les sources:
 - le dépôt des sources est cité ainsi que la tag qui pointe exactement la révision utilisée.
 - la section `patchs` indique avec précision ce qui a été modifié dans ces sources avant build. Le cas échéant des fichiers peuvent être cités et retrouvés dans `etc/...`
 
-Effectuer un `commit + publish` de `t1` vers le dépôt de distribution.
+Effectuer un `commit + publish` de `XX` vers le dépôt de distribution.
 
 La première fois il faut indiquer dans `github.com` que ce repository doit être diffusé sur `github.io`:
 - ouvrir le repository, et sa page de `settings`.
@@ -101,7 +112,7 @@ C'est tout.
 
 Lors de la distribution d'une nouvelle version ultérieure, la configuration de _Pages_ n'a pas à être refaite: le seul fait d'effectuer un `commit + publish` suffira à régénérer le site qui sera accessible par l'URL:
 
-    https://asocialapps.github.io/t1
+    https://asocialapps.github.io/XX
 
 (C'est bien `.io` pas `.com`).
 
