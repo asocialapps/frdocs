@@ -189,19 +189,17 @@ Un serveur NON géré est un serveur dont on assure soi-même la configuration e
 
 Sur un site non géré, il faut installer:
 - _éventuellement_ un `nginx` (ou équivalent) capable d'effectuer un _load balancing_ entre plusieurs instances de serveur HTTP assurant un service OP afin d'accroître la puissance disponible.
-- _éventuellement_ une base de données, `Sqlite` ou `Postgresql`, locale, et en gérer la sécurité / backup / restore. Mais il est aussi possible d'utiliser un service d'hébergement `Firestore` (ou par extension DynamoDB -Amazon-, ou CosmoDB -Microsoft Azure-) où un service d'hébergement externe `Postgresql`.
+- _éventuellement_ une base de données, `Sqlite` (ou `Postgresql` si l'accès est développé), locale, et en gérer la sécurité / backup / restore. Mais il est aussi possible d'utiliser un service d'hébergement `Firestore` (ou par extension DynamoDB -Amazon-, ou CosmoDB -Microsoft Azure-) où un service d'hébergement externe `Postgresql`.
 
 Les déploiements documentés sont les suivants:
 - **Serveur OP**: serveur assurant le seul service OP.
 - **Serveur PUBSUB**: serveur assurant le seul service PUBSUB.
 - **Serveur SRV**: serveur assurant les deux services OP+PUBSUB.
-  - optionnellement, SRV _pourrait_ aussi assurer la distribution de l'application Web,
-  - optionnellement, SRV _pourrait_ aussi assurer la distribution d'un site Web purement statique (par exemple documentaire).
 
 ### Déploiement pour un site GAE géré
 Google App Engine (GAE) est une solution pour déployer un _serveur_ assurant les mêmes fonctionnalités qu'un site NON géré avec les remarques suivantes.
 
-**GAE est une _ferme_ de serveurs:** une ou plusieurs instances peuvent s'exécuter en parallèle, le nombre pouvant est borné à 1 instance. Au bout d'un certain temps sans réception de requête, l'instance est arrêtée et sera relancée à l'arrivée d'une nouvelle requête:
+**GAE est une _ferme_ de serveurs:** une ou plusieurs instances peuvent s'exécuter en parallèle, le nombre pouvant est borné à UNE instance. Au bout d'un certain temps sans réception de requête, l'instance est arrêtée et sera relancée à l'arrivée d'une nouvelle requête:
 - c'est exactement le même comportement qu'un _Cloud Function_, si ce n'est que la durée de vie en l'absence de requête est plus long (une heure au lieu de 5 minutes pour fixer les idées).
 
 **Déployer le service OP _seul_ sur GAE n'a pas d'intérêt a priori:** plutôt utiliser un Cloud Function.
@@ -210,12 +208,12 @@ Google App Engine (GAE) est une solution pour déployer un _serveur_ assurant le
 
 **Déployer les deux services OP+PUBSUB sur GAE à un intérêt** de simplification d'administration:
 - la comparaison des coûts avec un mix de Cloud Functions n'a pas été faite.
-- il faut borner le nombre d'instances à 1, PUBSUB ne peut pas être multi-instances: en conséquence c'est **une option de _faible_ puissance**.
+- il faut borner le nombre d'instances à UNE, PUBSUB ne peut pas être multi-instances: en conséquence c'est **une option de _faible_ puissance**.
 - le mot _faible_ est flou: le débit potentiel peut cependant être suffisant dans les cas d'usage par des organisations de taille modeste ou moyenne.
-- dans les cas de faible trafic, le coût tombe facilement en dessous du minimum facturable, l'hébergement devenant gratuit.
+- dans les cas de faible trafic, le coût tombe en dessous du minimum facturable, l'hébergement devenant gratuit.
 
 GAE _pourrait_ assurer la distribution de l'application Web (et du site documentaire statique) mais **ce n'est pas une bonne idée**:
-- ça oblige à refaire un déploiement de l'ensemble même quand seule l'application Web a changé en provoquant une interruption certes faible de disponibilité.
+- ça obligerait à refaire un déploiement de l'ensemble même quand seule l'application Web a changé en provoquant une interruption certes faible de disponibilité.
 - ça présente aux utilisateurs une URL d'accès (celle de l'application Web) assez abscons et où Google apparaît.
 
 **Il reste préférable d'assurer séparément la distribution de l'application par `github pages` (ou autre)**. Ceci permet aussi de changer le déploiement des services OP et PUBSUB pour des solutions différentes meilleures en termes de coûts / performances de manière transparente pour les utilisateurs, ce qui est souhaitable.
@@ -223,14 +221,14 @@ GAE _pourrait_ assurer la distribution de l'application Web (et du site document
 ### Déploiement par des Cloud Functions (CF)
 **Le service OP peut être déployé par CF**, sans contrainte sur le nombre d'instances en parallèle.
 
-**Le service PUBSUB peut être déployé par CF**, avec contrainte d'une instance au plus.
+**Le service PUBSUB peut être déployé par CF**, avec contrainte d'UNE instance au plus.
 
 Il n'est documenté ici que l'usage de _Google Cloud Functions_: les deux autres options chez AWS et Azure sont à tester et documenter, même si en théorie les adaptations de code à effectuer semblent marginales.
 
 # Choix de la _base de données_
 
 ### Autogestion de la base de données
-C'est possible pour les _providers_ `SQLite` et `PostgreSQL`.
+C'est possible pour les _providers_ `SQLite` et `PostgreSQL` s'il est développé.
 
 C'est une gestion lourde et humainement contraignante pour une organisation.
 
@@ -241,10 +239,10 @@ Service géré par Google. Si le débit est faible on peut tomber sous le seuil 
 En pratique ceci impose _naturellement_ à opter pour _Google Storage_ pour le _storage_ des fichiers.
 
 ### PostgreSQL
-Il ya plusieurs offres sur le marché avec un coût d'entrée minimal d'une vingtaine d'euros mensuels: certes le débit va être important, mais c'est une solution à réserver si le coût de _Firestore_ devient prohibitif.
+Il y a plusieurs offres sur le marché avec un coût d'entrée minimal d'une vingtaine d'euros mensuels: certes le débit va être important, mais c'est une solution à réserver si le coût de _Firestore_ devient prohibitif.
 
 ### DynamoDB (AWS) et CosmoDB (Azure)
-Les classes _providers_ n'ont pas été écrites:
+Ces classes _providers_ n'ont pas été écrites:
 - sur le papier il n'y a pas de contradictions avec les contraintes à respecter pour l'interface _provider_.
 - les autres _providers_ ont environ 500 lignes de code: le temps à passer en compréhension / test des API, puis en création des comptes Amazon ou Azure, puis en tests, est plus important que l'effort d'écriture à proprement parlé du code.
 
@@ -266,56 +264,98 @@ Le Storage de Azure serait à écrire: environ 500 lignes de code.
 
 # Fichiers de configuration
 
-### Fichier `src/keys.mjs`
+### Fichier `keys.json`
 Ce fichier contient des autorisations et tokens spécifiques de l'administrateur du site:
 - il est exclu de git afin de ne pas exposer ces données au public,
 - sa sécurité est gérée par l'administrateur technique par ses propres moyens.
+
+> L'outil `node src/gensecret.mjs` génère un fichier _obfusqué_ `src/secret.mjs`.
 
 Il comporte les constantes suivantes:
 - `app_keys`: voir ci-après.
 - `service_account` : pour les déploiements sur Google Cloud Platform. Procédure décrite en annexe.
 - `s3_config` : le token d'authentification au service S3 choisi. Procédure décrite en annexe.
 
-    export const app_keys = {
-      admin:  ['FCp8...'],
-      sites:  {
-        A: 'FCp8...',
-        B: 'em8+...' 
+      {
+      "vapid_private_key": "...",
+      "vapid_public_key": "...",
+
+      "app_keys" : {
+        "admin":  ["..."],
+        "sites":  {
+          "A": { "k": "...", "db": [true, true, true], "st": [true, true, true] },
+          "B": { "k": "...", "db": [false, false, false], "st": [false, false, false] }
+        }
       },
-      vapid_private_key: 'FiR...',
-      vapid_public_key: 'BC8...'
-    }
 
-    export const service_account = {
-      ... obtenu depuis le compte Google
-    }
+      "service_account" : { ... },
 
-    export const s3_config = {
-      ... obtenu depuis le fournisseur d'accès S3
-    }
+      "s3_config" : { ... },
 
-Les _clés_ de l'administrateur technique et des sites A, B ... sont obtenus ainsi:
+      "alertes" : {
+        "_url": "http://.../script.php",
+        "_pwd": "...",
+
+        "_sendgrid_api_keyX": "...",
+        "_from": "daniel@sportes.fr"
+      }
+      }
+
+#### `vapid_private_key` et `vapid_public_key`
+Ce couple de clés permet au service PUBSUB de pousser des notifications vers l'application Web qui DOIT avoir dans sa configuration la `vapid_public_key`.
+- génération par l'outil _vapid_: `node src/tools.mjs vapid`
+- la clé publique est transmise dans la configuration de / des applications ayant accès à ce serveur / services.
+
+#### `app_keys`
+`admin`: donne la ou les hash des phrases secrètes de l'administrateur technique.
 - lancer l'application Web (n'importe laquelle)
 - ouvrir le panneau d'outils: barre du bas, icône _engrenage_,
 - onglet _Tester une phrase secrète_
-- saisir une phrase secrète et la garder cachée par exemple `les framboises sont bleues cette année`,
-- copier le texte qui apparaît dans `SHA256 du PBKFD de la phrase complète`
+- saisir une phrase secrète par exemple `les framboises sont bleues cette année`,
+- copier le texte qui apparaît dans `SHA256 du PBKFD de la phrase complète`.
 
     ZgHxc7BeHgR7z5HLpidsMd4XmSJmfCCulgu7cfwB9V8=
 
 Ceci donne une clé à mettre dans les propriétés de `app_keys`:
 
-`admin` : c'est la clé qui permet d'authentifier le login de l'administrateur technique. Dans cet exemple c'est la clé générée avec les paramètres:
+Le login s'effectuera ainsi:
 
     Organisation: `admin`
     Phrase secrète: `les framboises sont bleues cette année`
 
-`sites` : cette rubrique permet d'enregistrer la clé de cryptage des _sites_:
+`sites` : cette rubrique permet d'enregistrer la clé et les options de cryptage des _sites_:
 - habituellement un administrateur n'est concerné que par _son_ site, de code `A` typiquement.
 - toutefois s'il doit réaliser des exports de base de données pour d'autres sites, il doit disposer de la clé de cryptage du site cible, d'où dans ce cas l'existence d'un site `B`.
 
-`vapid_private_key` et `vapid_public_key` : ce couple de clés permet au service PUBSUB de pousser des notifications vers l'application Web qui DOIT avoir dans sa configuration la `vapid_public_key`.
-- génération par l'outil _vapid_: `node src/tools.mjs vapid`
+L'attribut `k` est obtenu comme la propriété admin:
+- les propriétés _data_ des tables / documents sont toujours cryptées par cette clé.
+
+L'attribut `db` donne trois booléens indiquant si la base crypte aussi,
+- [0] : le **code de l'organisation** préfixant les `id` et propriétés `hk`;
+- [1] : les ids principales des documents;
+- [2] : les ids secondaires des documents.
+
+L'attribut `st` donne trois booléens indiquant si le _storage_ crypte,
+- [0] : le **code de l'organisation**;
+- [1] : les ids des avatars / groupes;
+- [2] : les ids des fichiers.
+
+#### `service_account`
+Jeton d'accès au _Google account_ Dans le cas de déploiement sur Google (GAE / Firestore / Google Cloud Storage).
+
+#### `s3_config`
+Jeton d'accès au storage d'interface S3.
+
+#### `alertes`
+Certaines alertes graves peuvent donner lieu à envoi d'un email à une adresse (typiquement celle de l'administrateur technique) afin qu'il soit notifié au plus vite de la nécessité de consulter le log du serveur.
+
+Les propriétés sont celles d'un serveur externe d'envoi de mail mis en place par l'administrateur technique:
+- le couple `_url _pwd` est relatif à un serveur Web,
+  - dont l'url est donnée ici,
+  - et dont un mot de passe est donné ici.
+  - Voir en annexe l'API que doit implémenter un tel serveur.
+- le couple `_sendgrid_api_key _from` sont deux propriétés pour solliciter le service sendGrid (Twilio). Usage expérimental en évaluation. Dans le cas d'usage d'autres services du marché, leur configuration serait données ici.
+
 
 ### Folder `keys`
 **Ce folder contient le certificat du domaine de l'application** tels que générés par `Lets Encrypt` (https://letsencrypt.org/) par exemple:
@@ -326,7 +366,7 @@ Ce folder,
 - est exclu de git pour ne pas exposer les clés du domaine au public,
 - est **externe** au _build_ afin que sur le site on puisse renouveler ces clés (obsolètes régulièrement) sans refaire un déploiement.
 
-**Ce folder ne sert qu'aux déploiements _serveur_** et est inutile en cas de déploiement GAE et CF (dont les certificats sont gérés par le fournisseur).
+**Ce folder ne sert qu'aux déploiements _serveur NON géré_** et est inutile en cas de déploiement GAE et CF (dont les certificats sont gérés par le fournisseur).
 
 ### Fichier `src/config.mjs`
 - Il est inclus dans git.
@@ -336,42 +376,42 @@ Ce folder,
   - une partie _technique_ spécifique de chaque déploiement et détaillée ci-après.
 
 Il comporte des lignes donnant les _configurations_ des _providers_ de DB et de Storage:
-- pouvant être cités dans la section run
-- pouvant être cité sur les lignes de commande: `node src/tool.mjs ...`
+- pouvant être cités dans la section `run`,
+- pouvant être cité sur les lignes de commande: `node src/tools.mjs ...`
 
-    // Configuation nommées des providers db et storage
-    s3_a: { bucket: 'asocial' },
-    fs_a: { rootpath: './fsstorage' },
-    fs_b: { rootpath: './fsstorageb' },
-    gc_a: { bucket: 'asocial-test1.appspot.com', /* fixé pour emulator ? */ },
-    sqlite_a: { path: './sqlite/test.db3' },
-    sqlite_b: { path: './sqlite/testb.db3' },
-    firestore_a: { },
+      // Configuration nommées des providers db et storage
+      s3_a: { bucket: 'asocial' },
+      fs_a: { rootpath: './fsstoragea' },
+      fs_b: { rootpath: './fsstorageb' },
+      gc_a: { bucket: 'asocial-test1.appspot.com' },
+      sqlite_a: { path: './sqlite/testa.db3' },
+      sqlite_b: { path: './sqlite/testb.db3' },
+      firestore_a: { },
 
 #### Configuration des _providers_
 Chaque nom de configuration comporte: le `nom du provider`, `_`, `lettre d'identification`. Les noms sont:
 - Base données:
   - `sqlite`: accès à une base de données SQLite. Options:
-    - `{ path: '...' }` Path du fichier .db3 de la base données.
+    - `{ path: '...' }` Path du fichier `.db3` de la base données.
   - `firestore`: accès à Google Firestore. Options: `{ }`
 - Storage:
   - `fs`: accès à un folder du File-System local. Options:
-    - `{ rootpath: '...' }` Path de la racine
+    - `{ rootpath: '...' }` Path de la racine.
   - `gc`: accès au Google Cloud Storage. Options:
-    - `{ bucket: '...' }` identifiant du bucket réservé à cet usage
+    - `{ bucket: '...' }` identifiant du bucket réservé à cet usage.
   - `s3`: accès à un Storage Amazon S3. Options:
-    - `{ bucket: '...' }` identifiant du bucket réservé à cet usage
+    - `{ bucket: '...' }` identifiant du bucket réservé à cet usage.
 
 #### La section env: {...}
-_Certains_ paramètres **doivent** figurer en variables d'environnement. On les déclare dans la section env.
+_Certains_ paramètres (typiquement ceux de _l'emulator de Google Cloud Platform) **doivent** figurer en variables d'environnement. On les déclare dans la section env.
 Cas identifiés:
 - `STORAGE_EMULATOR_HOST`: pour EMULATOR de Google Storage
 - `FIRESTORE_EMULATOR_HOST`: pour EMULATOR de Google Firestore
 
-    env: {
-      STORAGE_EMULATOR_HOST: 'http://127.0.0.1:9199', // 'http://' est REQUIS
-      FIRESTORE_EMULATOR_HOST: 'localhost:8080'
-    }
+      env: {
+        STORAGE_EMULATOR_HOST: 'http://127.0.0.1:9199', // 'http://' est REQUIS
+        FIRESTORE_EMULATOR_HOST: 'localhost:8085' // Remplace le port par défaut 8080
+      }
 
 Toutes les entrées de cette section seront converties en _variable d'environnement_.
 
@@ -380,9 +420,7 @@ Toutes les entrées de cette section seront converties en _variable d'environnem
 Les déploiements possibles sont:
 - déploiement d'un service OP.
 - déploiement d'un service PUBSUB.
-- déploiement _SRV_, incluant OP et PUBSUB. Dans ce dernier cas, optionnellement, le _serveur_ peut gérer de plus:
-  - le service Web _statique_ de l'application Web,
-  - le service _statique_ d'un espace Web pour la documentation typiquement.
+- déploiement _SRV_, incluant OP et PUBSUB.
 
 Chaque déploiement demande:
 - d'ajuster la configuration pour chaque cas à déployer,
@@ -391,18 +429,20 @@ Chaque déploiement demande:
 
 # Déploiements _Serveur_ d'un service OP (sans PUBSUB)
 
-### Fichier `src/keys.mjs`
-`export const app_keys = {`
-- les clés vapid... sont inutiles (mais ne nuisent pas).
+### Fichier `src/keys.json`
+- les clés `vapid...` sont inutiles (mais ne nuisent pas).
 
-`export const service_account = {`
-- uniquement si le _provider_ de base de données est firestore.
+`service_account`
+- uniquement si le _provider_ de base de données est Firestore.
 
-`export const s3_config = {`
+`s3_config`
 - uniquement si le _provider_ de Storage est S3.
 
+alertes
+- uniquement si les alertes graves sont poussées sur le mail de l'administrateur technique.
+
 ### Folder `keys`
-Le certificat du domaine est requis.
+Le certificat du domaine est requis pour les serveurs NON gérés.
 
 ### Fichier `src/config.mjs`
 
@@ -416,7 +456,7 @@ Le certificat du domaine est requis.
       // Configuration du déploiement
       env: { },
 
-      fs_a: { rootpath: './fsstorage' },
+      fs_a: { rootpath: './fsstoragea' },
       gc_a: { bucket: 'asocial-test1.appspot.com' */ },
 
       sqlite_a: { path: './sqlite/test.db3' },
@@ -444,8 +484,8 @@ Le certificat du domaine est requis.
 - `gc_a:` configuration du provider Google Cloud Storage. Par commodité on peut en décrire plusieurs (gc_a gc_b etc.)
 - `sqlite_a:` configuration du provider DB SQLite. Par Par commodité on peut en décrire plusieurs (sqlite_a sqlite_b etc.)
 - `firestore_a:` configuration du provider DB Firestore. Par Par commodité on peut en décrire plusieurs (firestore_a firestore_b etc.)
-- `run.site: 'A'` indique l'entrée de app_keys.sites qui détient la clé de cryptage du site
-- `run.origins:` Set des origin des sites de CDN délivrant l'application Web. Si vide ou que la directive est absente, pas de contrôle sur l'origin.
+- `run.site: 'A'` indique l'entrée de `app_keys.sites` qui détient la clé de cryptage du site.
+- `run.origins:` Set des `origin` des sites de CDN délivrant l'application Web. Si vide ou que la directive est absente, pas de contrôle sur l'origine.
 - `run.nom:` sert uniquement à l'affichage lors d'une requête ping.
 - `run.mode:` 'https' (par exception en test 'http').
 - `run.port:` numéro de port d'écoute.
@@ -453,7 +493,7 @@ Le certificat du domaine est requis.
 - `run.storage_provider:` identifiant du provider de Storage (référencé au-dessus).
 - `run.db_provider:` identifiant du provider de DB (référencé au-dessus).
 - `run.projectId:` ID du project Google si l'un des providers storage / db est un service de Google.
-- `run.rooturl:` en général absent. URL externe d'appel du serveur qui ne sert qu'à un provider de storage qui doit utiliser le serveur pour délivrer une URL get / put file. Cas storageFS / storageGC en mode _emulator_.
+- `run.rooturl:` en général absent. URL externe d'appel du serveur qui ne sert qu'à un provider de storage qui doit utiliser le serveur pour délivrer une URL get / put file. Cas storageFS et storageGC en mode _emulator_.
 
 ### Build par `webpack`
 
@@ -492,9 +532,9 @@ Dans le folder `dist/op` insérer un fichier `package.json` ne contenant que `{}
 Si on veut exécuter immédiatement le résultat du _build_ directement dans le folder `dist/op`, `node` va chercher un `package.json`, y compris au niveau de folder supérieur et va trouver le `package.json` du projet qui a une directive `"type"module"` ce qui met l'exécution en erreur car `op.js` utilise un `require`.
 La présence du `package.json` _fake_ permet d'éviter ce problème.
 
-### Exécution de test dans dist/op
-- si le _provider_ de storage était par exemple `sqlite_a: { path: './sqlite/test.db3' },` vérifier qu'il y a bien une base `dist/op/sqlite/test.db3`.
-- si le _provider_ de storage était par exemple `fs_a: { rootpath: './fsstorage' },` dans config.mjs, vérifier qu'il existe bien un folder `dist/op/fsstorage`.
+### Exécution de test dans `dist/op`
+- si le _provider_ de storage était par exemple `sqlite_a: { path: './sqlite/testa.db3' },` vérifier qu'il y a bien une base `dist/op/sqlite/testa.db3`.
+- si le _provider_ de storage était par exemple `fs_a: { rootpath: './fsstoragea' },` dans `config.mjs`, vérifier qu'il existe bien un folder `dist/op/fsstorage`.
 
 Exécution:
 
@@ -506,13 +546,13 @@ Exécution:
 # Déploiements _Serveur_ d'un service PUBSUB (sans OP)
 
 ### Fichier `src/keys.mjs`
-`export const app_keys = {`
-- les clés vapid... SONT REQUISES.
+`app_keys`
+- les clés `vapid...` SONT REQUISES.
 
-`export const service_account = {`
+`service_account`
 - inutile (mais ne nuit pas).
 
-`export const s3_config = {`
+`s3_config`
 - inutile (mais ne nuit pas).
 
 ### Folder `keys`
@@ -521,7 +561,7 @@ Le certificat du domaine est requis.
 ### Fichier `src/config.mjs`
 
     export const config = {
-      // Paramètres fonctionnels inutiles mais ne nuisent
+      // Paramètres fonctionnels inutiles mais ne nuisent pas
 
       // Configuration du déploiement
       env: { },
@@ -531,7 +571,6 @@ Le certificat du domaine est requis.
 
       run: {
         site: 'A',
-        origins: new Set(['http://localhost:8080']),
         nom: 'test asocial-pubsub', // pour le ping
         mode: 'https',
         port: 8444
@@ -539,8 +578,8 @@ Le certificat du domaine est requis.
     }
 
 **Commentaires**
-- `run.site: 'A'` indique l'entrée de app_keys.sites qui détient la clé de cryptage du site
-- `run.origins:` Set des origin des sites de CDN délivrant l'application Web. et des sites OP. Si vide ou que la directive est absente, pas de contrôle sur l'origin.
+- `run.site: 'A'` indique l'entrée de `app_keys.sites` qui détient la clé de cryptage du site
+- `run.origins:` Set des origin des sites de CDN délivrant l'application Web et des sites OP. Si vide ou que la directive est absente, pas de contrôle sur l'origin.
 - `run.nom:` sert uniquement à l'affichage lors d'une requête ping.
 - `run.mode:` 'https' (par exception en test 'http').
 - `run.port:` numéro de port d'écoute. Attention à ne pas donner le même numéro de port que celui du service OP si c'est un serveur sur le même host.
@@ -582,7 +621,7 @@ Dans le folder `dist/pubsub` insérer un fichier package.json ne contenant que `
 Si on veut exécuter immédiatement le résultat du _build_ directement dans le folder `dist/pusub`, `node` va chercher un `package.json`, y compris au niveau de folder supérieur et va trouver le `package.json` du projet qui a une directive `"type"module"` ce qui met l'exécution en erreur car `pubsub.js` utilise un `require`.
 La présence du `package.json` _fake_ permet d'éviter ce problème.
 
-### Exécution de test dans dist/srv
+### Exécution de test dans `dist/pubsub`
 
 Exécution:
 
@@ -594,13 +633,13 @@ Exécution:
 # Déploiements _Serveur_ d'un service OP+PUBSUB
 
 ### Fichier `src/keys.mjs`
-`export const app_keys = {`
-- les clés vapid... sont REQUISES.
+`app_keys`
+- les clés `vapid...` sont REQUISES.
 
-`export const service_account = {`
+`service_account`
 - uniquement si le _provider_ de base de données est firestore.
 
-`export const s3_config = {`
+`s3_config`
 - uniquement si le _provider_ de Storage est S3.
 
 ### Folder `keys`
@@ -621,15 +660,8 @@ Le certificat du domaine est requis.
       fs_a: { rootpath: './fsstorage' },
       gc_a: { bucket: 'asocial-test1.appspot.com' */ },
 
-      sqlite_a: { path: './sqlite/test.db3' },
+      sqlite_a: { path: './sqlite/testa.db3' },
       firestore_a: { },
-
-      prefixapp: '/app',
-      pathapp: './app',
-
-      // Seulement si SRV sert de web statique documentaire
-      prefixwww: '/www',
-      pathwww: './www',
 
       pathlogs: './logs',
       pathkeys: './keys',
@@ -650,9 +682,6 @@ Le certificat du domaine est requis.
     }
 
 **Commentaires**
-- `prefixapp: pathapp:` Seulement si SRV sert de CDN pour l'application.
-- `prefixwww: pathwww:` seulement si SRV sert de web statique documentaire
-
 - `gc_a:` configuration du provider Google Cloud Storage. Par commodité on peut en décrire plusieurs (gc_a gc_b etc.)
 - `sqlite_a:` configuration du provider DB SQLite. Par Par commodité on peut en décrire plusieurs (sqlite_a sqlite_b etc.)
 - `firestore_a:` configuration du provider DB Firestore. Par Par commodité on peut en décrire plusieurs (firestore_a firestore_b etc.)
@@ -705,8 +734,8 @@ Si on veut exécuter immédiatement le résultat du _build_ directement dans le 
 La présence du `package.json` _fake_ permet d'éviter ce problème.
 
 ### Exécution de test dans `dist/srv`
-- si le _provider_ de storage était par exemple `sqlite_a: { path: './sqlite/test.db3' },` vérifier qu'il y a bien une base `dist/op/sqlite/test.db3`.
-- si le _provider_ de storage était par exemple `fs_a: { rootpath: './fsstorage' },` dans config.mjs, vérifier qu'il existe bien un folder `dist/op/fsstorage`.
+- si le _provider_ de storage était par exemple `sqlite_a: { path: './sqlite/testa.db3' },` vérifier qu'il y a bien une base `dist/op/sqlite/testa.db3`.
+- si le _provider_ de storage était par exemple `fs_a: { rootpath: './fsstoragea' },` dans config.mjs, vérifier qu'il existe bien un folder `dist/op/fsstoragea`.
 
 Exécution:
 
@@ -717,14 +746,14 @@ Exécution:
 
 # Déploiements de  _tools_
 ### Fichier `src/keys.mjs`
-`export const app_keys = {`
+`keys`
 - les clés vapid... sont inutiles (mais ne nuisent pas).
 
-`export const service_account = {`
-- uniquement si le _provider_ de base de données est firestore.
+`service_account`
+- uniquement si l'un des _providers_ de base de données est Firestore.
 
-`export const s3_config = {`
-- uniquement si le _provider_ de Storage est S3.
+`s3_config`
+- uniquement si l'un des _providers_ de Storage est S3.
 
 ### Folder `keys`
 Non utilisé.
@@ -735,10 +764,10 @@ Non utilisé.
       // Configuration du déploiement
       env: { },
 
-      fs_a: { rootpath: './fsstorage' },
+      fs_a: { rootpath: './fsstoragea' },
       gc_a: { bucket: 'asocial-test1.appspot.com' */ },
 
-      sqlite_a: { path: './sqlite/test.db3' },
+      sqlite_a: { path: './sqlite/testa.db3' },
       firestore_a: { },
 
       run: {
@@ -782,9 +811,9 @@ Commande dans un terminal (à la racine du projet):
 
 Dans le folder `dist/tools` insérer un fichier package.json ne contenant que `{}`:
 
-    echo "{}" > dist/op/package.json
+    echo "{}" > dist/tools/package.json
 
-### Exécution de test dans dist/op
+### Exécution de test dans `dist/tools`
 Les providers qui seront cités dans la ligne de commande doivent être déclarés.
 
 Exécution:
@@ -797,10 +826,77 @@ Voir en annexe les arguments de `tools`.
 > **Attention:** `tools.js` est le _vrai_ exécutable et écrit vraiment dans la _vraie_ base et le _vrai_ storage.
 
 # Déploiement _GAE_ 
-(TODO)
+Il faut avoir configuré son projet Google pour:
+- activer App Engine
+- utiliser Firestore: créer la base.
+- utiliser Storage: créer son bucket.
+- activer CRON sur App Engine.
+
+Le déploiement se fait dans un directory dédié, qui n'a pas lieu d'être archivé dans git.
+
+> Il n'a pas été possible d'effectuer un build webpack avant déploiement: en conséquence le déploiement s'effectue en _source_.
+
+Les fichiers spécifiques au déploiement GAE sont à préparer dans `asocial-srv/gae`.
+- Copie et adaptation des fichiers sous `asocial-srv`:
+  - `keys.json`
+    - supprimer l'entrée `s3_config`
+  - `config.mjs`
+    - première ligne: `EMULATOR = false`
+    - vérifier dans le `run` : http/port db_provider storage_provider.
+  - `package.json`
+    - enlever les sections `devDependencies packageManger`
+    - vérifier qu'il y a bien `type: module`
+    - vérifier qu'il n'y a qu'un seul `script: {"start": "node ./src/},secret.js"}`.
+- Fichiers spécifique de `gae`:
+  - `app.yaml`: vérifier la version de node.
+  - `cron.yaml`: ajuster l'heure si nécessaire.
+  - `.cloudignore`
+  - `depl.sh`. Ce fichier recopie les fichiers nécessaires dans le directory de déploiement.
+
+## Scénario de déploiement
+
+#### Préparer le folder de déploiement: `asocial-gae1` (par exemple)
+Y créer les folders `src` et `node_modules`.
+
+      cd ./asocial-srv/gae
+      ./depl.sh
+
+      cd ../../asocial-gae1
+      npm install     
+      # OUI npm, pas yarn, deploy utilise package-lock.json
+
+      node src/gensecret.mjs 
+      # pour intégrer une éventuelle mise à jour de keys.json
+
+`npm install` à deux fonctions:
+- permettre d'effectuer un test final après déploiement,
+- générer un package-lock.json qui accélère le déploiement ET fixe les versions exactes des modules.
+
+#### Tester localement
+On peut tester le serveur avec: node src/server.js
+
+**MAIS ça s'exécuterait sur la base de production**, c'est inopportun. Il faut donc:
+- changer dans `config.mjs` la première ligne `EMULATOR = true`
+- lancer l'emulator dans une autre fenêtre et l'initialiser avec des données de test d'intégration.
+
+Après tests, changer à nouveau dans `config.mjs` la première ligne `EMULATOR = false`.
+
+## Déployer depuis `asocial-gae1`
+
+    gcloud app deploy --verbosity debug
+
+Quelques minutes ..., puis si nécessaire (si `cron.yaml` a changé par rapport à l'opérationnel):
+
+    gcloud app deploy cron.yaml
+
+C'est rapide.
+
+Dans un autre terminal `gcloud app logs tail` permet de voir les logs de l'application quand ils vont survenir.
+
+Les logs complets s'obtienne depuis la console Google du projet (menu hamburger en haut à gauche `>>> Logs >>> Logs Explorer`).
 
 # Déploiements _Cloud Function_ des services OP et PUBSUB
-(TODO)
+A rédiger, après un premier déploiement réel.
 
 # L'utilitaire `upload`
 
@@ -811,6 +907,8 @@ upload est un micro serveur Web qui, une fois lancé, écoute ce port: il reçoi
 - le contenu du fichier est dans le body de la requête.
 
 Un _build + packaging_ délivre deux exécutables, un pour Linux `upload`, l'autre Windows `upload.exe`, autonomes: ils embarquent un runtime `node.js` qui dispense l'utilisateur d'une installation un peu technique de `node.js`.
+
+Il est aussi possible de mettre à disposition upload.js: dans ce cas le PC devra installer node et lancer l'exécution par `node upload.js`.
 
 Les fichiers envoyés par PUT sont installés dans le répertoire courant ou s'exécute `upload`. Argument optionnel: numéro de port d'écoute.
 
@@ -845,8 +943,9 @@ Localement publier dans ce repository:
 - `index.html`
 - `upload.exe`
 - `upload`
+- `upload.js`
 
-Dans le settings de ce repository, rubrique Pages, donner main comme branche de publication.
+Dans le settings de ce repository, rubrique Pages, donner `main` comme branche de publication.
 
     <!DOCTYPE html>
     <html>
@@ -915,3 +1014,18 @@ Les commandes sont:
     Exemple purge-db
     node tools purge-db --in 2,coltes,firebase_b,A
     node tools purge-db --in 2,coltes,sqlite_b,B
+
+# Utilitaire d'envoi de mails d'alertes
+
+Certaines alertes peuvent être notifiées sur le mail de l'administrateur technique.
+
+Un des moyens est d'utiliser un site Web d'URL `http://monsite.truc.fr/` ayant PHP et acceptant le mailing par PHP. Y inscrire un script `sendMail.php` ayant l'interface suivant:
+- il accepte des requêtes POST `application/x-www-form-urlencoded` avec les arguments suivants:
+  - `mailer`: 'A' # Au cas où le script accepte plusieurs configuration de mail.
+  - `mdp`: # mot de passe du service SMTP utilisé
+  - `to`: # adresse email de l'administrateur technique
+  - `subject`: # texte du sujet
+  - `text`: # Corps du texte
+- cas de succès d'envoi du mail retourne `OK: date-heure` et en cas d'échec `KO: date-heure`.
+
+Un exemple figure dans `etc/sendMail.php` et un exemple de soumission de requête est dans `etc/testMail.html`.

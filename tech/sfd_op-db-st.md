@@ -8,21 +8,18 @@ Spécifications Fonctionnelles Détaillées du service OP des opérations de mis
 ## Concepts structurants : espaces, comptes, GC
 
 ### Espaces
-Une base de données / service OP, héberge plusieurs espaces étanches entre eux. Un espace est identifié par `ns`, **un seule signe 0-9 a-z A-Z**.
+Une base de données / service OP, héberge plusieurs espaces étanches entre eux. Un espace est identifié par `org`, **un code d'organisation**.
 
 Tous les documents comportent:
-- soit une colonne / attribut `id` identifiant unique du document,
+- soit une colonne / attribut `id` de la forme `org@idd` identifiant unique du document, où:
+  - `org` est le code de l'organisation détentrice du document: ce code _préfixe_ donc toutes les id.
+  - `idd` est l'identifiant du document dans son organisation.
+  - pour les documents `espaces` et `syntheses`, l'id est simplement `org`.
 - soit un couple de colonnes / attributs `id / ids` identifiant un sous-document `ids` d'un document `id`.
 
-Les clés / paths _externes_, techniquement gérés par la base de données sont des clés **longues**, c'est à dire la clé _courte_ précédée du `ns` de l'espace.
-- à l'intérieur du document `id / ids` sont des id _courtes_. Les références à d'autres documents sont toujours considérés comme ceux du même espace.
-- ce n'est qu'à l'écriture en base ou en lecture depuis la base, que la clé longue est construite en préfixant la clé _courte_ par le `ns`.
-- dans l'application, seules les IDs _courtes_ sont connues.
-- seule la page d'administration technique des espaces de l'application a perception de l'existence de plusieurs espaces, toutes les autres ne se rapportent qu'à _leur_ espace.
+> Les documents `espaces syntheses` ont par convention un string vide une id de document (ce sont des singletons pour une organisation donnée).
 
-Les documents `espaces syntheses` ont pour ID _courte_ '' un string vide: vis à vis d'un espace ce sont des singletons, vis à vis de la base de données, il y a un document par espace. Leurs paths Firestore pour le `ns` `A` par exemple : `espaces/A` `syntheses/A`.
-
-Tous les autres documents ont une colonne / propriété `id` string NON vide, et le cas échéant une colonne / propriété `ids` string NON vide. 
+> Tous les autres documents ont une colonne / propriété `id` de document string NON vide, et le cas échéant une colonne / propriété `ids` string NON vide. 
 
 #### Code organisation attaché à un espace
 A la déclaration d'un espace, l'administrateur technique du site déclare un **code organisation**:
@@ -77,10 +74,10 @@ Les comptes "0" _délégués_ d'une partition peuvent:
 
 #### Comptes "A"
 Un compte "A" est créé par _sponsoring_,
-- soit d'un compte "A" existant qui à cette occasion fait _cadeau_ au compte sponsorisé d'un montant de son choix prélevé sur son solde monétaire.
-- soit par un compte "O" _délégué_ ou par le Comptable: un cadeau de bienvenue de 2c est affecté au solde du compte "A" sponsorisé (prélevé chez personne).
+- soit d'un compte "A" existant qui à cette occasion fait _un don_ au compte sponsorisé d'un montant de son choix prélevé sur son solde monétaire.
+- soit par un compte "O" _délégué_ ou par le Comptable: un don de bienvenue peut aussi être effectué.
 
-Un compta "A" définit lui-même ses quotas `qn` et `qv` (il les paye en tant _qu'abonnement_) et n'a pas de quotas `qc` (il paye sa _consommation_).
+Un compte "A" définit lui-même ses quotas `qn` et `qv` (il les paye en tant _qu'abonnement_) et n'a pas de quotas `qc` (il paye sa _consommation_).
 
 #### Rôles du Comptable
 Le rôle principal d'un _Comptable_ est,
@@ -88,7 +85,7 @@ Le rôle principal d'un _Comptable_ est,
 - de désigner les _délégués_ de chaque partition, le cas échéant de retirer ou d'ajouter la qualité de _délégué_ a un compte "O" de la partition.
 - de changer un compte "O" de partition.
 - de gérer des _notifications / blocages_ s'appliquant à des comptes "O" spécifiques ou à tous les comptes d'une partition.
-- d'enregistrer les paiements des comptes A.
+- d'enregistrer les paiements des comptes.
 - de sponsoriser directement la création de nouveaux comptes.
 
 Le Comptable est un compte "O" qui:
@@ -101,20 +98,73 @@ Le Comptable est un compte "O" qui:
 C'est un traitement de nettoyage qui est lancé une fois par jour. Il a plusieurs fonctionnalités techniques:
 - suppression de rows / documents obsolètes,
 - détection des comptes à détruire par inutilisation,
+- détection des groupes non hébergés depuis un certain temps et suppression de ceux-ci,
 - nettoyage des fichiers fantômes sur _Storage_,
 - calcul de _rapports / archivages_ mensuels pouvant conduire à purger des données vivantes de la base.
 
-En général c'est un service externe de **CRON** qui envoie journellement une requête de GC à une instance de service OP. Sur option ce peut être un déclenchement interne au serveur.
+C'est un service externe de **CRON** qui envoie journellement une requête de GC à une instance de service OP.
 
 # Base de données accédée par le service OP
 
-L'organisation diffère entre bases SQL (SQLite, PostgrSQL) et NOSQL (Firestore).
+L'organisation diffère entre bases SQL (SQLite, PostgrSQL ultérieurement) et NOSQL (Firestore).
 - **SQL** - Les données sont distribuées dans des **tables** `espaces avatars versions notes ...` contenant des **rows**, chacun ayant plusieurs **colonnes**.
 - **NOSQL** - Chaque table SQL correspond à une **collection de documents**, chaque **document** est équivalent à un row de la table SQL de même nom que la collection.
 
 Les _colonnes_ d'une table SQL correspondent aux _attributs / propriétés_ d'un document.
 - en SQL la _clé primaire_ est une colonne `id` ou un couple de colonnes `id / ids`,
 - en Firestore le _path_ d'un document contient cette propriété `id` ou couple de propriétés `id / ids`.
+
+## Attributs des tables / documents
+Ils sont listés dans un objet de configuration:
+
+    static _attrs = {
+      espaces: ['id', 'v', 'dpt', '_data_'],
+      fpurges: ['id', '_data_'],
+      partitions: ['id', 'v', '_data_'],
+      syntheses: ['id', 'v', '_data_'],
+      comptes: ['id', 'v', 'hk', '_data_'],
+      comptis: ['id', 'v', '_data_'],
+      invits: ['id', 'v', '_data_'],
+      comptas: ['id', 'v', 'dlv', '_data_'],
+      versions: ['id', 'v', 'dlv'],
+      avatars: ['id', 'v', 'vcv', 'hk', '_data_'],
+      notes: ['id', 'ids', 'v', '_data_'],
+      transferts: ['id', 'dlv', '_data_'],
+      sponsorings: ['id', 'ids', 'v', 'dlv', '_data_'],
+      chats: ['id', 'ids', 'v', '_data_'],
+      tickets: ['id', 'ids', 'v', 'dlv', '_data_'],
+      groupes: ['id', 'v', 'dfh', '_data_'],
+      membres: ['id', 'ids', 'v', '_data_'],
+      chatgrs: ['id', 'ids', 'v', '_data_']
+    }
+
+### Remarques
+- `id` et `hk` sont, en base, de la forme org@id et org@hk. Pour espaces et syntheses simplement de la forme org.
+- `hk`: clés d'accès _externes_, hash de phrase secrète ou de contact / sponsoring.
+- `ids` sont des clés secondaires relatives à la clé majeure id. Dans le seul cas de `sponsorings`, `ids` peut être utilisé comme clé alternative d'accès.
+- `v vcv`: sont des entiers, numéros de versions en séquence contine croissante.
+- `dpt dlv dfh`: sont entiers représentant des dates `aaaammjj` (`20250301`).
+- `_data_`: sont des objets sérialisés contenant les données du documents, dont ses attributs _externalisés_ ci-avant.
+  - `versions` n'a pas de `_data_` en base, celui-ci étant reconstruit à la lecture de ses attributs externes `{id, v, dlv}`.
+
+### Cryptage en base
+Les attributs _data_ sont toujours cryptés en base, ce n'est pas optionnel.
+
+Les autres attributs sont _externalisés_,
+- soit parce que servant de clé primaire d'accès (id ids),
+- soit parce que servant de clé alternative d'accès (hk),
+- soit parce que nécessaire comme valeur de filtrage (v vcv dpt dlv dfh).
+
+Pour chaque choix d'un site:
+- org peut être crypté ou non.
+- id peut être crypté ou non.
+- ids peut être crypté ou non.
+
+> Le cryptage de `org@id` est `corg@cid`, les deux termes `org` / `id` étant ou non cryptés séparément en `corg` / `cid`.
+
+Les attributs `v vcv dpt dlv dfh` ne sont PAS cryptés, étant utilisés par comparaison d'ordre et pas seulement d'égalité.
+
+> Aucun _meta-lien_ n'est accessible à la lecture d'une base cryptée, les codes des organisations hébergés comme les id des comptes / avatars / groupes ... étant également obfusqués.
 
 # Tables / collections _techniques_ de nettoyage du _Storage_
 
@@ -123,44 +173,50 @@ L'écriture et la suppression de fichiers du _Storage_ ne sont pas soumises à l
 - **considérés comme _logiquement_ détruits dans la base**, mais n'ayant pas encore été physiquement purgés du _Storage_. Il faudra, un jour, achever d'effectuer ces _purges_ physiques du _Storage_. C'est l'objet des documents `fpurges`.
 
 ## Documents `transferts`
-- `id` : identifiant _majeur_ du fichier, l'ID alias d'un avatar ou d'un groupe.
-- `ids` : identifiant du fichier relativement à son ID majeure (mais de facto universels).
-- `dlv` : jour d'écriture, du début de _l'upload_ + 1
+- `id`:
+- `dlv`:
+
+- `_data_`: sérialisation de:
+  - `id`: `avgrid + '_' + idf`,
+  - `avgrid`: id de l'avatar / groupe propriétaire du fichier.
+  - `idf`: identifiant du fichier.
+  - `dlv`: date-limite de validité, lendemain du jour d'écriture (début de _l'upload_).
 
 Ces documents ne sont jamais mis à jour une fois créés, ils sont supprimés,
 - en général quasi instantanément dès que _l'upload_ est physiquement terminé,
 - sinon par le GC qui considère qu'un upload ne peut pas techniquement être encore en cours à j+2 de son jour de début.
 
 ## Documents `fpurges`
-- `id` : aléatoire,
+- `id`: id aléatoire générée à la création,
+
 - `_data_` : liste encodée,
-  - soit d'un `id` d'un avatar ou d'un groupe, correspondant à un folder du _Storage_ à supprimer,
-  - soit d'un couple `[id, ids]` identifiant UN fichier `ids` dans le folder `id` d'un avatar ou d'un groupe.
+  - `avgrid` d'un avatar ou d'un groupe, correspondant à un folder du _Storage_ à supprimer,
+  - `lidf`: array des idf des fichiers à purger.
 
 Ces documents ne sont jamais mis à jour une fois créés, ils sont supprimés par le prochain GC après qu'il ait purgé du _Storage_ tous les fichiers cités dans _data_.
 
 # Table / documents entête d'un espace: `espaces syntheses`
 
 Pour un espace donné, `A`, ce sont des singletons:
-- `espaces` : `id` est un string vide (le `ns` est une propriété). Le document contient quelques données générales de l'espace.
-  - Clé primaire : `A`. Path : `espaces/A`
-- `syntheses` : `id` est est un string vide. Le document contient des données statistiques sur la distribution des quotas aux comptes "O" (par _partition_) et l'utilisation de ceux-ci.
-  - Clé primaire : `A`. Path : `syntheses/A`
+- `espaces`: `id` est un string vide. Contient les données de l'espace.
+- `syntheses`: `id` est est un string vide. Le document contient des données statistiques sur la distribution des quotas aux comptes "O" (par _partition_) et l'utilisation de ceux-ci.
+
+> Leur clé d'accès en base est donc `org`, leur organisation.
 
 # Tables / collections _majeures_ : `partitions comptes comptis invits comptas avatars groupes`
 
-Chaque collection a un document par `id` (clé primaire en SQL, second terme du path en Firestore). Ci-dessous le `ns` est `A`.
+Chaque collection a un document par `id` (clé primaire en SQL, second terme du path en Firestore).
 
 ### `partitions`
 Un document par _partition de quotas_ décrivant la distribution des quotas entre les comptes "O" attachés à cette partition.
-- `id` est un string aléatoire `2...`.
-- Clé primaire : `A2...`. Path : `partitions/A2...`
+- `id` est un id aléatoire `2...`.
+- Clé primaire : `org@2...`. Path : `partitions/org@2...`
 
 ### `comptes`
 Un document par compte donnant les clés majeures du compte, la liste de ses avatars et des groupes auxquels un de ses avatars participe. `id`, le numéro du compte, est un string aléatoire commençant par `3` :
 - `300000000000` : pour le Comptable.
 - `3...` : pour les autres comptes.
-- Clé primaire : `A`. Path : `comptes/A3...` 
+- Clé primaire : `org@3...`. Path : `comptes/org@3...` 
 
 ### `comptis`
 Un document _complémentaire_ de `comptes` (même `id`) qui donne des commentaires et hashtags attachés par le comptes aux avatars et groupes de sa connaissance.
@@ -174,26 +230,26 @@ Un document _complémentaire_ de `comptes` (même `id`) donnant ses compteurs de
 ### `avatars`
 Un document par avatar donnant les informations d'entête d'un avatar. 
 `id` est un string aléatoire commençant par `3`
-- Clé primaire : `A`. Path : `comptes/A3...` `avatars/A3...`
+- Clé primaire : `org@3...`. Path : `comptes/org@3...` `avatars/org@3...`
 
 ### `groupes`
 Un document par groupe donnant les informations d'entête d'un groupe. 
 `id` est un string aléatoire commençant par `4`.
-- Clé primaire : `A`. Path : `groupes/A5...`
+- Clé primaire : `org@4...`. Path : `groupes/org@4...`
 
 # Tables / sous-collections d'un avatar ou d'un groupe
 - chaque **avatar** a 4 sous-collections de documents: `notes sponsorings chats tickets` (seul l'avatar Comptable a des tickets).
 - chaque **groupe** a 3 sous-collections de documents: `notes membres chatgrs`.
 
 Dans chaque sous-collection, `ids` est un identifiant relatif à `id`. 
-- en SQL les clés primaires sont `id,ids`
-- en Firestore les paths sont (par exemple pour la sous-collection `notes`) : `versions/A4.../notes/Axy...`, `id` est le second terme du path, `ids` le quatrième.
+- en SQL les clés primaires sont `org@id ids`
+- en Firestore les paths sont (par exemple pour la sous-collection `notes`) : `versions/org@id/notes/ids`, `id` est le second terme du path, `ids` le quatrième.
 
 ### `notes`
 Un document représente une note d'un avatar ou d'un groupe. L'identifiant relatif `ids` est un string aléatoire. 
 
 ### `sponsorings`
-Un document représente un sponsoring d'un avatar. Son identifiant relatif `ids` est _hash de la phrase_ de sponsoring entre le sponsor et son sponsorisé.
+Un document représente un sponsoring d'un avatar. Son identifiant relatif `ids` est _hash de la phrase_ de sponsoring entre le sponsor et son sponsorisé et est utilisé comme clé alternative d'accès.
 
 ### `chats`
 Un chat entre 2 avatars I et E se traduit en deux documents : 
