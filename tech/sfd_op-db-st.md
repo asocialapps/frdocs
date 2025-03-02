@@ -130,7 +130,7 @@ Ils sont listés dans un objet de configuration:
       avatars: ['id', 'v', 'vcv', 'hk', '_data_'],
       notes: ['id', 'ids', 'v', '_data_'],
       transferts: ['id', 'dlv', '_data_'],
-      sponsorings: ['id', 'ids', 'v', 'dlv', '_data_'],
+      sponsorings: ['id', 'ids', 'v', 'dlv', 'hk', '_data_'],
       chats: ['id', 'ids', 'v', '_data_'],
       tickets: ['id', 'ids', 'v', 'dlv', '_data_'],
       groupes: ['id', 'v', 'dfh', '_data_'],
@@ -139,30 +139,30 @@ Ils sont listés dans un objet de configuration:
     }
 
 ### Remarques
-- `id` et `hk` sont, en base, de la forme org@id et org@hk. Pour espaces et syntheses simplement de la forme org.
+- `id` et `hk` sont préfixés par `org` en base (`org@id` et `org@hk`). Pour `espaces` et `syntheses` simplement c'est `org` (`id` étant vide).
 - `hk`: clés d'accès _externes_, hash de phrase secrète ou de contact / sponsoring.
-- `ids` sont des clés secondaires relatives à la clé majeure id. Dans le seul cas de `sponsorings`, `ids` peut être utilisé comme clé alternative d'accès.
-- `v vcv`: sont des entiers, numéros de versions en séquence contine croissante.
+- `ids` sont des clés secondaires relatives à la clé majeure `id`.
+- `v vcv`: sont des entiers, numéros de versions en séquence continue croissante.
 - `dpt dlv dfh`: sont entiers représentant des dates `aaaammjj` (`20250301`).
-- `_data_`: sont des objets sérialisés contenant les données du documents, dont ses attributs _externalisés_ ci-avant.
+- `_data_`: sont des objets Javascript sérialisés contenant les données du documents, dont ses attributs _externalisés_ ci-avant.
   - `versions` n'a pas de `_data_` en base, celui-ci étant reconstruit à la lecture de ses attributs externes `{id, v, dlv}`.
 
 ### Cryptage en base
-Les attributs _data_ sont toujours cryptés en base, ce n'est pas optionnel.
+Les attributs `_data_` sont toujours cryptés en base, ce n'est pas optionnel.
 
-Les autres attributs sont _externalisés_,
-- soit parce que servant de clé primaire d'accès (id ids),
-- soit parce que servant de clé alternative d'accès (hk),
-- soit parce que nécessaire comme valeur de filtrage (v vcv dpt dlv dfh).
+Les autres attributs sont _externalisés_ de _data_,
+- soit parce que servant de clé primaire ou de path d'accès (`id ids`),
+- soit parce que servant de clé alternative d'accès (`hk`),
+- soit parce que nécessaire comme valeur de filtrage (`v vcv dpt dlv dfh`).
 
 Pour chaque choix d'un site:
-- org peut être crypté ou non.
-- id peut être crypté ou non.
-- ids peut être crypté ou non.
+- `org` peut être crypté ou non.
+- `id` peut être crypté ou non.
+- `ids` peut être crypté ou non.
 
 > Le cryptage de `org@id` est `corg@cid`, les deux termes `org` / `id` étant ou non cryptés séparément en `corg` / `cid`.
 
-Les attributs `v vcv dpt dlv dfh` ne sont PAS cryptés, étant utilisés par comparaison d'ordre et pas seulement d'égalité.
+Les attributs `v vcv dpt dlv dfh` ne sont PAS cryptés, étant utilisés par comparaison d'ordre et pas seulement d'égalité. L'utilisation d'un cryptage respectant l'ordre (OPE: _Order Preserving Encryption_) ne semble pas pertinent en raison du faible nombre de valeurs possibles. 
 
 > Aucun _meta-lien_ n'est accessible à la lecture d'une base cryptée, les codes des organisations hébergés comme les id des comptes / avatars / groupes ... étant également obfusqués.
 
@@ -249,7 +249,7 @@ Dans chaque sous-collection, `ids` est un identifiant relatif à `id`.
 Un document représente une note d'un avatar ou d'un groupe. L'identifiant relatif `ids` est un string aléatoire. 
 
 ### `sponsorings`
-Un document représente un sponsoring d'un avatar. Son identifiant relatif `ids` est _hash de la phrase_ de sponsoring entre le sponsor et son sponsorisé et est utilisé comme clé alternative d'accès.
+Un document représente un sponsoring d'un avatar. Son identifiant relatif `ids` est _hash de la phrase_ de sponsoring entre le sponsor et son sponsorisé. `ids` est dédoublé en `hk` afin d'être utilisé comme clé alternative d'accès.
 
 ### `chats`
 Un chat entre 2 avatars I et E se traduit en deux documents : 
@@ -287,7 +287,7 @@ Un document par ticket de crédit généré par un compte A. `ids` est un nombre
 ## Clés
 ### S : clé du site
 Elle est fixée dans la configuration de déploiement des services OP et PUBSUB par l'administrateur technique.
-- **elle crypte les _data_ des documents**, c'est à dire l'ensemble des propriétés d'un document. Les propriétés externalisées en index / clé sont répliquées en clair en dehors de _data_.
+- **elle crypte a minima les _data_ des documents** (voir ci-avant), c'est à dire l'ensemble des propriétés d'un document.
 
 ### E : clé d'un espace
 - attribuée à la création de l'espace par l'administrateur.
@@ -353,6 +353,7 @@ Chaque avatar a un couple de clés privée / publique:
 
 ### `sponsorings`
 - `ids`: `hYR` hash du PBKFD de la phrase secrète réduite.
+- `hk` : redondance de ids permettant un cryptage en base `org@id`.
 - `pspK` : phrase de sponsoring cryptée par la clé K du sponsor.
 - `YCK` : PBKFD de la phrase de sponsoring cryptée par la clé K du sponsor.
 - `hYC` : hash du PBKFD de la phrase de sponsoring,
@@ -368,7 +369,7 @@ Chaque avatar a un couple de clés privée / publique:
 # Périmètre d'un compte
 
 Le périmètre d'un compte délimite un certain nombre de documents:
-- un compte n'a la visibilité en session UI que des documents de son périmètre.
+- un compte n'a la visibilité dans l'application Web que des documents de son périmètre.
 - la plupart d'entre eux sont _synchronisés_: une session d'un compte reçoit des _avis de changement_ (pas le contenu) de ces documents qui permettent à l'opération `Sync` de tirer les contenus des documents ayant changé.
 
 ### Documents synchronisés du _périmètre_
@@ -379,7 +380,7 @@ Le périmètre d'un compte délimite un certain nombre de documents:
 
 ### Documents NON synchronisés du _périmètre_ 
 Ces documents ne sont pas utiles à jour en permanence dans une session. Ils sont lus à la demande en fonction de la phase de dialogue en cours dans la session.
-- `syntheses`: id vide (singleton pour l'espace `ns` du compte).
+- `syntheses`: id vide (singleton pour l'espace `org` du compte).
 - `partitions`: pour un compte "O", LE document dont l'ID est donnée par `idp` du `comptes`. 
   - Seule une session du Comptable peut accéder, successivement, à tous les documents `partitions` de son espace.
 - `comptas` identifié par l'id du compte. 
@@ -393,7 +394,7 @@ Ces documents ne sont pas utiles à jour en permanence dans une session. Ils son
 - marginalement par le GC.
 - les changements sont notifiés par PUBSUB aux sessions UI quand ils concernent des documents synchronises du périmètre courant des comptes.
 
-## Disponibilité en session UI
+## Disponibilité dans l'application Web
 Une session connectée à un compte **dispose en mémoire de tous les documents synchronisés de son compte**:
 - chargement initial en début de session,
 - puis à réception des avis de changements, rechargement incrémental sélectif des documents ayant changé.
@@ -422,13 +423,13 @@ Les documents devenus inutiles parce que non référencés par personne sont **p
 Les documents `versions` sont chargés du tracking des mises à jour des sous-documents de `avatars` et de `groupes`. Propriétés:
 - `id` : ID du groupe ou de l'avatar du document.
 - `v` : version, incrémentée de 1 à chaque mise à jour, soit du document maître, soit de ses sous-documents `notes sponsorings chats tickets membres chatgrs`
-- `suppr` : jour de _suppression_ de l'avatar ou du groupe (considérés comme _zombi_)
+- `dlv` : jour de _suppression_ de l'avatar ou du groupe (considérés comme _zombi_)
 
-> **Remarque:** Afin d'éviter de conserver pour toujours la trace de très vielles suppressions, le GC lit les `versions` supprimées depuis plus de N mois pour les purger. Les sessions ont toutes eu le temps d'intégrer les disparitions correspondantes.
+> **Remarque:** Afin d'éviter de conserver pour toujours la trace de très vielles suppressions, le GC lit les `versions` supprimées depuis plus de N mois (filtre sur `dlv`) pour les purger. Les sessions ont toutes eu le temps d'intégrer les disparitions correspondantes.
 
 **La constante `IDBOBS / IDBOBSGC` de `api.mjs`** donne le nombre de jours de validité d'une micro base locale IDB sans resynchronisation. Celle-ci devient **obsolète** (à supprimer avant connexion) `IDBOBS` jours après sa dernière synchronisation. Ceci s'applique à _tous_ les espaces avec la même valeur.
 
-> Les documents `versions` sont purgés par le GC `IDBOBSGC` jours après leur jour de suppression `suppr`.
+> Les documents `versions` sont purgés par le GC `IDBOBSGC` jours après leur jour de suppression `dlv`.
 
 # Détail des tables / collections _majeures_ et leurs _sous-collections_
 Ce sont les documents faisant partie d'un périmètre d'un compte: `partitions comptes comptas comptis invits avatars groupes notes sponsorings chats tickets membres chatgrs versions`
@@ -439,20 +440,21 @@ En base de données, les colonnes / propriétés suivantes sont lisibles:
 - `v`: la version du document.
 - _quelques_ propriétés devant être indexées, spécifiquement quand elles existent dans la classe du  document:
   - `hk`: la propriété `hk` du document précédée du `ns` de l'espace.
-  - `vcv dlv dfh org idf`: valeur de la propriété correspondante du document.
+  - `vcv dlv dfh dpt`: valeur de la propriété correspondante du document.
 - `_data_`: sérialisation cryptée des propriétés du document.
 
 ### `_data_`
 Tous les documents, ont en base une propriété `_data_` qui porte toutes les informations sérialisées du document. `_data_` est crypté:
 - en base _centrale_ par la clé du site qui a été générée par l'administrateur technique et qu'il conserve en lieu protégé comme quelques autres données sensibles (_token_ d'autorisation d'API, identifiants d'accès aux comptes d'hébergement ...).
 - en base _locale_ par la clé K du compte.
+- pour `versions`, le _data_ est reconstruit depuis les 3 propriétés externes { id, v, dlv } ce qui évite de stocker un attribut _data_ en base.
 
 Lors de la lecture des documents par l'opération `Sync`, le _data_ d'un document est sérialisé et transmis en retour de la requête POST en HTTPS. Par défaut, toutes les propriétés sont transmises. Toutefois, selon la classe du document et le compte concerné, certaines propriétés _non transmises en session_ sont _omises_ dans la sérialisation du _data_ qui remonte en session.
 
 ### `id` et `ids` quand il existe
 Ces propriétés sont externalisées et font partie de la clé primaire (en SQL) ou du path (en Firestore).
 
-Pour un `sponsorings` la propriété `ids` est le hash de la phrase de reconnaissance :
+Pour un `sponsorings` la propriété `hk` est le hash de la phrase de reconnaissance :
 - elle est indexée.
 - en Firestore l'index est `collection_group` afin de rendre un sponsorings accessible par index sans connaître son _parent_ le sponsor.
 
@@ -467,12 +469,12 @@ Pour un `sponsorings` la propriété `ids` est le hash de la phrase de reconnais
 Elle permet au GC de détecter les transferts en échec et de nettoyer le _storage_.
 - en Firestore l'index est `collection_group` afin de s'appliquer aux fichiers des notes de tous les avatars et groupe.
 
-### `dlv` d'un `comptes`
+### `dlv` d'un `comptas`
 La `dlv` **d'un compte** désigne le dernier jour de validité du compte:
 - c'est le **dernier jour d'un mois**.
 - **cas particulier**: quand c'est le premier jour d'un mois, la `dlv` réelle est le dernier jour du mois précédent. Dans ce cas elle représente la date de fin de validité fixée par l'administrateur pour l'ensemble des comptes "O". En gros il a un financement des frais d'hébergement pour les comptes de l'organisation jusqu'à cette date (par défaut la fin du siècle).
 
-La `dlv` d'un compte est inscrite dans le document `comptes` du compte: elle est externalisée pour que le GC puisse récupérer tous les comptes obsolètes à détruire.
+La `dlv` d'un compte est inscrite dans le document `comptas` du compte: elle est externalisée pour que le GC puisse récupérer tous les comptes obsolètes à détruire.
 
 ### `dlv` d'un `sponsorings` 
 - jour au-delà duquel le sponsoring n'est plus applicable ni pertinent à conserver. Les sessions suppriment automatiquement à la connexion les sponsorings ayant dépassé leur `dlv`.
@@ -483,7 +485,7 @@ La `dlv` d'un compte est inscrite dans le document `comptes` du compte: elle est
 Cette propriété est la version `v` du document au moment de la dernière mise à jour de la carte de visite: elle est indexée afin de pouvoir filter un avatar et n'accéder à son contenu que si la version de sa carte de visite est plus récente que celle déjà détenue en session UI.
 
 ### `dfh` : date de fin d'hébergement. `groupes`
-La **date de fin d'hébergement** sur un groupe permet de détecter le jour où le groupe sera considéré comme disparu. A dépassement de la `dfh` d'un groupe, le GC fait disparaître le groupe inscrivant une `suppr` du jour dans son document `versions`.
+La **date de fin d'hébergement** sur un groupe permet de détecter le jour où le groupe sera considéré comme disparu. A dépassement de la `dfh` d'un groupe, le GC fait disparaître le groupe inscrivant une `dlv` du jour dans son document `versions`.
 
 ### `hk` : hash d'un extrait de la phrase de contact. `avatars`
 Cette propriété de `avatars` est indexée de manière à pouvoir accéder à un avatar en connaissant sa phrase de contact. En base la propriété est précédée du `ns` de l'espace.
