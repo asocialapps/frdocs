@@ -883,7 +883,9 @@ Après tests, changer à nouveau dans `config.mjs` la première ligne `EMULATOR 
 
 ## Déployer depuis `asocial-gae1`
 
-    gcloud app deploy --verbosity debug
+    gcloud app deploy --verbosity debug --no-cache
+
+no-cache : sinon plantage du build step 2 en cherchant à comparer avec une version antérieure.
 
 Quelques minutes ..., puis si nécessaire (si `cron.yaml` a changé par rapport à l'opérationnel):
 
