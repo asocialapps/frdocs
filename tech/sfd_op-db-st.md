@@ -611,12 +611,12 @@ Toute opération ayant à authentifier son émetteur porte un `token` sérialisa
 - Pour un compte connecté:
   - `org` : le code l'organisation.
   - `sessionId`,
-  - `hXR` : hash (sur 14 chiffres) du PBKFD d'un extrait de la phrase secrète.
-  - `hXC` : hash (sur 14 chiffres) du PBKFD de la phrase secrète complète.
+  - `hXR` : hash -_court_ du PBKFD des 12 premiers caractères de la phrase secrète.
+  - `hXC` : hash _court_ du PBKFD de la phrase secrète complète.
 
-Le service OP recherche le document `comptes` par `ns + hXR` (propriété `hk` indexée de `comptes`). Le `ns` est connu par le code `org` figurant dans le token.
+Le service OP recherche le document `comptes` par `org@hXR` (propriété `hk` indexée de `comptes`):
 - vérifie que `hXC` est bien celui enregistré dans `comptes`.
-- enregistre dans le contexte de l'opération `sessionId, org, ns`.
+- enregistre dans le contexte de l'opération `sessionId, org`.
 
 # _Textes_ humainement interprétables
 
@@ -672,8 +672,6 @@ Une notification a les propriétés suivantes:
 
 **Remarque:** une notification `{ dh: ... }` correspond à la suppression de la notification antérieure (ni restriction, ni texte).
 
-> Le document `comptes` a une date-heure de lecture `dhvuK` qui indique _quand_ le titulaire du compte a lu les notifications. Une icône peut ainsi signaler l'existence d'une _nouvelle_ notification, i.e. une notification qui n'a pas été lue.
-
 # Sous-objet `CV` carte de visite
 
 Une carte de visite a 4 propriétés `{ id, v, ph, tx }`:
@@ -682,7 +680,7 @@ Une carte de visite a 4 propriétés `{ id, v, ph, tx }`:
 - `ph`: photo cryptée par la clé A de l'avatar ou G du groupe propriétaire.
 - `tx`: texte (gzippé) crypté par la clé A de l'avatar ou G du groupe propriétaire.
 
-`nom` : il correspond aux 16 premiers caractères de la première ligne du texte. Ce nom est affiché partout ou l'avatar / groupe apparaît, suivi des 4 derniers chiffres de son id.
+`nom` : il correspond aux 16 premiers caractères de la première ligne du texte et est affiché partout ou l'avatar / groupe apparaît, suivi des 4 derniers chiffres de son id.
 
 Les cartes de visite des avatars sont hébergées dans le document `avatars`, celles des groupes dans leurs documents `groupes`.
 
@@ -713,14 +711,13 @@ Un document `versions` donne la plus haute version d'un sous-arbre:
 _data_ :
 - `id` : ID du document.
 - `v` : 1..N, plus haute version attribuée aux documents du sous-arbre.
-- `suppr` : jour de suppression, ou 0 s'il est actif.
+- `dlv` : jour de suppression, ou 0 s'il est actif.
 
 Quand un document, un `chats` par exemple est mis à jour, l'opération,
 - lit le document `versions` de son sous-arbre:
-- lit le document de l'avatar (racine du sous-arbre) de même `id` que le `chats`,
-- incrémente de 1 de `v` de `versions`,
-- inscrit v comme version `v` de `chats`,
-- met à jour de `versions` et `chats`.
+- incrémente de 1 `v` de `versions`,
+- l'inscrit comme version `v` de `chats`,
+- met à jour `versions` et `chats`.
 
 La version `v` est celle de tout le sous-arbre, la plus haute attribuée à un document du sous-arbre.
 
@@ -728,34 +725,44 @@ La version `v` est celle de tout le sous-arbre, la plus haute attribuée à un d
 
 Ces documents sont créés par l'administrateur technique à l'occasion de la création de l'espace et du Comptable correspondant.
 
-**Il est _synchronisé_ en session UI:** un avis de changement (avec la nouvelle valeur de sa version) est poussé par le service PUBSUB à toutes les sessions en cours du même espace (ns).
+**Il est _synchronisé_ par l'application Web:** un avis de changement (avec la nouvelle valeur de sa version) est poussé par le service PUBSUB à toutes les sessions en cours du même espace `org`.
+
+#### Clé de l'espace `cleES / cleET`
+**`cleES` ne sert qu'à crypter les rapports statistiques** des comptes et des tickets: comme c'est le traitement GC qui les génère il faut bien qu'il puisse la lire _en clair_.
+- c'est la seule clé détenue en _clair_ dans la base (mais _data_ est cryptée).
+- `cleES` est cryptée en `cleET` par le PBKFD de la phrase complète de sponsorings du Comptable:
+  - à la création du compte du Comptable, `cleET` peut être décryptée (le Comptable ayant saisi sa phrase de sponsorings) et elle est ré-encryptée en `cleEK` dans le document `comptes` du Comptable par sa clé K.
+  - `cleET` ne sert donc que peu de temps, entre la création de l'espace par l'administrateur technique et la création du compte du Comptable.
 
 La lecture effective du document vérifie l'habilitation à sa lecture et ne transmet que les propriétés autorisées.
-- la propriété `ns` est récupérée par le service OP, elle n'est pas stockée dans le document `espaces`.
-- _Administrateur technique_ : toutes les propriétés, quelque soit l'espace.
-- _Comptable_ : toutes les propriétés (pour _son_ espace, il ne peut pas lire les autres.
-- _Délégués_ : pour leur espace seulement, toutes les propriétés sauf `moisStat moisStatT dlvat nbmi`
-- _autres comptes_: restriction d'un délégué, mais de plus la seule notification de _leur_ partition (s'il y en a une) est transmise.
+- la propriété `org` est récupérée par le service OP depuis la propriété id externalisée (`org@id`) et inscrite à la lecture depuis la base dans le document mais **n'y est pas stockée**: on peut _migrer_ une organisation sous un autre code sans intervention dans le contenu même du document.
+- _Administrateur technique_ : toutes les propriétés, quelque soit l'espace, sauf `tnotifP`.
+- _Comptable_ : toutes les propriétés (pour _son_ espace, il ne peut pas lire les autres), sauf `hTC` qui ne lui sert à rien..
+- _autres comptes "O"_ : pour leur espace seulement,
+  - toutes les propriétés sauf `moisStat moisStatT cleES hTC`.
+  - `tnotifP`: ne contient QUE la seule notification de _leur_ partition.
 
-**Les sessions sont systématiquement synchronisées à _leur_ espace.** Elles sont ainsi informées à tout instant d'un changement des notifications,
+**Les sessions des application Web sont synchronisées à _leur_ espace.** et sont ainsi informées à tout instant d'un changement des notifications,
 - E de l'espace lui-même,
 - de leur partition (pour un compte "O").
 
-> **Remarque**: les notifications C (de compte) sont portées par les documents `partitions` **et** `comptes` et sont synchronisées par lui. C'est aussi le cas des dépassements de seuils (`pcn pcv` pour les quotas, `pcc nbj` pour la consommation) qui remontent de `comptas` à `comptes` lors de franchissement de variation significative -5% ou 5 jours- (pas à chaque opération).
+> **Remarque**: les notifications C (de compte) sont portées par les documents `partitions` **et** `comptes` et sont synchronisées par lui.
 
 _data_ :
 - `id` : string vide.
 - `v` : 1..N
-- `org` : code de l'organisation propriétaire.
+- `dpt` : date du prochain traitement (mensuel).
 
-- `ns` : **cette propriété N'EST PAS persistante**. Elle calculée par le service OP et transmise en session UI.
+- `org` : code de l'organisation propriétaire, récupérée par le service OP, mais pas stockée dans _data_.
 
 - `creation` : date de création.
+- `hTC` : hash _court_ du PBKFD de la phrase de sponsoring du Comptable par l'administrateur technique.
 - `moisStat` : dernier mois de calcul de la statistique des comptas.
 - `moisStatT` : dernier mois de calcul de la statistique des tickets.
 - `quotas`:  `{ qn, qv, qc }` : quotas maximum globaux attribués par l'administrateur technique.
 - `dlvat` : `dlv` déclarée par l'administrateur technique.
-- `cleES` : clé de l'espace cryptée par la clé du site. Permet au comptable de lire les reports créés sur le serveur et cryptés par cette clé E.
+- `cleES` : clé de l'espace générée à la création de l'espace.
+  
 - `notifE` : notification pour l'espace de l'administrateur technique. Le texte n'est pas crypté.
 - `opt`: option des comptes autonomes.
   - 0: Pas de comptes "autonomes",
@@ -770,15 +777,13 @@ _Remarques:_
 - `tnotifP` : mise à jour par le Comptable et les délégués des partitions.
 
 **Au début de chaque opération, l'espace est lu afin de vérifier la présence de notifications E et P** (éventuellement restrictives) de l'espace et de leur partition (pour un compte "O"):
-- c'est une lecture _lazy_ : si l'espace a été trouvé en cache et relu depuis la base depuis moins de 5 minutes, on l'estime à jour.
-- en conséquence, _quand il y a plusieurs instances en parallèle_, la prise en compte de ces notifications n'est _certaine_ qu'au bout de 5 minutes.
+- c'est une lecture _lazy_ : si l'espace a été trouvé en cache et relu depuis la base depuis peu de temps (3s : `Cache.LAZY_MS`), on l'estime à jour, ce qui évite des lectures trop rapprochées en cas de pic de requêtes d'opération.
+- en conséquence, _quand il y a plusieurs instances en parallèle_, la prise en compte de ces notifications n'est _certaine_ qu'au bout de quelques secondes.
 
 ### `dlvat nbmi`
 L'administrateur technique gère une `dlvat` pour l'espace : 
 - c'est la date à laquelle l'administrateur technique détruira les comptes. Par défaut elle est fixée à la fin du siècle.
 - l'administrateur ne peut pas (re)positionner une `dlvat` à moins de `nbmi` mois du jour courant afin d'éviter les catastrophes de comptes supprimés sans que leurs titulaires n'aient eu le temps de se reconnecter.
-
-L'opération de mise à jour d'une `dlvat` est une opération longue du fait du repositionnement des `dlv` des comptes égales à la `dlvat` remplacée. C'est une **tâche**.
 
 **Le maintien en vie d'un compte en l'absence de connexion** a le double inconvénient, 
 - d'immobiliser des ressources peut-être pour rien,
@@ -793,10 +798,10 @@ Le Comptable fixe en conséquence un `nbmi` (de 3, 6, 12, 18, 24 mois),
 
 ## Protocole de création d'un espace et de son Comptable
 **Par l'Administrateur Technique**: création d'un espace:
-- choix du code de l'espace `ns` et de l'organisation `org`
-- acquisition de la phrase de sponsoring du comptable T -> `TC` (son PBKFD) -> `hTC` (son hash)
+- choix du code de l'organisation `org`
+- acquisition de la phrase de sponsoring du comptable T -> `TC` (son PBKFD) -> `hTC` (son hash _court_)
 - **Opération** `CreationEspace`
-  - Arguments: `ns org TC hTC`
+  - Arguments: `org TC hTC`
   - Traitement:
     - OK si: 
       - soit espace n'existe pas, 
@@ -806,25 +811,19 @@ Le Comptable fixe en conséquence un `nbmi` (de 3, 6, 12, 18, 24 mois),
 
 **Par le Comptable**: création de son compte
 - saisie de la phrase de sponsoring T -> `hTC TC`
-- **Opération** `GetCleET`:
-  - argument: `org hTC` (pour vérification)
-  - retour: `cleET`
 - saisie phrase secrète du compte: X -> `XC` -> `hXR hXC`
 - génération de la clé K: -> `cleKXC` -> `cleEK`
 - génération pub/priv: -> `privK pub`
 - génération de la clé P de la partition 1: `clePK` -> `ck` `{cleP, code}` crypté par clé K
 - **Opération** `CreationComptable`:
-  - arguments: `org hTC` (pour vérification) `hXR hXC cleK clePK privK pub cleAP cleAK cleKXC clePA ck`
-    - implicite: `id` du Comptable, génération `rds` du compte et de son avatar principal 
-  - Traitement:
-    - création de `compte compti compta` du Comptable
-    - création de la `partition` 1 ne comprenant que le Comptable
-    - création de son `avatar` principal (et pour toujours unique)
-    - _dans son `espace`_: suppression de `hTC`
+  - création de `compte compti compta` du Comptable,
+  - création de la première `partition` ne comprenant que le Comptable,
+  - création de son `avatar` principal (et pour toujours unique),
+  - _dans son `espace`_: suppression de `hTC` qui ne sert plus à rien.
 
 # Document `syntheses` d'un espace
 
-Ces documents sont des singletons de leur espace. Ils ne sont pas synchronisés, les sessions UI les demandent explicitement,
+Ces documents sont des singletons de leur espace. Ils ne sont **PAS** synchronisés, les sessions des applications Web les demandent explicitement,
 - pour l'administrateur technique,
 - pour le Comptable.
 
@@ -834,7 +833,6 @@ _data_:
 - `qA` : `{ qc, qn, qv }` - quotas **maximum** disponibles pour les comptes A.
 - `qtA` : `{ qc, qn, qv }` - quotas **effectivement attribués** aux comptes A. En conséquence `qA.qn - qtA.qn` est le quotas `qn` encore attribuable aux compte A.
 
-- `dh` : date-heure de dernière mise à jour (à titre informatif).
 - `tsp` : map des _synthèses_ des partitions.
   - _clé_: id de la partition.
   - _valeur_ : `synth`, objet des compteurs de synthèse calculés de la partition.
@@ -860,7 +858,7 @@ Une partition est créée par le Comptable qui peut la supprimer quand il n'y a 
   - soit à leur création par sponsoring : elle est cryptée par la clé K du compte créé.
   - soit quand le compte change de partition (par le Comptable) ou passe de compte "A" à compte "O" par un délégué ou le Comptable: elle est cryptée par la clé publique RSA du compte.
 
-**Un document partition NON synchronisé, est explicitement demandé** par les sessions UI,
+**Un document partition NON synchronisé, est explicitement demandé** par les sessions des applications Web,
 - soit du Comptable,
 - soit d'un délégué.
 - soit d'un compte "O" non délégué. Dans ce cas:  
@@ -877,12 +875,11 @@ Une partition est créée par le Comptable qui peut la supprimer quand il n'y a 
 
 #### Incorporation des consommations des comptes
 Les compteurs de consommation d'un compte extraits de `comptas` sont recopiés à l'occasion de la fin d'une opération:
-- dans les compteurs `{ qc, qn, qv, pcc, pcn, pcv, nbj }` du document `comptes`,
-- pour un compte "O" dans les compteurs `q: { qc qn qv c2m nn nc ng v }` de l'entrée du compte dans son document `partitions`.
+- pour un compte "O" dans les compteurs `q: { qc qn qv nn nc ng v cjm }` de son entrée dans `mcpt`.
   - en conséquence la ligne de synthèse de sa partition est reportée dans l'élément correspondant de son document `syntheses`.
-- afin d'éviter des mises à jour trop fréquentes, la procédure de report n'est engagée qui si les compteurs `pcc pcn pcv` passe un cap de 5% ou que `nbj` passe un cap de 5 jours.
+- afin d'éviter des mises à jour trop fréquentes, la procédure de report n'est engagée qui si les compteurs ont une variation significative depuis le dernier report.
 
-> **Remarque**: la modification d'un compteur de quotas `qc qn qv` provoque cette procédure de report `comptas -> comptes -> partitions -> syntheses` à chaque évolution et sans effet de seuil. 
+> **Remarque**: la modification d'un compteur de quotas `qc qn qv` provoque cette procédure de report `comptas -> partitions -> syntheses` à chaque évolution et sans effet de seuil. 
 
 _data_:
 - `id` : ID de la partition attribué par le Comptable à sa création.
@@ -896,16 +893,17 @@ _data_:
     - `notif`: notification du compte cryptée par la clé P de la partition (redonde celle dans compte).
     - `cleAP` : clé A du compte crypté par la clé P de la partition.
     - `del`: `true` si c'est un délégué.
-    - `q` : `qc qn qv c2m nn nc ng v` extraits du document `comptas` du compte.
-      - `c2m` est le compteur `conso2M` de compteurs, montant moyen _mensualisé_ de consommation de calcul observé sur M/M-1. 
+    - `q` : `qc qn qv nn nc ng v cjm` extraits du document `comptas` du compte.
+      - `cjm` est le compteur `conso2M` de compteurs, montant moyen _mensualisé_ de consommation de calcul observé sur M/M-1. 
 
-`mcpt` compilé en session - Ajout à `q` :
-  - `pcc` : pourcentage d'utilisation de la consommation journalière `c2m / qc`
-  - `pcn` : pourcentage d'utilisation effective de qn : `nn + nc ng / qn`
+`mcpt` compilé en session des applications Web - Ajout à `q` :
+  - `pcc` : pourcentage d'utilisation de la consommation journalière `cjm / qc`
+  - `pcn` : pourcentage d'utilisation effective de qn : `nn + nc + ng / qn`
   - `pcv` : pourcentage d'utilisation effective de qc : `v / qv`
 
-**Un objet `synth` est calculable** (en session ou dans le serveur):
-- `qt` : les totaux des compteurs `q` : (`qc qn qv c2m n (nn+nc+ng) v`) de tous les comptes,
+**Un objet `synth` est calculable** (en application Web ou dans le serveur):
+- `lqv` : `['qn', 'qv', 'qc', 'nn', 'nc', 'ng', 'v', 'cjm']`
+- `qt` : les totaux des compteurs de `lqv` de tous les comptes,
 - `ntf`: [1, 2, 3] - le nombre de comptes ayant des notifications de niveau de restriction 1 / 2 / 3. 
 - `nbc nbd` : le nombre total de comptes et le nombre de délégués.
 - _recopiés de la racine dans `synth`_ : `id nrp q`
@@ -913,7 +911,7 @@ _data_:
   - `pcac` : pourcentage d'affectation des quotas : `qt.qc / q.qc`
   - `pcan` : pourcentage d'affectation des quotas : `qt.qn / q.qn`
   - `pcav` : pourcentage d'affectation des quotas : `qt.qv / q.qv`
-  - `pcc` : pourcentage d'utilisation de la consommation journalière `qt`.`c2m / q.qc`
+  - `pcc` : pourcentage d'utilisation de la consommation journalière `qt`.`cjm / q.qc`
   - `pcn` : pourcentage d'utilisation effective de `qn` : `qt.n / q.qn`
   - `pcv` : pourcentage d'utilisation effective de `qc` : `qt.v / q.qv`
 
@@ -924,35 +922,16 @@ Un document `comptes` est identifié par l'id du compte: il est **synchronisé e
 _data_ :
 - `id` : ID du compte = ID de son avatar principal.
 - `v` : 1..N.
-- `hk` : `hXR`, hash du PBKFD d'un extrait de la phrase secrète (en base précédé de `ns`).
-- `dlv` : dernier jour de validité du compte.
-
-- `dharF dhopf dharC dhopC dharS dhopS`: dh des ACCES RESTREINT (F, C, S).
+- `hk` : `hXR`, hash _court_ du PBKFD du début de la phrase secrète (en base `org@hk`).
 
 - `vpe` : version du périmètre
 - `vci` : version de `comptis`
 - `vin` : version de `invits`
 
-- `hXC`: hash du PBKFD de la phrase secrète complète (sans son `ns`).
+- `hXC`: hash _court_ du PBKFD de la phrase secrète complète.
 - `cleKXC` : clé K cryptée par XC (PBKFD de la phrase secrète complète).
-- `cleEK` : pour le Comptable, clé de l'espace cryptée par sa clé K à la création de l'espace pour le Comptable. Permet au comptable de lire les reports créés sur le serveur et cryptés par cette clé E.
+- `cleEK` : pour le Comptable seulement, clé de l'espace cryptée par sa clé K à la création de l'espace. Permet au comptable de lire les reports créés sur le serveur et cryptés par cette clé E.
 - `privK` : clé privée RSA de son avatar principal cryptée par la clé K du compte.
-
-- `dhvuK` : date-heure de dernière vue des notifications par le titulaire du compte, cryptée par la clé K.
-- `qv` : `{ qc, qn, qv, nn, nc, ng, v, cjm }`. Recopiés de `compta.compteurs.qv` en fin d'opération quand l'un d'eux passe un seuil de 5% (sans seuil pour `qc, qn, qv`), à la montée ou à la descente.
-  - `qc`: limite de consommation
-  - `qn`: quota du nombre total de notes / chats / groupes.
-  - `qv`: quota du volume des fichiers.
-  - `nn`: nombre de notes existantes.
-  - `nc`: nombre de chats existants.
-  - `ng` : nombre de participations aux groupes existantes.
-  - `v`: volume effectif total des fichiers
-  - `cjm`: coût journalier moyen de calcul sur M et M-1.
-- `flags` : flags courants. Recopiés de `compta.compteurs.flags` en fin d'opération en cas de changement.
-  - `RAL` : ralentissement (excès de calcul / quota)
-  - `NRED` : documents en réduction (excès de nombre de documents / quota)
-  - `VRED` : volume de fichiers en réduction (excès de volume / quota)
-  - `ARSN` : accès restreint pour solde négatif
 
 - `lmut` : liste des `ids` des chats pour lesquels le compte (son avatar principal) a une demande de mutation (`mutI` != 0)
 
@@ -979,23 +958,23 @@ _Comptes "O" seulement:_
 
 #### `vci vin` : synchronisation des `comptis invits`
 A chaque mise à jour du `comptis` (resp. `invits`) du compte, la version courante du compte est inscrite, 
-- comme `v` de `comptis` (resp. de invits), 
+- comme `v` de `comptis` (resp. de `invits`), 
 - dans `vci` (resp. `vin`). 
 
-Ceci permet lors de l'appel `Sync` en session UI à la réception d'un avis de changement du compte, de savoir si `comptis` (resp. `invits`) est hors date ou non et doit ou non être rechargé. 
+Lors de l'appel `Sync` une application Web peut savoir à la réception d'un avis de changement du compte, si `comptis` (resp. `invits`) est hors date ou non et doit ou non être rechargé. 
 
 #### Périmètre du compte, `vpe`
-Le périmètre d'un compte est la lis ordonnée sans doublon (un Set ordonné) des IDs des avatars trouvés dans `mav` et des groupes trouvés dans `mpg`.
+Le périmètre d'un compte est la liste ordonnée sans doublon (un Set ordonné) des IDs des avatars trouvés dans `mav` et des groupes trouvés dans `mpg`.
 
 A la fin de chaque opération, le service OP compare, pour tous les comptes mis à jour par l'opération, les périmètres avant et après l'opération: la liste des périmètres changés `[[ID du compte, nouveau périmètre [id1 ... ]] ... ]` est transmise à PUBSUB afin d're mis à jour et de pouvoir notifier les futurs changements.
 
-Si le périmètre d'un compte a changé, la propriété vpe est mise à jour dans le compte avec la valeur courante de la version du compte. Ceci permet de savoir quand un compte a changé, si son périmètre a changé ou non depuis la version précédente et à PUBSUB de mettre à jour ou non le périmètre d'un compte.
+Si le périmètre d'un compte a changé, la propriété `vpe` est mise à jour dans le compte avec la valeur courante de la version du compte. Ceci permet de savoir quand un compte a changé, si son périmètre a changé ou non depuis la version précédente et à PUBSUB de mettre à jour ou non le périmètre d'un compte.
 
 # Documents `comptis`
 
 Ils sont identifiés pat l'ID de leur compte, créé et purgé avec lui. C'est une prolongation du document `comptes` portant des informations personnelles (texte et hashtags) à propos des avatars et groupes connus du compte.
 
-**Ils sont synchronisés:** la _lecture_ en session ne s'effectue que par l'opération `Sync`.
+**Ils sont synchronisés:** la _lecture_ par une application Web ne s'effectue que par l'opération `Sync`.
 
 _data_:
 - `id` : id du compte.
@@ -1030,8 +1009,8 @@ _data_:
     - `msgG` : message de bienvenue / invitation émis par l'invitant.
 
 Pour un simple contact:
-- `flags` est à 0
-- `msgG` est null
+- `flags` est à 0.
+- `msgG` est null.
 - `invpar` reflète dans le cas des invitations unanimes, la liste des votants _pour_ à cet instant.
 
 Un _contact_ peut se faire effacer des contacts du groupe et s'inscrire en liste noire.
@@ -1039,29 +1018,43 @@ Un _contact_ peut se faire effacer des contacts du groupe et s'inscrire en liste
 # Documents `comptas`
 
 **Ces documents de même id que leur compte est lu à chaque début d'opération et mis à jour par l'opération.**
-- si ses compteurs `pcc, pcn, pcv, nbj` _ont changé d'ordre de grandeur_ (5% / 5j) ils sont reportés dans le document `comptes`: ce dernier ne devrait, statistiquement, n'être mis à jour que rarement en fin d'opération.
 
-**Les documents ne sont PAS synchronisés.** La lecture est à la demande par les sessions, ce qui permet de vérifier qui le demande: compte lui-même, Comptable, un délégué de sa partition pour un compte "O".
+**Les documents ne sont PAS synchronisés.** La lecture est à la demande par les sessions des applications Web, ce qui permet de vérifier qui le demande: compte lui-même, Comptable, un délégué de sa partition pour un compte "O".
 
-_data_:
+### Synthèse `adq`
+A chaque retour d'une opération sollicité par une session d'une application Web, un résultat `adq` est retourné lui transmettant les données suivantes:
+- `nl ne vm vd` : le nombre de lectures, écritures, volumes montant et descendant de l'opération.
+- `qv` : `{qc, qn, qv, nn, nc, ng, v, cjm}` des compteurs.
+- `dh`: la date-heure de calcul des compteurs.
+- `v` : la version du document `comptas`.
+- `dlv` : la dlv du compte.
+- `flags`: les flags de restriction du compte détectés par l'opération.
+
+A la fin de chaque opération le changement de adq par rapport à la version précédente stockée dans comptas est évalué:
+- changement de `dlv flags qv.qc qv.qn, qv.qc`. `adq` est envoyé à PUBSUB pour notification à toutes les sessions en ligne du compte. Ceci n'arrive pas souvent.
+- changement _significatif_ des compteurs `qv. {nn, nc, ng, v, cjm}`: la changement est **de plus** propagé **pour les comptes "O"** à `partitions` et `syntheses`.
+
+### _data_
+
 - `id` : numéro du compte = id de son avatar principal.
 - `v` : 1..N. Sa version lui est spécifique.
+- `dlv`: date limite de validité du compte.
 
-- `qv` : `{qc, qn, qv, nn, nc, ng, v}`: quotas et nombre de groupes, chats, notes, volume fichiers. Valeurs courantes.
-- `estA` : `true` si c'est un compte A.
-- `compteurs` sérialisation des quotas, volumes et coûts.
-- _Comptes "A" seulement_
-  - `solde`: résultat, 
-    - du cumul des crédits reçus depuis le début de la vie du compte (ou de son dernier passage en compte A), 
-    - plus les dons reçus des autres,
-    - moins les dons faits aux autres.
-  - `tickets`: map des tickets / dons:
-    - _clé_: `ids` du ticket,
-    - _valeur_: `{dg, dr, ma, mc, refa, refc }`
-  - `dons` : liste des dons effectués / reçus `[{ dh, m, iddb }]`
-    - `dh`: date-heure du don
-    - `m`: montant du don (positif ou négatif)
-    - `iddb`: id du donateur / bénéficiaire (selon le signe de `m`).
+- `dhdc`: date-heure de la dernière connexion du compte.
+- `dharc`: date-heure de la notification d'accès restreint signifiée au compte.
+- `dharp`: date-heure de la notification d'accès restreint signifiée à la partition du compte.
+- `dlv`: date limite de validité du compte.
+- `flags`: des restrictions lors de la dernière opération.
+- `adq`: dernières valeurs transmise en `adq`: `dlv, flgs, qv`
+
+- `serialCompteurs`: sérialisation des quotas, volumes et coûts. Voir la description détaillée des **compteurs** en annexe.
+- `tickets`: map des tickets:
+  - _clé_: `ids`
+  - _valeur_: `{dg, dr, ma, mc, refa, refc}`
+- `dons`: liste des dons effectués / reçus `[{ dh, m, iddb }]`
+  - `dh`: date-heure du don
+  - `m`: montant du don (positif ou négatif)
+  - `iddb`: id du donateur / bénéficiaire (selon le signe de `m`).
 
 # Documents `avatars`
 
@@ -1071,29 +1064,29 @@ _data_:
 - `id` : ID de l'avatar.
 - `v` : 1..N.
 - `vcv` : version de la carte de visite afin qu'une opération puisse détecter (sans lire le document) si la carte de visite est plus récente que celle qu'il connaît.
-- `hk` : `hZR` hash du PBKFD de la phrase de contact réduite (précédé du `ns` en base).
-- `alias` : ID alternative générée à la création de l'avatar. Identifie l'avatar sur Storage pour éviter d'y faire figurer son ID réelle.
+- `hk` : `hZR` hash _court_ du PBKFD de la phrase de contact réduite (`org@hk` en base).
 
 - `idc` : id du compte de l'avatar (égal à son id pour l'avatar principal).
 - `cleAZC` : clé A cryptée par ZC (PBKFD de la phrase de contact complète).
 - `pcK` : phrase de contact complète cryptée par la clé K du compte.
 - `hZC` : hash du PBKFD de la phrase de contact complète.
-
 - `cvA` : carte de visite de l'avatar `{id, v, ph, tx}`. photo et texte (possiblement gzippé) cryptés par la clé A de l'avatar.
-
 - `pub privK` : couple des clés publique / privée RSA de l'avatar.
 
 # Documents `tickets`
 
 Ce sont des sous-documents de `avatars` qui n'existent **que** pour l'avatar principal du Comptable.
 
-Il y a un document `tickets` par ticket de crédit généré par un compte "A" annonçant l'arrivée d'un paiement correspondant. Chaque ticket est dédoublé:
+Il y a un document `tickets` par ticket de crédit généré par un compte annonçant l'arrivée d'un paiement correspondant. Chaque ticket est dédoublé:
 - un exemplaire dans la sous-collection `tickets` du Comptable,
 - un exemplaire dans le document `comptas` du compte, dans la liste `tickets` cryptée par la clé K du compte A `{ids, dg, dr, ma, mc, refa, refc, di }`.
 
 _data_:
 - `id`: ID du Comptable.
-- `ids` : identifiant du ticket
+- `ids`: l'ids d'un ticket est un string de la forme : `aammrrrrrrrr`
+  - `aa` : année de génération,
+  - `mm` : mois de génération,
+  - `r...r` : aléatoire.
 - `v` : version du ticket.
 
 - `dg` : date de génération.
@@ -1107,62 +1100,59 @@ _data_:
 
 ## Cycle de vie
 #### Génération d'un ticket (annonce de paiement) par le compte A
-- le compte A déclare,
+- un compte déclare,
   - un montant `ma` celui qu'il affirme avoir payé / viré.
-  - une référence `refa` textuelle libre facultative à un dossier de _litige_, typiquement un _avoir_ correspondant à une erreur d'enregistrement antérieure.
+  - une référence `refa` textuelle libre facultative à un éventuel dossier de _litige_, typiquement un _avoir_ correspondant à une erreur d'enregistrement antérieure.
 - le ticket est généré et enregistré en deux exemplaires:
   - un dans le document `comptas` du compte,
   - un comme document `tickets` du Comptable..
 
-#### Effacement d'un de ses tickets par le compte A
+#### Effacement d'un de ses tickets par le compte
 En cas d'erreur, un ticket peut être effacé par son émetteur, _à condition_ d'être toujours _en attente_ (ne pas avoir de date de réception). Le ticket est physiquement effacé de `tickets` et de la liste `comptas.tickets`.
 
 #### Réception d'un paiement par le Comptable
-- le Comptable ne peut _que_ compléter un ticket _en attente_ (pas de date de réception) **dans le mois d'émission du ticket ou les deux précédents**. Au delà le ticket est _auto-détruit_.
+- le Comptable ne peut _que_ compléter un ticket _en attente_ (n'ayant pas de date de réception) **dans le mois d'émission du ticket ou les deux précédents**. Au delà le ticket est _auto-détruit_.
 - sur le ticket correspondant le Comptable peut remplir:
   - le montant `mc` du paiement reçu, sauf indication contraire par défaut égal au montant `ma`.
-  - une référence textuelle libre `refc` justifiant une différence entre `ma` et `mc`. Ce peut être un numéro de dossier de _litige_ qui pourra être repris ensuite entre le compte A et le Comptable.
+  - une référence textuelle libre `refc` justifiant une différence entre `ma` et `mc`. Ce peut être un numéro de dossier de _litige_ qui pourra être repris ensuite entre le compte et le Comptable.
 - la date de réception `dr` est inscrite, le ticket est _réceptionné_.
 - le ticket est mis à jour dans `tickets` et dans la liste `comptas.tickets` du compte A: **le compte A est crédité**.
 
-#### Lorsque le compte A va sur sa page de gestion de ses crédits
+#### Lorsque le compte va sur sa page de gestion de ses crédits
 - les tickets dont il possède une version plus ancienne que celle détenue dans `tickets` du Comptable sont mis à jour.
 - les tickets émis un mois M toujours non réceptionnés avant la fin de M+2 sont supprimés.
 - les tickets de plus de 2 ans sont supprimés.
 
 **Remarques:**
 - de facto dans `tickets` un document ne peut avoir qu'au plus deux versions.
-- la version de création qui créé le ticket et lui donne son identifiant secondaire et inscrit les propriétés `ma` et éventuellement `refa` désormais immuables.
+- la version de création qui créé le ticket, lui donne son identifiant secondaire et inscrit les propriétés `ma` et éventuellement `refa` désormais immuables.
 - la version de réception par le Comptable qui inscrit les propriétés `dr mc` et éventuellement `refc`. Le ticket devient immuable dans `tickets`.
 - les propriétés sont toutes immuables.
 
 #### Listes disponibles en session
-Un compte "A" dispose de la liste de ses tickets sur une période de 2 ans, quelque soit leur statut, y compris ceux obsolètes parce que non réceptionnés avant fin M+2 de leur génération.
+Un compte dispose de la liste de ses tickets sur une période de 2 ans, quelque soit leur statut, y compris ceux obsolètes parce que non réceptionnés avant fin M+2 de leur génération.
 
 Le Comptable dispose en session de la liste des tickets détenus dans tickets. Cette liste est _synchronisée_ (comme pour tous les sous-documents).
 
 #### Arrêtés mensuels
-Le GC effectue des arrêtés mensuels consultables par le Comptable et l'administrateur technique. Chaque arrêté mensuel,
+Le GC effectue des arrêtés mensuels consultables par le Comptable. Chaque arrêté mensuel,
 - récupère tous les tickets générés à M-3 (par exemple `202407`) et les efface de la liste `tickets`,
-- les stocke dans un _fichier_ **CSV** `T_202407` du Comptable. Ces fichiers sont cryptés par la clé E de l'espace connue de l'administrateur et du Comptable.
+- les stocke dans un _fichier_ **CSV** `T_202407` du Comptable. Ces fichiers sont cryptés par la clé E de l'espace connue de l'administrateur technique (et du GC) et du Comptable.
 
 Pour rechercher un ticket particulier, par exemple pour traiter un _litige_ ou vérifier s'il a bien été réceptionné, le Comptable,
 - dispose de l'information en ligne pour tout ticket de M M-1 M-2,
 - dans le cas contraire, ouvre l'arrêté mensuel correspondant au mois du ticket cherché qui est un fichier CSV basique.
 
 #### Numérotation des tickets
-L'ids d'un ticket est un string de la forme : `aammrrrrrrrrrr`
-- `aa` : année de génération,
-- `mm` : mois de génération,
-- `r...r` : aléatoire.
-
 Un code à 6 lettres majuscules en est extrait afin de le joindre comme référence de _paiement_.
-- la première lettre  donne le mois de génération du ticket : A-L pour les mois de janvier à décembre si l'année est paire et M-X pour les mois de janvier à décembre si l'année est impaire.
-- les autres lettres correspondent à `r...r`.
+- la première lettre  donne le mois de génération du ticket : 
+  - A-L pour les mois de janvier à décembre si l'année est paire,
+  - M-X pour les mois de janvier à décembre si l'année est impaire.
+- les autres lettres correspondent à `r...r` de `ids`.
 
 Le Comptable sait ainsi dans quel _arrêté mensuel_ il doit chercher un ticket au delà de M+2 de sa date de génération à partir d'un code à 6 lettres désigné par un compte pour audit éventuel de l'enregistrement.
 
-> **Personne, pas même le Comptable,** ne peut savoir quel compte "A" a généré quel ticket. Cette information n'est accessible qu'au compte lui-même et est cryptée par sa clé K (la base connaît cette information mais elle est cryptée par la clé du site).
+> **Personne, pas même le Comptable,** ne peut savoir quel compte a généré quel ticket. Cette information n'est accessible qu'au compte lui-même et est cryptée par sa clé K (la base connaît cette information mais elle est cryptée par la clé du site).
 
 # Documents `chats`
 
@@ -1303,14 +1293,15 @@ P est le parrain-sponsor, F est le filleul-sponsorisé.
 
 _data_:
 - `id` : id de l'avatar sponsor.
-- `ids` : `hYR` hash du PBKFD de la phrase réduite de parrainage (précé en base du `ns`), 
+- `ids` : hash _court_ du PBKFD de la phrase réduite de parrainage, 
 - `v`: 1..N.
-- `dlv` : date limite de validité
+- `dlv` : date limite de validité.
+- `hk` : `ids`, en base `org@hk`. Deux organisations peuvent utiliser des phrases de sponsorings identiques sans collision.
 
 - `st` : statut. _0: en attente réponse, 1: refusé, 2: accepté, 3: détruit / annulé_
 - `pspK` : texte de la phrase de sponsoring cryptée par la clé K du sponsor.
 - `YCK` : PBKFD de la phrase de sponsoring cryptée par la clé K du sponsor.
-- `hYC` : hash du PBKFD de la phrase de sponsoring,
+- `hYC` : hash _court_ du PBKFD de la phrase de sponsoring,
 - `dh`: date-heure du dernier changement d'état.
 - `cleAYC` : clé A du sponsor crypté par le PBKFD de la phrase complète de sponsoring.
 - `partitionId`: id de la partition si compte "O"
@@ -1319,10 +1310,9 @@ _data_:
 - `del` : `true` si le sponsorisé est délégué de sa partition.
 - `cvA` : `{ id, v, ph, tx }` du sponsor, textes cryptés par sa cle A.
 - `quotas` : `[qc, q1, q2]` quotas attribués par le sponsor.
-  - pour un compte "A" `[0, 1, 1]`. Un tel compte n'a pas de `qc` et peut changer à loisir `[q1, q2]` qui sont des protections pour lui-même (et fixe le coût de l'abonnement).
-- `don` : pour un compte autonome, montant du don.
-- `dconf` : le sponsor a demandé à rester confidentiel. Si oui, aucun chat ne sera créé à l'acceptation du sponsoring.
-- `dconf2` : le sponsorisé a demandé à rester confidentiel. Si oui, aucun chat ne sera créé à l'acceptation du sponsoring (ignoré en session UI).
+- `don` : montant du don éventuel par le sponsor.
+- `dconf` : le sponsor a demandé à rester confidentiel. Si oui, aucun _chat_ ne sera créé à l'acceptation du sponsoring.
+- `dconf2` : le sponsorisé a demandé à rester confidentiel. Si oui, aucun _chat_ ne sera créé à l'acceptation du sponsoring (ignoré en session UI).
 - `ardYC` : ardoise de bienvenue du sponsor / réponse du sponsorisé cryptée par le PBKFD de la phrase de sponsoring.
 
 **Remarques**
@@ -1341,7 +1331,7 @@ _data_:
   - génère ses clés K et celle de son avatar principal,
   - donne le texte de carte de visite.
 - pour un compte "O", l'identifiant de la partition à la quelle le compte est associé est obtenu de `clePYC`.
-- la `comptas` du sponsorisé est créée et créditée des quotas attribués par le sponsor pour un compte "O" et d'un `solde` minimum pour un compte "A".
+- la `comptas` du sponsorisé est créée et créditée des quotas attribués par le sponsor et d'un don éventuel.
 - pour un compte "O" le document `partitions` est mis à jour (quotas attribués), le sponsorisé est mis dans la liste des comptes `tcpt` de `partitions`.
 - un mot de remerciement est écrit par le sponsorisé au sponsor sur `ardYC` **ET** ceci est dédoublé dans un chat sponsorisé / sponsor créé à ce moment et comportant l'item de réponse. Si le sponsor ou le sponsorisé ont requis la confidentialité, le chat n'est pas créé.
 - le statut du `sponsoring` est 2.
@@ -1362,7 +1352,7 @@ _data_:
 - `im` : exclusivité dans un groupe. L'écriture est restreinte au membre du groupe d'indice `im`. 
 - `vf` : volume total des fichiers attachés.
 - `ht` : liste des hashtags _personnels_ cryptée par la clé K du compte.
-  - En session, pour une note de groupe, `ht` est le terme de `htm` relatif au compte de la session.
+  - En session d'une application Web, pour une note de groupe, `ht` est le terme de `htm` relatif au compte de la session.
 - `htg` : note de groupe : liste des hashtags cryptée par la clé du groupe.
 - `htm` : note de groupe seulement, hashtags des membres. Map:
     - _clé_ : id du compte de l'auteur,
@@ -1379,14 +1369,16 @@ _data_:
 **Pour une note de groupe**, la propriété `htm` n'est pas transmise en session: l'item correspondant au compte est copié dans `ht`.
 
 ## Map des fichiers attachés
-- _clé_ `idf`: identifiant aléatoire généré à la création. L'identifiant _externe_ est `id` du groupe / avatar, `idf`. En pratique `idf` est un identifiant absolu.
+- _clé_ `idf`: identifiant aléatoire (absolu) généré à la création.
 - _valeur_ : `{ idf, lg, ficN }`
   - `ficN` : `{ nom, info, dh, type, gz, lg, sha }` crypté par la clé de la note
 
-**Identifiant de stockage :** `org/id/idf`
+**Identifiant de _storage_ :** `org/id/idf`
 - `org` : code de l'organisation.
 - `id` : id de l'avatar / groupe auquel la note appartient.
 - `idf` : identifiant du fichier.
+
+Selon le paramétrage du site, `org id idf` sont ou non cryptés par la clé du site.
 
 En imaginant un stockage sur file-system,
 - l'application a un répertoire racine par espace portant le code de l'organisation,
@@ -1470,12 +1462,12 @@ Ces trois tables sont synchrones: l'indice `im` d'un membre est le même pour le
 **Statut `st`:**
 - 0 : **radié**: c'est un ex-membre désormais _inconnu_, peut-être disparu, son id est perdu (`tid[im]` vaut null).
 - 1 : **contact** proposé pour une éventuelle invitation future par un membre ayant un droit d'accès aux membres.
-  - l'avatar n'est pas au courant et ne peut rien faire dans le groupe.
+  - l'avatar ne peut rien faire dans le groupe mais il est informé (par `invits`). Il peut se désinscrire des contacts du groupe.
   - les membres du groupe peuvent voir sa carte de visite.
   - un animateur peut le faire passer en état _invité_ ou _le radier_ (avec ou sans inscription en liste noire _groupe_).
 - 2 / 3 : **pré-invité / invité**: 
   - 2 : **pré-invité : en attente de votes** quand un vote unanime est requis. Un ou plusieurs animateurs ont voté pour inviter le contact, mais pas tous.
-    - l'avatar n'est pas au courant et ne peut rien faire dans le groupe.
+    - l'avatar ne peut rien faire dans le groupe mais il est informé (par `invits`). Il peut se désinscrire des contacts du groupe.
     - les membres du groupe peuvent voir sa carte de visite.
     - les animateurs peuvent:
       - voter _pour_, effacer leur vote, changer les conditions d'invitation. Quand tous les animateurs ont voté pour, l'avatar devient _invité_.
@@ -1501,7 +1493,7 @@ Ces trois tables sont synchrones: l'indice `im` d'un membre est le même pour le
   - 5 : **animateur**. _actif_ avec privilège d'animation.
     - un autre animateur ne peut ni changer ses droits, ni le radier, ni lui retirer son statut d'animateur (mais lui-même peut le faire).
 
-Le nombre de notes pris en compte dans la comptabilité du compte:
+Le nombre de groupes pris en compte dans la comptabilité du compte:
 - est incrémenté de 1 quand il accepte une invitation,
 - est décrémenté de 1 quand il est radié ou redevient simple contact.
 
@@ -1523,7 +1515,7 @@ Un membre actif peut _s'auto-radier_:
 - avec inscription en liste noire il ne pourra plus jamais ultérieurement être réinscrit comme contact ou réinvité.
 
 A la radiation d'un membre d'indice `im`:
-- son document `membres` est logiquement détruit (passe en _zombi_).
+- son document `membres` est mis à jour, ou détruit si inscription en liste noire.
 - il peut être inscrit dans les listes noires `lng lnc`.
 - ses entrées dans `tid st flags` sont à `null 0 0`.
 
@@ -1601,15 +1593,13 @@ Tant que le membre,
 ## Hébergement par un membre _actif_
 L'hébergement d'un groupe est noté par :
 - `imh`: indice membre de l'avatar hébergeur. 
-- `idh` : id du **compte** de l'avatar hébergeur. **Cette donnée n'est pas transmise aux sessions**.
+- `idh` : id du **compte** de l'avatar hébergeur. **Cette donnée n'est pas transmise aux sessions des application Web**.
 - `dfh`: date de fin d'hébergement qui vaut 0 tant que le groupe est hébergé. Les notes ne peuvent plus être mises à jour _en croissance_ quand `dfh` existe.
 
 ### Prise d'hébergement
-- en l'absence d'hébergeur, c'est possible pour,
-  - tout animateur,
-  - en l'absence d'animateur: tout actif ayant le droit d'écriture des notes, puis tout actif ayant accès aux notes, puis tout actif.
-- s'il y a déjà un hébergeur, seul un animateur peut se substituer à l'hébergeur actuel.
-- dans tous les cas c'est à condition que le nombre de notes `nn` et le volume de fichiers actuels `vf` ne le mette pas en dépassement de son abonnement.
+- un hébergeur peut transmettre l'hébergement à un autre de ses avatars.
+- en l'absence d'hébergeur, c'est possible pour tout compte actif.
+- s'il y a déjà un hébergeur animateur, seul un autre animateur peut se substituer à l'hébergeur actuel.
 
 ### Fin d'hébergement par l'hébergeur
 - `dfh` est mise la date du jour + 90 jours.
@@ -1623,7 +1613,6 @@ _data_:
 - `v` :  1..N
 - `dfh` : date de fin d'hébergement.
 
-- `alias` : ID alternative générée à la création du groupe. Identifie le groupe sur Storage pour éviter d'y faire figurer son ID réelle.
 - `nn qn vf qv`: nombres de notes actuel et maximum autorisé par l'hébergeur, volume total actuel des fichiers des notes et maximum autorisé par l'hébergeur.
 - `idh` : id du compte hébergeur (pas transmise aux sessions).
 - `imh` : indice `im` du membre dont le compte est hébergeur.
@@ -1667,7 +1656,7 @@ _data_:
 - `cvA` : carte de visite du membre `{id, v, ph, tx}`, textes cryptés par la clé A de l'avatar membre.
 - `msgG`: message d'invitation crypté par la clé G pour une invitation en attente de vote ou de réponse. 
 
-> Un message d'invitation est aussi inscrit dans le chat du groupe ou figure aussi la réponse de l'invité. `msgG` est effacé après acceptation ou refus, mais pas les items correspondants dans le chat.
+> Un message d'invitation est aussi inscrit dans le _chat_ du groupe ou figure aussi la réponse de l'invité. `msgG` est effacé après acceptation ou refus, mais pas les items correspondants dans le chat.
 
 ## Opérations
 ### Par un animateur:
@@ -1794,7 +1783,7 @@ Elle est effectuée en deux phases:
   - récupère les groupes où l'avatar est invité (dans `invits` de son compte) et dont il est membre actif (dans `mpg` de son compte).
   - pour chacun de ces groupes, supprime ce qui est relié à cet avatar.
   - supprime l'avatar dans la liste des avatars `mav` de son compte.
-  - met l'avatar en état _zombi_. Ceci marque le document `versions` de l'avatar à _supprimé_ (`suppr` porte la date du jour).
+  - met l'avatar en état _zombi_. Ceci marque une `dlv` dans le document `versions` de l'avatar.
   - purge ses documents `sponsorings`.
   - dès lors l'avatar est _logiquement_ supprimé.
   - inscription des deux tâches différées `AVC` et `AGN`.
@@ -1810,22 +1799,24 @@ Elle est effectuée en deux phases:
   - suppression des invitations en cours.
   - suppression du groupe des comptes l'ayant en tant que participant.
   - mise à jour de la comptas du compte hébergeur.
-  - le groupe est mis à l'état _zombi_. Ceci marque le document `versions` du groupe à _supprimé_ (`suppr` porte la date du jour).
+  - le groupe est mis à l'état _zombi_. Ceci marque une `dlv` dans le document `versions` du groupe.
   - inscription des deux tâches différées `GRM` et `AGN`.
 - **deux tâches différées sont lancées:**
   - `GRM`: purge les _membres_ du groupe.
   - `AGN`: purge les notes du groupe.
 
 ## Résiliation d'un compte
-En une transaction la résiliation immédiate des avatars du compte est effectuée, ce qui lance une chaîne longue de transactions différées.
+En une transaction la résiliation immédiate des avatars du compte est effectuée,
+- peut entraîner des résiliation de groupes (ceux n'ayant plus d'actifs),
+- ce qui lance des tâches `AGN` voire `GRM`.
 
 # Contrôle global des ressources d'un espace
 Les quotas globaux sont attribués par l'administrateur technique.
 
-Le Comptable attribue une _réserve_ globale pour tous les comptes A: la somme de leurs quotas ne pourra pas dépasser ce quota.
-- le restant entre les quotas globaux et ceux réservés pour les comptes A, sont utilisables pour les partitions (compte O).
+Le Comptable attribue une _réserve_ globale pour tous les comptes "A": la somme de leurs quotas ne pourra pas dépasser ce quota.
+- le restant entre les quotas globaux et ceux réservés pour les comptes "A", sont utilisables pour les partitions (compte "O").
 
-Le Comptable crée des partitions et leur alloue à chacune des quotas. La somme de ces quotas ne peut pas être supérieure aux quotas globaux diminués de ceux réservés pour les comptes A.
+Le Comptable crée des partitions et leur alloue à chacune des quotas. La somme de ces quotas ne peut pas être supérieure aux quotas globaux diminués de ceux réservés pour les comptes "A".
 
 Le Comptable et les délégués d'une partition allouent des quotas aux comptes de la partition, leur somme ne peut pas dépasser les quotas de la partition.
 
@@ -1862,17 +1853,17 @@ Attribution / ajustement des quotas d'une partition p par le Comptable
 - affecte `partition[p].q` ce qui se répercute sur `syntheses.tsp[p].q`
 - bloqué si c'est en augmentation ET fait dépasser le quotas général de espaces.
 
-Ajustement de ses quotas par un compte A dont un `qc` (qui peut le ralentir).
+Ajustement de ses quotas par un compte "A" dont un `qc` (qui peut le ralentir).
 - affecte comptes[A].qv
 - augmente / diminue `syntheses.qtA`
 - bloqué si c'est en augmentation ET fait dépasser le quotas général de espaces.
 
-Mutation d'un compte `c` A en compte O de la partition `p`
+Mutation d'un compte `c` "A" en compte "O" de la partition `p`
 - diminue `syntheses.qtA`
 - augmente `partition[p].mcpt[c].q` (si c'est possible) ce qui se répercute sur `syntheses.tsp[p].qt`
 - blocage si les quotas de la partition ne supportent pas les quotas du compte muté.
 
-Mutation d'un compte `c` O de la partition `p` en compte A
+Mutation d'un compte `c` "O" de la partition `p` en compte "A"
 - augmente `syntheses.qtA`.
 - diminue `partition[p].mcpt[c].q` ce qui se répercute sur `syntheses.tsp[p].qt`.
 - bloqué si l'augmentation de `syntheses.qtA` fait dépasser `syntheses.qA`.
@@ -1885,72 +1876,53 @@ Création du compte par sponsoring
 
 # Gestion des disparitions des comptes: `dlv` 
 
-Chaque compte a une **date limite de validité**:
-- toujours une _date de dernier jour du mois_ (sauf exception par convention décrite plus avant),
-- propriété indexée de son document `comptes`.
+Chaque compte a une **date limite de validité** mémorisé dans son `comptas`:
+- toujours une _date de dernier jour du mois_,
+- propriété indexée de son document `comptas`.
 
-Le GC utilise le dépassement de `dlv` pour libérer les ressources correspondantes (notes, chats, ...) d'un compte qui n'est plus utilisé:
-- **pour un compte "A"** la `dlv` représente la limite d'épuisement de son crédit mais bornée à `nbmi` mois du jour de son calcul.
-- **pour un compte "O"**, la `dlv` représente la plus proche de ces deux limites,
-  - un nombre de jours sans connexion (donnée par `nbmi` du document `espaces` de l'organisation),
-  - la date `dlvat` jusqu'à laquelle l'organisation a payé ses coûts d'hébergement à l'administrateur technique (par défaut la fin du siècle). C'est la date `dlvat` qui figure dans le document `espaces` de l'organisation. Dans ce cas, par convention, c'est la **date du premier jour du mois suivant** pour pouvoir être reconnue.
+Le GC utilise le dépassement de `dlv` pour libérer les ressources correspondantes (notes, chats, ...) d'un compte qui n'est plus utilisé. `comptas` mémorise :
+- `ddsn`: quand le solde est négatif, c'est la date du jour le plus récent où le solde est passé de positif à négatif. Ce calcul est effectué en remettant les compteurs à l'instant t.
+- `dharc`: quand le compte ("O") a une _restriction d'accès_ (nr = 2) sur sa notification de compte, c'est la date-heure du passage le plus récent de nr < 2 à nr = 2.
+- `dharp`: quand le compte ("O") a une _restriction d'accès_ (nr = 2) sur sa notification de partition, c'est la date-heure du passage le plus récent de nr < 2 à nr = 2.
+
+Si l'une de ces trois date est positionné, le compte est sous le coup d'une _restriction d'accès_ (soit pour solde négatif, soit pour notification de compte, soit pour notification de partition) depuis la plus ancienne de ces trois dates.
+- dans ce cas le compte peut vivre jusqu'à (`nbmi` / 2) mois après cette date.
+
+Si ces dates ne sont positionnées, le compte peut vivre jusqu'à nbmi mois après sa dernière connexion.
+
+**Remarques:**
+- décompte en nombre de jour, un mois faisant 30 jours (`nbmi` mois signifie en fait `nbmi` * 30 jours).
+- la `dlv` est le dernier jour du mois de la date ainsi calculée.
 
 > Remarque. En toute rigueur un compte "A" qui aurait un gros crédit pourrait ne pas être obligé de se connecter pour prolonger la vie de son compte _oublié / tombé en désuétude / décédé_. Mais il n'est pas souhaitable de conserver des comptes _morts_ en hébergement, même payé: ils encombrent pour rien l'espace.
-
-## Calcul de la `dlv` d'un compte
-La `dlv` d'un compte est recalculée à plusieurs occasions.
-
-### Acceptation du sponsoring du compte
-Première valeur calculée selon le type du compte.
-
-### Connexion
-La connexion permet de refaire les calculs en particulier en prenant en compte de nouveaux tarifs.
-
-C'est l'occasion majeure de prolongation de la vie d'un compte.
-
-### Don pour un compte "A": passe par un chat
-Les `dlv` du _donneur_ et du récipiendaire sont recalculées sur l'instant.
-
-### Enregistrement d'un crédit par le Comptable
-Pour le destinataire du crédit sa dlv est recalculée sur l'instant.
-
-### Modification de l'abonnement d'un compte A
-La `dlv` est recalculée à l'occasion de la nouvelle évaluation qui en résulte.
-
-### Mutation d'un compte "O" en "A" et d'un compte "A" en "O"
-La `dlv` est recalculée en fonction des nouvelles conditions.
 
 ## Changement des paramètres dans l'espace d'une organisation
 Il y a deux données: 
 - `dlvat`: date limite de vie des comptes "O", fixée par l'administrateur technique en fonction des contributions effectives reçues de l'organisation pour héberger ses comptes "O".
 - `nbmi`: nombre de mois d'inactivité acceptable fixé par le Comptable (3, 6, 9, 12, 18 ou 24). Ce changement n'a pas d'effet rétroactif.
 
-> **Remarque**: `nbmi` est fixé par configuration par le Comptable _pour chaque espace_. C'est une contrainte de délai maximum entre deux connexions à un compte, faute de quoi le compte est automatiquement supprimé. La constante `IDBOBS` fixe elle un délai maximum (2 ans par exemple), _pour un appareil et un compte_ pour bénéficier de la synchronisation incrémentale. Un compte peut se connecter toutes les semaines et avoir _un_ poste sur lequel il n'a pas ouvert une session synchronisée depuis 3 ans: bien que tout à fait vivant, si le compte se reconnecte en mode _synchronisé_ sur **ce** poste, il repartira depuis une base locale vierge, sans bénéficier d'un redémarrage incrémental.
+> **Remarque**: 
+- `nbmi` est fixé par configuration par le Comptable _pour chaque espace_. C'est une contrainte de délai maximum entre deux connexions à un compte, faute de quoi le compte est automatiquement supprimé. 
+- La constante `IDBOBS` fixe un délai maximum (2 ans par exemple), _pour un appareil et un compte_ pour bénéficier de la synchronisation incrémentale. Un compte peut se connecter toutes les semaines et avoir _un_ poste sur lequel il n'a pas ouvert une session synchronisée depuis 3 ans: bien que tout à fait vivant, si le compte se reconnecte en mode _synchronisé_ sur **ce** poste, il repartira depuis une base locale vierge, sans bénéficier d'un redémarrage incrémental.
 
 ### Changement de `dlvat`
-Si le financement de l'hébergement par accord entre l'administrateur technique et le Comptable d'un espace tarde à survenir, beaucoup de comptes "O" ont leur existence menacée par l'approche de cette date couperet. Un accord tardif doit en conséquence avoir des effets immédiats une fois la décision actée.
+Si le financement de l'hébergement par accord entre l'administrateur technique et le Comptable d'un espace n'est plus assuré, beaucoup de comptes "O" auront leur existence menacée par l'approche de cette date couperet.
 
-Par convention une `dlvat` est fixée au **1 d'un mois** et ne peut pas être changée pour une date inférieure à M + 3 (nbmi ?) du jour de modification.
-
-L'administrateur technique qui remplace une `dlvat` le fait en plusieurs transactions pour toutes les `dlv` des `comptes` égales à l'ancienne `dlvat`. La transaction finale fixe aussi la nouvelle `dlvat`. La valeur de remplacement est,
-- la nouvelle `dlvat` (au 1 d'un mois) si elle est inférieure à `auj + nbmi mois`: c'est encore la `dlvat` qui borne la vie des comptes O (à une autre borne).
-- sinon la fixe à `auj + nbmi mois` (au dernier jour d'un mois), comme si les comptes s'étaient connectés aujourd'hui.
-
-_Remarque_: idéalement une transaction unique aurait été préférable mais elle pourrait être longue et entraînerait des blocages.
+> Par convention une `dlvat` est fixée au **1 d'un mois** et ne devrait pas être changée pour une date inférieure à M + 3 du jour de modification.
 
 # Décomptes des coûts et crédits
 
 > **Remarque**: en l'absence d'activité de sessions la _consommation_ d'un compte est nulle, alors que le _coût d'abonnement_ augmente à chaque seconde même sans activité.
 
 On décompte **dans le service OP** le nombre de lectures et d'écritures effectués dans chaque opération:
-- intégration dans le document `comptas` du compte, le cas échéant avec propagation au compte (voire partition) si le changement est significatif.
+- intégration dans le document `comptas` du compte, le cas échéant avec propagation aux documents `partitions / syntheses` si le changement est significatif.
 - le volume de _download_ est décompté quand une session demande une URL de _GET_ d'un fichier (en considérant que puisqu'elle a demandé l'URL, elle s'en est servi).
 - le volume _d'upload_ est décompté sur l'opération qui valide l'upload. 
-- retour à la session pour information où sont cumulés les 4 compteurs depuis le début de la session.
+- retour à la session par le record adq pour information où sont cumulés les 4 compteurs depuis le début de la session et publication éventuelle aux autres sessions en cours du même compte si le changement est significatif.
 
-Le tarif de base par défaut repris pour les estimations est celui de Firebase [https://firebase.google.com/pricing#blaze-calculator]: ces tarifs sont de facto fixés dans `config.mjs`.
+Le tarif de base par défaut repris pour les estimations s'appuie sur les données de _pricing_ de Firebase [https://firebase.google.com/pricing#blaze-calculator], MAIS les tarifs sont fixés dans `config.mjs` pour chaque fournisseur.
 
-Le volume _technique_ moyen d'un groupe / note / chat est estimé à 8K. Ce chiffre est probablement faible, le volume _utile_ en Firestore étant faible par rapport au volume réel occupé avec les index ... D'un autre côté, le serveur considère les volumes utilisés en base alors que n / v vont être décomptés sur des quotas (des maximum rarement atteints).
+> Le volume _technique_ moyen d'un groupe / note / chat est estimé à 8K. Ce chiffre est probablement faible, le volume _utile_ en Firestore étant faible par rapport au volume réel occupé avec les index ... D'un autre côté, le serveur considère les volumes utilisés en base alors que n / v vont être décomptés sur des quotas (des maximum rarement atteints).
 
 ## Classe `Tarif`
 Un tarif correspond à,
@@ -1971,26 +1943,26 @@ On ne modifie pas les tarifs rétroactivement, en particulier celui du mois en c
 
 La méthode `const t = Tarif.cu(a, m)` retourne le tarif en vigueur pour le mois indiqué.
 
-## Objet quotas et volumes `qv` : `{ qc, qn, qv, nn, nc, ng, v }`
+## Classe Compteurs
+Les _compteurs_ d'un document comptas sont sérialisés en base:
+- ils représentent les valeurs calculées à la date dh.
+- à la lecture depuis la base, depuis ces valeurs calculées à `dh`, le temps a passé: les compteurs doivent être recalculés à l'instant `t`,
+  - depuis les valeurs à l'instant `dh`,
+  - en tenant compte du temps écoulé entre `dh` et `t`,
+  - `t` (l'instant de calcul) est rangé dans `dh`,
+  - l'objet est _sérialisé_ à la fin du recalcul.
+
+Sous-objet quotas et volumes `qv` : `{ qc, qn, qv, nn, nc, ng, v, cjm }`
 - `qc`: quota de consommation
 - `qn`: quota du nombre total de notes / chats / groupes.
 - `qv`: quota du volume des fichiers.
 - `nn`: nombre de notes existantes.
 - `nc`: nombre de chats existants.
 - `ng` : nombre de participations aux groupes existantes.
+- `cjm` : coût journalier moyen de calcul établi sur M / M-1.
 - `v`: volume effectif total des fichiers.
 
-Cette objet est la propriété `qv` de `comptas`. 
-
-## Objet consommation `conso` : `{ nl, ne, vm, vd }`
-- `nl`: nombre absolu de lectures depuis la création du compte.
-- `ne`: nombre d'écritures.
-- `vm`: volume _montant_ vers le Storage (upload).
-- `vd`: volume _descendant_ du Storage (download).
-
-Cet objet rapporte une évolution de consommation.
-
-## Unités
+#### Unités
 - T : temps.
 - D : nombre de document (note, chat, participations à un groupe).
 - B : byte.
@@ -1998,20 +1970,85 @@ Cet objet rapporte une évolution de consommation.
 - E : écriture d'un document.
 - € : unité monétaire.
 
-## Classe `Compteurs`
-Cette classe donne les éléments de facturation et des éléments de statistique d'utilisation sur les les 12 derniers mois (mois en cours y compris).
-
-**Propriétés:**
+**Propriétés de `Compteurs`:**
 - `dh0` : date-heure de création du compte.
-- `dh` : date-heure courante (dernier calcul).
-- `qv` : quotas et volumes pris en compte au dernier calcul `{ qc, qn, qv, nn, nc, ng, v }`.
-- Quand on _prolonge_ l'état actuel pendant un certain temps AVANT d'appliquer de nouvelles valeurs, il faut pouvoir disposer de celles-ci.
-- `vd` : [0..3] - vecteurs détaillés pour M M-1 M-2 M-3.
-- `mm` : [0..18] - coût abonnement + consommation pour le mois M et les 17 mois antérieurs (si 0 pour un mois, le compte n'était pas créé).
-- `aboma` : somme des coûts d'abonnement des mois antérieurs au mois courant depuis la création du compte.
-- `consoma` : somme des coûts de consommation des mois antérieurs au mois courant depuis la création du compte.
+- `dh` : date-heure du dernier calcul (juste avant sérialisation).
+- `dhP` : date-heure de création ou de changement O <-> A (informative, n'intervient pas dans les calculs).
+- `idp` : id de la partition pour un compte O.
+- `qv` : quotas et volumes pris en compte au dernier calcul : `{ qc, qn, qv, nn, nc, ng, v, cjm }`
+  - `qc`: quota de consommation
+  - `qn`: quota du nombre total de notes / chats / groupes.
+  - `qv`: quota du volume des fichiers.
+  - `nn`: nombre de notes existantes.
+  - `nc`: nombre de chats existants.
+  - `ng` : nombre de participations aux groupes existantes.
+  - `cjm` : coût journalier moyen de calcul établi sur M / M-1.
+  - `v`: volume effectif total des fichiers.
+- `ddsn` : date-heure de début de solde négatif.
+- `vd` : [0..11] - vecteur détaillé pour les 12 mois de l'année (glissante).
 
-Le vecteur `vd[0]` et le montant `mm[0]` vont évoluer tant que le mois courant n'est pas terminé. Pour les mois antérieurs `vd[i]` et `mm[i]` sont immuables.
+**Propriétés calculées:**
+- `pcn` : % de qn utilisé
+- `pcv` : % de qv utilisé
+- _pcc_ : % du cjm*30 à qc
+- `cjm` : consommation moyenne sur M / M-1 ramenée à un jour.
+- `njec` : nombre de jours estimés avant épuisement du crédit.
+- `flags` : flags courants :
+  - `RAL` : ralentissement (excès de calcul / quota).
+  - `NRED` : documents en réduction (excès de nombre de documents / quota).
+  - `VRED` : volume de fichiers en réduction (excès de volume / quota).
+  - `ARSN` : accès restreint pour solde négatif.
+- `aaaa mm` : année / mois de dh.
+
+**Vecteur `vd`** : pour chaque mois M de l'année glissante ([0] est janvier)
+- MS 0 : nombre de ms dans le mois - si 0, le compte n'était pas créé
+- moyennes des quotas:
+  - QC 1 : moyenne de qc dans le mois (en c)
+  - QN 2 : moyenne de qn dans le mois (en nombre de documents)
+  - QV 3 : moyenne de qv dans le mois (en bytes)
+- cumuls des consommations:
+  - NL 4 : nb lectures cumulés sur le mois (L),
+  - NE 5 : nb écritures cumulés sur le mois (E),
+  - VM 6 : total des transferts montants (B),
+  - VD 7 : total des transferts descendants (B).
+- moyennes des compteurs:
+  - NN 8 : nombre moyen de notes existantes.
+  - NC 9 : nombre moyen de chats existants.
+  - NG 10 : nombre moyen de participations aux groupes existantes.
+  - V 11 : volume moyen effectif total des fichiers stockés.
+- compteurs monétaires
+  - AC 12 : coût de l'abonnement (dans le mois)
+  - AF 13 : abonnement facturé (dans le mois) - pour un compte ayant été "A" une partie du mois.
+  - CC 14 : coût de consommation (dans le mois)
+  - CF 15 : consommation facturée (dans le mois) - pour un compte ayant été "A" une partie du mois.
+  - DB 16 : débits du mois
+  - CR 17 : crédits du mois
+  - S 18 : solde au début du mois
+  
+Le solde en fin de mois est celui du début du mois suivant: S - DB + CR - CF - AF
+
+Le principe de calcul est de partir avec la dernière photographie enregistrée à la date-heure `dh`.
+- le calcul démarre _maintenant_ à la date-heure `now`.
+- la première étape est d'établir le passé survenu entre `dh` et `now`: ce peut être quelques secondes comme 18 mois.
+  - par principe aucun événement ne s'est produit entre ces deux instants, il s'agit donc de _prolonger_ l'état connu à `dh` jusqu'à `now`.
+  - le mois M de la photo précédente à `dh` doit être prolongé, soit jusqu'à `now`, soit jusqu'à la fin du mois.
+  - puis le cas échéant il _peut_ y avoir N mois entiers à prolonger dans l'état connu à fin M.
+  - puis le cas échéant il _peut_ y avoir un dernier mois incomplet prolongeant le dernier calculé.
+
+Quand on prolonge un mois, selon les compteurs deux cas se présentent:
+- soit c'est une addition : les nombres de lectures, écritures ... augmentent.
+- soit c'est l'ajustement d'une _moyenne_ en fonction du nombre de millisecondes sur laquelle elle était calculée et celui sur laquelle elle est à prolonger.
+
+Le calcul s'effectuant depuis le dernier mois calculé, mois par mois, le calcul peut s'effectuer sur plus de 12 mois, sachant que seuls les onze derniers et le mois courant sont disponibles dans `vd`.
+
+Après la phase de prolongation de `dh` à `now`, on met à jour le nouvel état courant:
+- les compteurs `qv` peuvent être à mettre à jour,
+- le statut O/A peut être à mettre à jour,
+- une consommation peut être enregistrée MAIS CE N'EST Qu4AU CYCLE SUIVANT qu'elle _coûtera_ quelque chose.
+
+Le coût de calcul moyen sur M /M-1 peut être effectué: 
+- si le nombre de ms de cette période est trop faible (moins de 10 jours), la moyenne peut être aberrante en survalorisant les opérations les plus récentes.
+- cette moyenne considère qu'il y a toujours eu au moins 10 jours de vie, même si la création remonte à moins que cela.  
 
 ### Dynamique
 Un objet de class `Compteurs` est construit,
@@ -2020,30 +2057,12 @@ Un objet de class `Compteurs` est construit,
 - la construction recalcule tout l'objet: il était sérialisé à un instant `dh`, il est recalculé pour être à jour à l'instant t.
 - **puis** il peut être mis à jour, facultativement, juste avant le retour du `constructor`, par:
   - `qv` : quand il faut mettre à jour les quotas ou les volumes,
-  - `conso` : quand il faut enregistrer une consommation.
+  - `conso` : quand il faut enregistrer une consommation,
+  - `idp` : changement de partition (A <-> O),
+  - `dbcr`: enregistrement, soit d'un crédit ou d'un don reçu ou de dons (>0), soit d'un don effectué (<0).
 
-`const compteurs = new Compteurs(serial, qv, conso, dh)`
-- `dh` est facultatif et sert pour effectuer des batteries de tests ne dépendants pas de l'heure courante.
-
-### Vecteur détaillé d'un mois
-Pour chaque mois M à M-3, il y a un **vecteur** de 14 (X1 + X2 + X2 + 3) compteurs:
-- moyennes et cumuls servent au calcul au montant du mois:
-  - QC : moyenne de qc dans le mois (€)
-  - QN : moyenne de qn dans le mois (D)
-  - QV : moyenne de qv dans le mois (B)
-  - NL : nb lectures cumulés sur le mois (L),
-  - NE : nb écritures cumulés sur le mois (E),
-  - VM : total des transferts montants (B),
-  - VD : total des transferts descendants (B).
-- compteurs de _consommation moyenne sur le mois_ qui n'ont qu'une utilité documentaire.
-  - NN : nombre moyen de notes existantes.
-  - NC : nombre moyen de chats existants.
-  - NG : nombre moyen de participations aux groupes existantes.
-  - V : volume moyen effectif total des fichiers stockés.
-- 3 compteurs spéciaux
-  - MS : nombre de ms dans le mois - si 0, le compte n'était pas créé
-  - CA : coût de l'abonnement pour le mois
-  - CC : coût de la consommation pour le mois
+`const compteurs = new Compteurs(serial, qv, conso, idp, dbcr, dh)`
+- `dh` est facultatif et ne sert que pour effectuer des batteries de tests ne dépendants pas de l'heure courante.
 
 Le getter `get serial ()` retourne la sérialisation de l'objet afin de l'écrire dans la propriété `compteurs` de `comptas`.
 
@@ -2061,69 +2080,35 @@ En session:
 - le Comptable peut afficher le `compteurs` de n'importe quel compte "A" ou "O".
 - les délégués d'une partition ne peuvent faire afficher les `compteurs` _que_ des comptes "O" de leur partition.
 
-### Mutation d'un compte _autonome_ en compte _d'organisation_
-Le compte passe en "O".
+# Tâches différées et périodiques (GC)
 
-Le Comptable ou un délégué désigne le compte dans ses contacts et vérifie que c'est un compte "A".
+Une opération effectue dans sa transaction les mises à jour immédiates de manière à ce que la cohérence des données soit garantie. Mais pour certaines opérations il peut rester des activités d'optimisation et / ou de nettoyage à exécuter qui peuvent être _différées_.
 
-Les quotas `qc / qn / qv` sont ajustés par le sponsor / comptable:
-- de manière à supporter au moins le volume actuels n / v,
-- en respectant les quotas de la partition courante.
-
-L'opération de mutation:
-- inscrit le compte dans la partition courante,
-- dans `compteurs` du `comptas` du compte:
-  - remise à zéro du total abonnement et consommation des mois antérieurs (`razma()`):
-  - l'historique des compteurs et de leurs valorisations reste intact.
-  - les montants du mois courant et des 17 mois antérieurs sont inchangés,
-  - MAIS les deux compteurs `aboma` et `consoma` qui servent à établir les dépassements de coûts sont remis à zéro: en conséquence le compte va bénéficier d'un mois (au moins) de consommation _d'avance_.
-- inscription d'un item de chat.
-
-### Rendre _autonome_ un compte "O"
-C'est une opération du Comptable et/ou d'un délégué.
-
-L'opération de mutation:
-- retire le compte de sa partition.
-- comme dans le cas ci-dessus, remise à zéro des compteurs total abonnement et consommation des mois antérieurs.
-- dans `comptas`:
-  - `solde` vaut un pécule de 2c, le temps de générer un ticket et de l'encaisser.
-  - les listes des `tickets dons` sont vides.
-
-### Sponsoring d'un compte "O"
-Rien de particulier : `compteurs` est initialisé. Sa consommation est nulle, de facto ceci lui donne une _avance_ de consommation moyenne d'au moins un mois.
-
-### Sponsoring d'un compte "A"
-`compteurs` est initialisé, sa consommation est nulle mais il bénéficie d'un _solde_ minimal pour lui laisser le temps d'enregistrer son premier crédit.
-
-Dans `comptas` on trouve:
-- un `solde` de 2 centimes.
-- des listes `tickets dons` vide.
-
-# Tâches différées (_triggers_) et périodiques
-
-Une opération effectue dans sa transaction les mises à jour immédiates de manière à ce que la cohérence des données soit garantie. En conséquence de ces transactions il peut rester des activités d'optimisation et / ou de nettoyage à exécuter qui peuvent être _différées_.
-
-**Une tâche périodique** a pour objectif de détecter les changements d'états liés au simple passage du temps:
+**Une tâche périodique GC** a pour objectif de détecter les changements d'états liés au simple passage du temps:
 - compte résilié en raison d'une non-utilisation prolongée,
+- groupe n'étant plus hébergé,
 - sponsorings ayant dépassé leur date limite,
-- production d'états mensuels.
+- production d'états mensuels,
+- nettoyages:
+  - des transferts de fichiers non validés,
+  - de suppression de fichiers enregistrés mais restés présents.
 
-**_Exemple:_**
+**Tâche différée: exemple**
 - _transaction principale_: un groupe est supprimé. Dès cet instant toute opération tentant d'agir sur le groupe sortira en exception parce que le groupe n'existe plus.
-- _tâche différée_: purge des membres et des notes.
+- _tâche différée_: purge de ses membres et de ses notes.
 
 Un document `taches` enregistre toutes ces tâches différées:
-- une opération _principale_ peut enregistrer des tâches à  sous contrôle transactionnel.
-- un _démon_ est lancé s'il n'était pas en cours, qui va scruter `taches`, 
-  - en extraire la plus ancienne en attente de traitement,
+- une opération _principale_ peut enregistrer des tâches sous contrôle transactionnel.
+- un _démon_ (opération `ProchTache`) est lancé s'il n'était pas en cours, qui va scruter `taches`, 
+  - en extraire la prochaine à traiter et se terminer s'il n'y en a pas,
   - la traiter en une transaction, ce qui peut le cas échéant ajouter d'autres tâches,
   - in fine la retirer de `tâches`, ou pour une tâche périodique la réinscrire pour le lendemain typiquement.
-  - puis rechercher la tâche suivante à exécuter et en cas d'absence se rendormir.
+  - puis relancer un démon.
 
 **Une tâche non périodique:**
 - a un code opération (celle de son traitement),
-- est associée à un espace: elle n'est pas candidate à l'exécution si son espace est figé ou clos.
-- a un document cible identifié par id ou id / ids.
+- est associée à un espace (`org`) et ne fait rien si son espace est figé ou clos.
+- a un document cible identifié par une `id`.
 - est exécutée sous privilège administrateur et n'enregistre pas ses consommations,
 - a une date-heure au plus tôt: quand une tâche a rencontré une exception, sa date-heure au plus tôt permet de laisser s'écouler un certain délai avant une nouvelle exécution.
 - n'a pas de rapport de bonne exécution, la tâche étant détruite.
@@ -2135,97 +2120,46 @@ Un document `taches` enregistre toutes ces tâches différées:
 - est exécutée sous privilège administrateur et n'enregistre pas ses consommations.
 - peut avoir un rapport d'exception décrivant l'exception qui a interrompu sa dernière exécution.
 
-**Espace clos / figé**
-- **une tâche non périodique n'est pas lancée** si son espace est clos ou figé.
-- une tâche périodique teste dans son exécution l'état des espaces en fonction de chaque document qu'elle doit traiter, et ne traite que ceux dont l'espace n'est ni clos ni figé.
-
-**Multi serveur / cloud function**: empêcher 2 serveurs de lancer la même tâche
+**Multi serveur / cloud function**: empêcher 2 serveurs de lancer la même tâche:
 - _début de tâche_: mise à jour de la date-heure au plus tôt. _Comme si_ la relance de la tâche était déjà planifiée.
 - _fin de tâche_: purge de la tâche pour une tâche _non périodique_ et changement de l'heure de relance pour une tâche périodique.
 
-**Articulation avec le GC**
-- le GC est une pseudo-opération sollicitée de l'extérieur par une URL qui réveille le _démon_.
-- en effet en l'absence de trafic, en l'absence du réveil du GC, des tâches non périodiques en exception pourraient n'être relancées que tardivement, des rapports mensuels ne pas être calculés à temps.
+**Service CRON**
+- en l'absence de trafic des tâches non périodiques en exception pourraient n'être relancées que tardivement, des rapports mensuels ne pas être calculés à temps.
+- un service CRON lance (de l'extérieur) chaque jour une opération `ProchTache` par une URL comportant un code d'autorisation inscrit en configuration pour éviter des sollicitations intempestives.
 
 ### L'administrateur dispose d'un accès aux tâches, et peut:
 - voir la liste des tâches,
   - soit les tâches périodiques,
   - soit les tâches non périodiques _d'un espace_.
 - voir le dernier compte-rendu d'exception d'une tâche.
-- ajouter ou supprimer une tâche,
+- supprimer une tâche,
+- relancer une tâche,
+- annuler une tâche,
 - réveiller le démon.
-
-### Réveiller le _démon_ au démarrage du serveur ?
-- pour un _serveur_ ça fait sens,
-- pour une _cloud function_ c'est un overhead de lecture systématique de `taches`.
 
 La table / document n'a pas de _data_ mais directement des colonnes / attributs exposés dans la base :
 - `op` : code de l'opération.
-- `ns` : 0 pour une tâche périodique, sinon le ns de la tâche.
+- `org` : code de l'organisation (vide pour une tâche périodique).
 - `dh` : date-heure au plus tôt d'exécution.
 - `id` : id de l'objet principal concerné, '' pour un périodique.
-- `ids`: identifiant secondaire ou ''.
 - `exc` : rapport d'exception de la dernière exécution.
 - `dhf` : date-heure de fin pour une tâche GC.
-- `nb : nombre d'items traités à la dernière exécution d'une tâche GC.
-`
-Tâche candidate:
-- la plus petite `dh` avec dh supérieure à l'instant présent.
-- dont le `ns` est '' OU dans la liste des ns _ouverts_ (existants, non figé, non clos) OU n'est pas dans la liste fermée des ns _fermés_.
+- `nb` : nombre d'items traités à la dernière exécution d'une tâche GC.
 
-## Liste des tâches non périodiques
+## Liste des tâches 
+Périodiques (GC):
+- DFH = 1 // détection d'une fin d'hébergement
+- DLV = 2 // détection d'une résiliation de compte
+- TRA = 3 // traitement des transferts perdus
+- VER = 4 // purge des versions supprimées depuis longtemps
+- STA = 5 // statistique "mensuelle" des comptas et des tickets
+- FPU = 7 // purge des fichiers à purger
 
-### GRM : purge des membres d'un groupe supprimé
-Arguments:
-- `id` : id du groupe.
-
-### AGN : purge des notes d'un groupe ou avatar supprimé
-Arguments:
-- `id` : id du groupe / avatar.
-
-### AGF : purge d'un fichier supprimé OU des fichiers attachés aux notes d'un groupe ou avatar supprimé
-Arguments:
-- `id` : id du groupe / avatar.
-- `ids` : ids du fichier si la suppression ne concerne que ce fichier.
-
-_Remarque_: pour la suppression _d'un_ fichier, l'opération principale,
-- en phase 2, inscrit la tâche AGF pour le fichier à supprimer,
-- en phase 3 essaie de supprimer le fichier du _Storage_ et en cas de succès supprime la tâche AGF inscrite en phase 2. La tâche est, dans le cas favorable, supprimée _avant_ que le démon n'ait pu être réveillé (en fin de l'opération).
-
-### AVC : gestion et purges des chats de l'avatar
-Arguments:
-- `id` : id de l'avatar.
-
-Liste les chats de l'avatar et pour chacun:
-- met à jour le statut / cv du `chatE` correspondant.
-- purge le `chatI`
-
-### ESP : mise à jour des dlv des comptes d'un espace dont la date-limite fixée par l'administrateur a changé
-Arguments:
-- `ns` : celui de l'espace concerné
-- `ids` : `dla` pour retrouver les comptes de l'espace à traiter.
-
-Un tour d'exécution par compte.
-
-## Liste des tâches périodiques
-
-### DFH : détection d'une fin d'hébergement
-Filtre les groupes dont la `dfh` est dépassée:
-- immédiatement pour chaque groupe _suppression du groupe_.
-
-### DLV : détection d'une résiliation de compte
-Filtre les comptes dont la `dlv` est dépassée:
-- immédiatement pour chaque compte _suppression du compte_.
-
-### TRA : traitement des transferts perdus
-Filtre les transferts par `dlv`:
-- immédiatement pour chaque transfert, purge dans le _Storage_
-
-### VER : purge des versions supprimées depuis longtemps
-
-### STC : statistique "mensuelle" des comptas (avec purges)
-
-### STT : statistique "mensuelle" des tickets (avec purges)
+Non périodiques: `org`, organisation, `id` d'un groupe ou avatar selon le cas.
+- GRM = 21 // purge des membres d'un groupe supprimé
+- AGN = 22 // purge des notes d'un groupe ou avatar supprimé
+- AVC = 24 // gestion et purges des chats de l'avatar
 
 # Connexion et Synchronisation au fil de l'eau d'une session de l'application Web
 
