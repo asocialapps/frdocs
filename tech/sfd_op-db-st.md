@@ -1021,7 +1021,16 @@ Un _contact_ peut se faire effacer des contacts du groupe et s'inscrire en liste
 
 **Les documents ne sont PAS synchronisés.** La lecture est à la demande par les sessions des applications Web, ce qui permet de vérifier qui le demande: compte lui-même, Comptable, un délégué de sa partition pour un compte "O".
 
-### Synthèse `adq`
+### Synthèse `adq` : _Alertes Date-limite-validité Quotas-volume_
+Le record `adq` est une synthèse mémorisée dans le document comptas d'un compte qui donne une synthèse de l'état courant du compte:
+- **des flags d'alertes** résultant de la situation des compteurs:
+  - `ARSN`: accès restreint pour solde négatif.
+  - `RAL`: ralentissement des opérations pour excès de consommation de calcul par rapport au quota.
+  - `NRED`: restriction d'augmentation du nombre de documents (notes, chats, groupes), le nombre actuel excédant le quota.
+  - `VRED`: restriction d'augmentation de volume des fichiers attachés aux notes, le volume actuel excédant le quota.
+- **de la `dlv`** date limite de validité du compte.
+- des **compteurs qv** (quotes / volumes).
+
 A chaque retour d'une opération sollicité par une session d'une application Web, un résultat `adq` est retourné lui transmettant les données suivantes:
 - `nl ne vm vd` : le nombre de lectures, écritures, volumes montant et descendant de l'opération.
 - `qv` : `{qc, qn, qv, nn, nc, ng, v, cjm}` des compteurs.
@@ -2177,39 +2186,54 @@ Non périodiques: `org`, organisation, `id` d'un groupe ou avatar selon le cas.
 
 > Les trois autres documents du périmètre du compte `syntheses partitions comptas` sont chargés à la demande.
 
-## L'objet `DataSync`
-Cet objet sert:
-- entre session et _service OP_ a obtenir les documents resynchronisant la session avec l'état de la base.
-- dans une base locale IDB: à indiquer ce qui y est stocké et dans quelle version.
+### Publication aux sessions en cours des applications Web à la fin de chaque opération
+Un objet de classe `TrLog` est créé et transmis au service PUBSUB: il contient les informations que l'opération a fait évoluer dans le périmètre du compte sous lequel elle s'est exécuté.
+- `vesp` : le numéro de version de l'espace, SSI l'opération a mis à jour le document espaces.
+- `vadq` : le numéro de version du document comptas du compte, SSI son record adq a évolué de manière suffisamment significative depuis la dernière version notifiée par PUBSUB.
+- `vcpt` : le numéro de version du document comptes
+- `avgr` : les versions des sous-arbres avatars / groupes ayant changé.
+- `perimetres` : la liste des comptes dont le périmètre a changé avec la version de ce périmètre.
+
+Le service PUBSUB connaissant les sessions en cours et leurs périmètres de documents synchronisés est en mesure de savoir quelles sessions doivent être notifiées de quels changements. Chaque _changement_ se limite à indiquer sa nouvelle version: chaque session des applications Web en cours détermine ainsi, par rapport aux versions qu'elle détient,
+- **si elle doit recharger le document `espaces` de son organisation**: ceci lui indiquera d'éventuelles restrictions (`FIGE`: espace figé, `LSNTF` / `ARNTF`: restrictions de niveau partition).
+- **si elle doit recharger le record `adq` issu de son document `comptas`** (dont les éventuels flags RAL NRED VRED ARSN).
+- **si elle doit ou non re-synchroniser les données de son compte** (voir ci-après Sync / DataSync) et obtenir les éventuelles restrictions de niveau compte LSNTF ARNTF).
+
+> Toutes les _alertes_ pouvant entraver le fonctionnement du compte sont ainsi _synchronisées_: elles apparaissent dès qu'elles sont positionnées et disparaissent dès qu'elles sont effacées de la base centrale.
+
+### L'opération `Sync` et l'objet `DataSync`
+L'objet `DataSync` échangé en argument et résultat d'une opération `Sync`, sert à une session d'une application Web:
+- à obtenir les documents la resynchronisant avec l'état le plus récent de la base.
+- à indiquer à sa base locale IDB ce qui y est stocké et dans quelle version.
 
 **Les états successifs _de la base_ sont toujours cohérents**: _tous_ les documents de _chaque_ périmètre d'un compte sont cohérents entre eux.
 
-L'état courant d'une session en mémoire et le cas échéant de sa base locale IDB, est consigné dans l'objet `DataSync` ci-dessous:
-- chaque sous-arbre d'un avatar ou d'un groupe est _cohérent_ (tous les documents sont synchrones sur la même version `vs`),
+L'état courant en mémoire d'une session d'une application Web et le cas échéant de sa base locale IDB, est consigné dans l'objet `DataSync` ci-dessous:
+- chaque sous-arbre d'un avatar ou d'un groupe est _cohérent_ (tous les documents sont synchrones sur la même version `vs` _version session_),
 - en revanche il peut y avoir (plus ou moins temporairement) des sous-arbres à jour par rapport à la base et d'autres en retard.
 
 **L'objet `DataSync`:**
 - `compte`: `{ vs, vb }`
-  - `vs` : numéro de version de l'image détenue en session
-  - `vb` : numéro de version de l'image en base centrale
+  - `vs` : numéro de version de l'image détenue en _session_.
+  - `vb` : numéro de version de l'image en _base centrale_.
 - `avatars`: Map des avatars du périmètre. 
   - Clé: id de l'avatar
   - Valeur: `{ id, chg, vs, vb } `
-    - `chg`: true si l'avatar a été détecté changé en base par le serveur
+    - `chg`: `true` si l'avatar a été détecté changé en base par le serveur.
 - `groupes`: : Map des groupes du périmètre. 
   - Clé: id groupe
   - Valeur: `{ id, chg, vs, vb, ms, ns, m, n }`
-    - `chg`: true si le groupe a été détecté changé en base par le serveur
-    - `vs` : numéro de version du sous-arbre détenue en session
-    - `vb` : numéro de version du sous-arbre en base centrale
-    - `ms` : true si la session a la liste des membres
-    - `ns` : true si la session a la liste des notes
-    - `m` : true si en base centrale le groupe indique que le compte a accès aux membres
-    - `n` : true si en base centrale le groupe indique que le compte a accès aux membres
+    - `chg`: `true` si le groupe a été détecté changé en base par le serveur.
+    - `vs` : numéro de version du sous-arbre détenue en _session_.
+    - `vb` : numéro de version du sous-arbre en _base centrale_,
+    - `ms` : `true` si la session a actuellement la liste des membres.
+    - `ns` : `true` si la session a actuellement la liste des notes.
+    - `m` : `true` si en base centrale le groupe indique que le compte a accès aux membres.
+    - `n` : `true` si en base centrale le groupe indique que le compte a accès aux membres
 
 **Remarques:**
 - un `DataSync` reflète l'état d'une session, les `vs` (et `ms ns` des groupes) indiquent quelles versions sont connues d'une session.
-- Un `DataSync` reflète aussi l'état en base centrale, du moins quand il a été écrit, les `vb` (et `m n` pour les groupes) indiquent quelles versions sont détenues dans l'état courant de la base centrale.
+- Un `DataSync` reflète aussi l'état en base centrale quand il a été calculé, les `vb` (et `m n` pour les groupes) indiquent quelles versions sont détenues dans l'état courant de la base centrale.
 - Quand toutes les `vb` et `vs` correspondantes sont égales (et les couples `ms ns / m n` pour les groupes), l'état en session reflète celui en base centrale: il n'y a plus rien à synchroniser ... jusqu'à ce l'état en base centrale change et que l'existence d'une mise à jour soit notifiée par _web push_ à la session.
 
 Chaque appel de l'opération `Sync` :
@@ -2229,13 +2253,13 @@ Pas forcément les mises à jour de **tous** les sous-arbres:
 - au retour, la session va récupérer (en mode _synchronisé_) le `maxim` de documents encore valides et présents dans IDB: 
   - elle lit depuis IDB le `DataSync` qui était valide lors de la fin de la session précédente et qui donne les versions `vs` (et `ms ns` pour les groupes),
   - elle lit depuis IDB l'état des sous-arbres connus afin d'éviter un rechargement total: les `vs` (et `ms ns`) sont mis à jour dans le DataSync.
-  - le prochain appel de `Sync` ne provoquera des chargements _que_ de ce qui est nouveau et pas des documents ayant une version déjà à jour en session UI.
+  - le prochain appel de `Sync` ne provoquera des chargements _que_ de ce qui est nouveau et pas des documents ayant une version déjà à jour en session UI IDB.
 
 **Appels suivants de Sync**
 - le `DataSync` reçu sur le serveur permet de savoir ce que la session connaît.
 - si des avis de mises à jour sont parvenus, la liste de leur `id` est passée à `Sync`: au lieu de relire toutes les versions de tous les sous-arbres `Sync` se contente de lire uniquement les versions des sous-arbres changés donnés par la liste des `id` reçue de la session UI.
 
-A chaque appel de `Sync`, les versions de` comptes comptis invits` sont vérifiées: en effet avant de transmettre les mises à jour des sous-arbres `Sync` s'enquiert auprès du document comptes:
+A chaque appel de `Sync`, les versions de` comptes comptis invits` sont vérifiées: en effet avant de transmettre les mises à jour des sous-arbres `Sync` s'enquiert auprès du document `comptes`:
 - des sous-arbres n'ayant plus d'intérêt (avatars et groupes hors périmètre),
 - des nouveaux sous-arbres (nouveaux avatars, nouveau groupes apparaissant dans le périmètre),
 - pour les groupes si les accès _membres_ et _notes_ ont changé pour le compte.
@@ -2244,10 +2268,11 @@ A chaque appel de `Sync`, les versions de` comptes comptis invits` sont vérifi�
 Après la phase de _connexion_, l'état en mémoire est cohérent et stable, avec _écoute des web push_ activée en permanence: ces avis sont reçus par _notifications poussées au Browser_. Le service PUBSUB voit passer toutes les mises à jour et connaît les périmètres de toutes les sessions.
 
 **Remarques:**
+- les avis de mise à jour de `espaces adq` ne sont pas liés à `Sync / DataSync` et traités isolément dès leur arrivée.
 - les avis de mise à jour des sous-arbre _compte_, sous-arbre _avatar_, sous-arbre _groupe_ peuvent parvenir dans un ordre différent de celui dans lequel les mises à jour sont intervenues;
-- un avis de mise à jour de `espaces` est décorrélé des autres: il est traité isolément dès son arrivée.
-- en revanche un avis sur comptes peut parvenir après un avis sur un de ses avatars: pour éviter cette discordance, l'état de compte est toujours relu (si nécessaire) à chaque `Sync`.
-- il se _POURRAIT_ qu'un sous-arbre (complet) _avatar_ soit remis à jour AVANT un sous-arbre _groupe_, dans l'ordre inverse des opérations sur le serveur. Mais cette discordance entre la vue en session et la réalité,
+
+- en revanche un avis sur `comptes` _pourrait_ parvenir après un avis sur un de ses avatars: pour éviter cette discordance, l'état de `comptes` est toujours relu (si nécessaire) à chaque `Sync`.
+- il se _POURRAIT_ qu'un sous-arbre (complet) _avatar_ soit remis à jour AVANT un sous-arbre _groupe_, dans l'ordre inverse des opérations sur le serveur. Cette discordance potentielle entre la vue en session et la réalité,
   - va être temporaire,
   - est fonctionnellement quasi impossible à discerner,
   - n'a pas de conséquence sur la cohérence des données.
@@ -2263,7 +2288,7 @@ Phase unique:
 - **mise à jour des _stores_ des documents compilés** en une séquence sans interruption (sans `await`) afin que la vision graphique soit cohérente.
 
 ## Synchronisation au fil de l'eau
-Au fil de l'eau il parvient des notifications de mises à jour de _versions_. 
+Au fil de l'eau il parvient des notifications _web-push_ de mises à jour de _versions_. 
 
 Une table _queue de traitements_ mémorise pour chaque sous-arbre, son `id` et la version notifiée par l'avis de mise à jour. Elle regroupe ainsi des événements survenus très proches.
 
@@ -2279,26 +2304,3 @@ Tant qu'il reste des traitements à effectuer, une opération `Sync` est soumise
 Le traitement standard de retour,
 - met à jour la base locale en une transaction,
 - met à jour les _store_ de la session sans interruption (sans `await`).
-
-# Annexe I: déclaration des index
-
-## SQL
-`sqlite/schema.sql` donne les ordres SQL de création des tables et des index associés.
-
-Rien de particulier : sont indexées les colonnes requérant un filtrage ou un accès direct par la valeur de la colonne.
-
-## Firestore #A REVOIR
-`firestore.index.json` donne le schéma des index: le désagrément est que pour tous les attributs il faut indiquer s'il y a ou non un index et de quel type, y compris pour ceux pour lesquels il n'y en a pas.
-
-**Les règles génériques** suivantes ont été appliquées:
-
-_data_ n'est jamais indexé.
-
-Tous les attributs apparaissant dans une _query_ avec un _where_ donne lieu à un index, voire un index composite (id / v ...).
-
-Pour `sponsorings` `ids` sert de clé d'accès direct et a donc un index **collection_group**, pour les autres l'index est simple.
-
-Autres index:
-- `hXR` sur `comptas`: accès à la connexion par phrase secrète.
-- `hYR` sur `avatars`: accès direct par la phrase de contact.
-- `dfh` sur `groupes`: détection par le GC des groupes sans hébergement.
