@@ -26,9 +26,9 @@ Une telle organisation l'a fait pour ses membres, au sens large. Son _Comptable_
 ### C) Les comptes d'une organisation
 **L'organisation a certains moyens de contrôles sur les comptes "O"** en leur imposant des quotas et restrictions.
 
-**Elle n'a aucun moyen sur les comptes "A"**. Étant incapable de relier un compte et un paiement, le Comptable ne peut même pas mettre volontairement en solde négatif un compte A (ce qui le bloquerait): tout au plus le Comptable peut ne plus enregistrer aucun paiement, ce qui in fine conduirait tous les comptes "A" à s'auto-détruire.
+**Elle n'a aucun moyen de pression sur les comptes "A"**. Étant incapable de relier un compte et un paiement, le Comptable ne peut même pas mettre volontairement en solde négatif un compte A (ce qui le bloquerait): tout au plus le Comptable peut ne plus enregistrer aucun paiement, ce qui in fine conduirait tous les comptes "A" à s'auto-détruire.
 
-**Une organisation n'a aucune possibilité technique de _modération_ des contenus**: ce sont les comptes qui décident à qui leurs groupes sont ouverts ou non, avec qui ils chattent ou non.
+**Une organisation n'a aucune possibilité technique de _modération_ des contenus**: ce sont les comptes qui décident à qui leurs groupes sont ouverts ou non, avec qui ils _chattent_ ou non.
 
 > **Une injonction judiciaire ne peut être applicable que vis à vis de l'ensemble de l'organisation**, mais pas vis à vis de comptes désignés. Et d'ailleurs désignés comment ? par leur identifiant non signifiant ? Un Comptable n'a aucun moyen de relier un identifiant de compte à une carte de visite d'un compte qui ne le souhaite pas. De plus le texte porté sur cette carte de visite est n'importe quoi, un pseudo invérifiable.
 
@@ -75,7 +75,7 @@ Les membres du groupe peuvent juger qu'un trublion devrait en être exclu et que
 #### Préjudice à l'organisation
 Si le compte trublion commet des textes dans des groupes contraire aux règles éthiques de l'organisation, ce peut être un problème qu'il n'est pas forcément facile de résoudre.
 
-> Corréler **un compte** et ses textes dans un groupe n'est en général pas possible. Certes le sponsor du compte connaît le nom et l'identifiant du compte qu'il a sponsorisé mais ce dernier a pu créer des avatars secondaires connus de lui seul.
+> Corréler **un compte** et ses textes dans un groupe n'est en général pas possible. Certes le sponsor du compte devrait plus ou moins connaître le titulaire qu'il a sponsorisé mais ce dernier a pu créer des avatars secondaires connus de lui seul.
 
 **Si le trublion est un compte "A"** qui paye son abonnement et sa consommation il ne peut pas être _bloqué_ par l'organisation.
 - ce n'est donc pas un préjudice financier.
@@ -88,8 +88,7 @@ Il ne reste aux membres de l'organisation que la seule latitude d'informer sur l
 - son compte peut être _restreint à un accès minimal_, ce qui causera à terme sa résiliation automatique.
 
 #### Modération des contenus sur un groupe
-Si le trublion est un animateur c'est difficile. Sinon, ses échanges sur le chat peuvent être supprimés par un animateur et ses textes litigieux modifiés ou supprimés.
-
+Si le trublion est un animateur c'est difficile. Sinon, ses échanges sur le _chat_ peuvent être supprimés par un animateur et ses textes litigieux modifiés ou supprimés.
 
 ## Protection des libertés individuelles
 Pour certaines organisations, la liberté d'expression dans un espace _privé_ est plus importante qu'un contrôle éthique: dans ce cas elle fonctionnera avec des comptes "A" qui ne peuvent pas être bloqués. Les autres comptes savent d'emblée que dans cette organisation ils peuvent être invités dans des groupes heurtant leur sensibilité et qu'il n'y a rien qui puisse l'empêcher.
@@ -99,7 +98,7 @@ Pour certaines organisations, la liberté d'expression dans un espace _privé_ e
 **Les notes partagées dans un groupe ne sont pas _publiques_:**
 - elles ne sont partagées qu'avec une liste fermée (et réduite) d'avatars ayant explicitement **demandé** à faire partie du groupe,
 - la _liste de diffusion implicite_ qu'est le groupe est connue de tous les participants au groupe, sans _destinataires cachés_, chacun disposant du droit de s'en exclure à tout instant.
-- il y a une zone _grise_: un groupe _privé_ de 5000 membres n'est peut-être pas si privé que cela, mais le Comptable peut réduire cette limite à quelques dizaines (voire centaines), l'application n'étant d'ailleurs pas fonctionnelles avec des groupes en milliers de membres.
+- il y a une zone _grise_: un groupe _privé_ de 5000 membres n'est peut-être pas si privé que cela, mais le logiciel limite ce nombre 100. Même si cette donnée de configuration peut être changée, elle n'est pas très élevée et l'application ne serait d'ailleurs pas fonctionnelle avec des groupes en milliers de membres.
 
 ### L'application est agnostique vis à vis des contenus des notes
 Pas de vote, d'avis ... 

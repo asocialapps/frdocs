@@ -52,14 +52,14 @@ Le premier byte d'une chaîne cryptée est le numéro du _SALT_ employé au cryp
 
 ### Cryptage asymétrique RSA2048
 Le cryptage nécessite une paire de clés générées ensemble:
-- la clé publique sert à crypter un texte qui ne pourra être décrypté qu'en utilisant la clé privéE. Les deux clé sont longues.
+- la clé **publique** sert à crypter un texte qui ne pourra être décrypté qu'en utilisant la clé **privée**. Les deux clé sont longues.
 - le texte _source_ a une longueur maximale de 256 bytes.
 - le cryptage est lent.
 - deux cryptages successifs d'un même texte source donne deux cryptages différents.
 
 > 2048, c'est 256 bytes. Attaquer par force brute une telle clé semble irréaliste.
 
-L'objectif est que le _public_ puisse librement crypter un texte à destination d'un seul destinataire.
+L'objectif est qu'avec la clé _publique_ on puisse librement crypter un texte qui ne pourra être décrypté que par un seul destinataire disposant de la clé _privée_.
 
 Quand le texte à crypter peut être plus long que 256 bytes, on génère une clé symétrique aléatoire qui crypte le long texte et on crypte cette clé par la clé RSA.
 
@@ -96,16 +96,16 @@ Les clés comme les valeurs sont cryptées par la clé K:
 La clé K crypte toutes les notes des avatars du compte et ses fichiers.
 
 ## Clé "CV" d'un avatar
-Quand un avatar est créé, il est générée une clé dite CV qui crypte sa carte de visite. La clé CV est mémorisée dans le document maître de l'avatar cryptée par la clé K du compte.
+Quand un avatar est créé, une clé dite CV est générée qui crypte sa carte de visite. La clé CV est mémorisée dans le document maître de l'avatar cryptée par la clé K du compte.
 
 Cette clé est aussi incassable que les autres sauf qu'elle va être donnée à tous les autres avatars _en contact_, ceux à qui justement on a accordé le droit de lire sa carte de visite.
 
-> La **fragilité** n'est pas dans le procédé cryptographique mais dans le nombre de _contacts_ à qui on a attribué sa confiance.
+> La **fragilité** d'une carte de visite n'est pas dans le procédé cryptographique mais dans le nombre de _contacts_ à qui on a attribué sa confiance.
 
 Cela dit le risque se limite à ce que des contacts pas forcément désirables un jour puissent lire votre carte de visite. Les autres données sont définitivement inaccessibles aux autres avatars.
 
 ## Clé d'un chat entre deux avatars
-Elle est générée aléatoirement à la création du chat et est cryptée par les clés K respectives des deux comptes. A la création, le créateur du chat crypte cette clé par la clé publique RSA de l'autre: il n'y a que lui qui puisse la décoder, par sa clé privée encryptée par la clé K encryptée par la phrase secrète.
+Elle est générée aléatoirement à la création du _chat_ et est cryptée par les clés K respectives des deux comptes. A la création, le créateur du _chat_ crypte cette clé par la clé publique RSA de l'autre: il n'y a que lui qui puisse la décoder, par sa clé privée encryptée par la clé K encryptée par la phrase secrète.
 
 ## Clé d'un groupe
 Elle est générée aléatoirement à la création du groupe.
@@ -145,13 +145,21 @@ Par exception, l'identifiant du Comptable est `300000000000` et la clé de sa ca
 Un compte et son avatar principal ont le même identifiant.
 
 # Données cryptées en base de données
-Certaines données ne peuvent pas être cryptées en base de données parce qu'elles servent de clé d'accès ou d'index.
+Quelques données servent de clé d'accès (clé _primaire_ ou _path_) dans la base de données: le code de l'organisation, des IDs d'avatars et de groupes, etc. Selon l'option fixée par l'administrateur technique, ces données peuvent être cryptées ou non en base de données.
+- si elles sont cryptées la lecture de la base de données ne permet même pas de savoir quelle organisation y est hébergée et pour chaque row / document à quel avatar / groupe il se rapporte.
 
-Pour chaque type de document quelques données sont donc _en clair_:
-- l'identifiant (un terme ou deux termes): mais c'est un string aléatoire non porteur d'information.
-- des dates de péremption ... qui porte sur des documents dont on ne sait pas à qui appartiennent.
-- des numéros de versions de 1 à N.
+Quelques autres données sont,
+- soit des numéros de version en ordre croissant,
+- sot des dates `aaaammjj`.
+- ces colonnes / attributs sont en clair dans la base de données parce que servant d'indexation ordonnée ... mais on ne sait pas à quoi elles se rapportent.
 
-Les autres propriétés des documents sont scellées encodées dans un texte binaire crypté par la _clé d'administration du site_ que l'administrateur a _caché_ avec quelques rares autres données confidentielles comme les _token_ d'accès aux services d'accès externes (base de données, storage ...).
+### Les attributs _data_ et les rares attributs _externalisés_
+Les données d'un compte ou d'une comptabilité sont volumineuses et de structure complexe. Elles sont _sérialisées_ (compilées et scellées dans un texte binaire) et stockées en base dans un attribut opaque _data_. A la lecture elles sont décompilées pour redonner la structure complexe de départ.
 
-Les services du serveur peuvent évidemment lire ces propriétés des documents MAIS PAS le fournisseur d'accès des bases de données. Par exemple si on utilise une base de données de Google (Firestore), Google peut lire les index -à supposer que ça l'intéresse- mais aucune des autres informations qui sont encapsulées dans des binaires cryptés dont il n'a pas la clé.
+**Les _data_ sont stockés cryptés en base de données**: même le prestataire gérant la base n'est pas capable de les décoder.
+
+> Cette clé de cryptage est stockée avec la _clé d'administration du site_ que l'administrateur et quelques rares autres données confidentielles comme les _token_ d'accès aux services d'accès externes (base de données, storage ...) dans un fichier que seul l'administrateur technique détient en clair dans un endroit connu de lui seul puis crypté par ses soins avec d'être intégré au logiciel déployé en production.
+
+**Pour chaque type de document quelques données sont _externalisées_** de _data_, c'est à dire sont à la fois dans _data_ et dans un attribut nommé et connu de la base de données:
+- des identifiants - qui peuvent être cryptés_ avant écriture en base,
+- numéros de version ou des date de jour qui sont des attributs _entiers_.

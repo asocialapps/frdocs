@@ -7,11 +7,13 @@ title: Contacts et "chats"
 
 Un chat peut être **ouvert**,
 - à la création du compte entre sponsor et sponsorisé si tous deux en sont d'accord,
-- pour un compte "O" (de l'organisation) avec un des _délégués_ désignés par le Comptable pour la partition du compte,
+- depuis la page des _chats d'urgence_:
+  - avec le Comptable, sans qu'il soit besoin d'avoir son accord,
+  - pour un compte "O" (de l'organisation) avec les _délégués_ désignés par le Comptable pour sa partition,
 - avec un membre _actif_ d'un groupe pour lequel le compte a droit d'accès aux membres (voir plus loin),
 - avec n'importe quel avatar ayant confié au compte sa _phrase de contact_.
 
-Les deux avatars peuvent écrire sur le _chat_ des textes courts:
+Les deux avatars en contact peuvent écrire sur le _chat_ des textes courts:
 - **un texte d'un _chat_ ne peut plus y être modifié** mais peut être supprimé par son auteur,
 - le volume total des textes sur le _chat_ est limité à 5000 signes, les plus anciens étant perdus en cas de dépassement de cette limite.
 
@@ -30,25 +32,25 @@ Chacun peut attacher au _contact du chat_ ses propres _hashtags_ (par exemple _c
 ## Création d'un _chat_ avec un membre d'un groupe
 Quand un compte a accès aux membres d'un groupe, il n'en voit que leurs _cartes de visites_: ces contacts sont _temporaires_ puisque si le membre est résilié du groupe (ou disparaît), il n'apparaît plus dans la liste des membres. C'est aussi le cas quand le compte perd le droit d'accès aux membres du groupe.
 
-Il est possible d'ouvrir un _chat_ avec un membre d'un groupe: ceci a pour effet aussi de rendre le contact _permanent_.
+Il est possible d'ouvrir un _chat_ avec un membre d'un groupe: ceci a pour effet de rendre le contact _permanent_.
 
 ## _Chats_ d'urgence
 **L'urgence apparaît pour un compte _restreint_, soit en _LECTURE SEULE_, soit _ACCÈS RESTREINT_.** [Voir le chapitre à propos des alertes](./alertes.html).
 
-Dans ce cas il faut pouvoir dialoguer par _chat_ avec le Comptable ou ses délégués sur la partition du compte. 
+Dans ce cas il faut pouvoir dialoguer par _chat_ avec le Comptable ou ses délégués pour la partition du compte. 
 
-Il est toujours possible d'ouvrir un _chat_ avec ces comptes **même si le compte a été restreint en _accès minimal=**, la page correspondante étant toujours accessibles (parfois la seule).
+Il est toujours possible d'ouvrir un _chat_ avec ces comptes **même si le compte a été restreint en _accès minimal_**, la page correspondante étant toujours accessible (parfois la seule).
 - **Tous** les délégués de la partition du compte (pour un compte "O") _peuvent_ devenir contacts _permanents_ en ouvrant un _chat d'urgence_ avec eux.
 
 ## Vie d'un _chat_
 Vu du côté du compte, un _chat_ peut apparaître dans deux états:
-_ _actif_: le chat est décompté dans le nombre de _documents de la session.
-_ _passif_: le chat N'EST PAS décompté dans le nombre de _documents de la session.
+_ _actif_: le chat est décompté dans le nombre de _documents_ de la session.
+_ _passif / raccroché_: le chat N'EST PAS décompté dans le nombre de _documents_ de la session.
 
-Dès qu'un compte écrit sur un _chat_ celui-ci devient _actif_.
+Dès qu'un compte écrit sur un _chat_ celui-ci devient _actif_ pour lui.
 
 Quand un compte _raccroche_ un _chat_:
-- le _chat_ devient _passif_ (n'est plus décompté dans le nombre de _documents de la session).
+- le _chat_ devient _passif_ (n'est plus décompté dans le nombre de _documents_ de la session).
 - les textes sont effacés de son côté (mais pas du côté de son contact).
 - _raccrocher_ permet de ne plus être importuné par des textes non souhaités, ni avoir son quota de nombre de documents pénalisé. On peut filtrer simplement les _chats_ et ne voir lister que ceux _actifs_.
 - **toutefois** ceci n'empêche pas le contact d'écrire sur le _chat_, ces items seront lisibles (sauf si bien sur la sélection des _chat_ a filtré les chats passifs).
