@@ -32,7 +32,7 @@ Le compte ne peut pas ajouter de fichiers ou remplacer un fichier par un autre d
 Le compte ne peut plus ni lire ses données, ni les mettre à jour. Toutefois il conserve les possibilités de:
 - visualiser ses alertes et sa comptabilité,
 - effectuer des versements et les enregistrer afin que le Comptable les créditent,
-- discuter sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O" de sa situation, voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
+- discuter  de sa situation sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O, voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
 
 ## Alerte de l'Administrateur Technique à l'organisation
 **Cette alerte porte toujours un message d'information** (_arrêt programmé ..._).
@@ -60,7 +60,7 @@ Le compte ne peut plus ni lire ses données, ni les mettre à jour.
 Dans tous les cas il conserve toutefois les possibilités de:
 - visualiser ses alertes et sa comptabilité,
 - effectuer des versements et les enregistrer afin que le Comptable les créditent,
-- discuter sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O" de sa situation, voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
+- discuter  de sa situation sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O", voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
 
 ## Date limite de vie d'un compte
 Cette date, toujours le dernier jour d'un mois, signifie que le jour suivant le compte sera irrémédiablement détruit sans possibilité de récupération.

@@ -8,7 +8,7 @@ title: Analyse de la confiance dans l'application en exécution
 ## Confiance humaine
 Au delà de la pétition de principe que in fine tout aboutit à une confiance humaine, le plus important est d'analyser ce qui se passe si elle est prise en défaut.
 
-On peut essayer de consacrer des moyens considérables à essayer de casser une clé de cryptage, mais le fait est que la corruption et la menace sur son propriétaire sont en général des procédés moins coûteux pour obtenir le même résultat.
+On peut consacrer des moyens considérables à essayer de casser une clé de cryptage, mais le fait est que la corruption et la menace sur son propriétaire sont en général des procédés moins coûteux pour obtenir le même résultat.
 
 ### Une structure non hiérarchique qui _confine_ les conséquences des fuites des _utilisateurs_
 **Dans les structures _dictatoriales_, un _sommet_ détient plus d'information que les niveaux inférieurs**. Mais la structure de l'application **n'est pas** hiérarchique mais à plat, en réseau:
@@ -96,8 +96,7 @@ il est impossible de lire aucune _données humaines_ sur aucun autre support tec
 - Les _données humaines_ sont inaccessibles, cryptées par les données des comptes.
 
 ### Conséquences sur le détournement de l'espace de _storage_ des fichiers
-Il n'y a (quasiment) pas de _meta-donnée_ stockées. Les contenus des fichiers sont cryptés par des clés que seuls les comptes connaissent. 
-- On ne peut seulement qu'en tirer le nombre et le volume des fichiers par _identifiant_ d'avatar ou de groupe.
+Il n'y a pas de _meta-donnée_ stockées. Les contenus des fichiers sont cryptés et leurs _path_ sont cryptés depuis les identifiants (organisation, ID d'avatar / compte, ID d'un fichier). 
 
 # Problématique de confiance
 On suppose que le _matériel / Operating System_ est de confiance.
@@ -218,7 +217,7 @@ Cette clé permet à un intervenant extérieur ayant accès en lecture à la bas
 
 Le _provider_ d'accès à la base de données est-il en mesure de lire tous les champs de la base ?
 - bien entendu, sinon il ne pourrait pas gérer la base,
-- mais les colonnes / attributs `_data_` ne lui sont accessibles qu'en binaire crypté dont il n'en a pas la clé. Il ne peut rien en faire et donc ne peut pas techniquement rendre visible les _meta-données_.
+- mais les colonnes / attributs `_data_ id ids hk ...` ne lui sont accessibles qu'en binaire crypté dont il n'en a pas la clé. Il ne peut rien en faire et donc ne peut pas techniquement rendre visible les _meta-données_.
 
 > Remarque: l'administrateur technique gère la clé de cryptage et le jeton d'accès à la base. S'il détourne l'une il peut aussi détourner l'autre.
 
@@ -262,7 +261,7 @@ Un _matériel_, un ordinateur, est identifiable: sa carte d'accès réseau a un 
 
 Un _humain_ peut avoir des identifiants, _login mots de passe / phrase secrète_ qui ont la caractéristique d'être _externes_ aux ordinateurs qu'il utilise: sa _mémoire cérébrale_ n'y est pas connectée (du moins aujourd'hui).
 - il faut bien un logiciel pour transmettre cette _phrase secrète_:
-  - d'abord ce n'est pas la phrase qui est transmise mais un hash (ou deux) de cette phrase.
+  - d'abord ce n'est pas la phrase qui est transmise mais un hash (en fait deux) de cette phrase.
   - ensuite le serveur peut savoir si oui ou non ce hash correspond à un compte chez lui, il peut croire avoir _authentifié_ la personne ayant émis cette phrase (sans avoir à la connaître), mais en fait il n'en a authentifié qu'un _hash_.
 
 **Remarque**: dans le cas de AsocialApp, si le _serveur_ s'est fait berné en recevant un _hash_ piraté, il renverra à l'application Web des données cryptés par la _vraie phrase secrète entière_ (pas par son hash). Si l'application cliente pirate n'avait que les hash, elle ne peut rien en faire. La _vraie_ phrase secrète en clair ne sort JAMAIS de la mémoire d'une session Web, il faut avoir hacké le browser pour l'exposer (ça arrive mais ce n'est pas très public et il faut savoir s'en servir et la _faille_ ne vit pas forcément longtemps).
@@ -273,6 +272,6 @@ Un _humain_ peut avoir des identifiants, _login mots de passe / phrase secrète_
 
 Tout cela pour dire qu'un _serveur_,
 - **PEUT authentifier un HUMAIN à distance** parce que l'identifiant en question est _externe_ au matériel et au _logiciel_,
-- **NE PEUT PAS AUTHENTIFIER un logiciel A** qui communique avec lui parce que son identifiant étant inscrit dans le logiciel A lui-même peut être décompilé et réutilisé par un autre logiciel B qui pourra ainsi de faire passer pour A vis à vis du serveur.
+- **NE PEUT PAS AUTHENTIFIER un logiciel A** qui communique avec lui parce que son identifiant étant inscrit dans le logiciel "A" lui-même peut être décompilé et réutilisé par un autre logiciel "B" qui pourra ainsi de faire passer pour "A" vis à vis du serveur.
 
-L'application Web, ne peut pas, être authentifiée avec sûreté du fait même de la nature intrinsèque d'un logiciel qui est un texte lisible (humainement **et** par un CPU).
+L'application Web, ne peut pas, être _authentifiée_ avec sûreté du fait même de la nature intrinsèque d'un logiciel qui est un texte lisible (humainement **et** par un CPU).

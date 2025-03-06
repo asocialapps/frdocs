@@ -29,7 +29,7 @@ La création de comptes se fait par _cooptation_ : un compte _sponsor_ prépare 
 
 La fiche de sponsoring est complétée par un _mot de bienvenu_ du sponsor au sponsorisé:
 - habituellement ce mot initialise un _chat_ entre sponsor et sponsorisé, qui seront ainsi mutuellement _contacts_ et connaîtront leurs cartes de visite.
-- toutefois, le sponsor peut refuser que ce _chat_ (et ce contact) s'établisse..
+- toutefois, le sponsor peut refuser que ce _chat_ (et ce contact) s'établisse.
 
 La _fiche de sponsoring_ a une durée de validité de 30 jours. Si elle n'a pas été acceptée / refusée dans ce délai elle s'autodétruit.
 
@@ -40,7 +40,7 @@ Le futur titulaire accède à sa fiche de sponsoring en citant la phrase que le 
 - s'il est satisfait, le sponsorisé:
   - choisit sa phrase secrète qu'il saisit deux fois,
   - remplit un mot de remerciement pour le sponsor,
-  - peut ne pas souhaiter ouvrir un chat avec le sponsor et rester indépendant de lui, sinon il accepte et _sponsor / sponsorisé_ seront des contacts.
+  - peut ne pas souhaiter ouvrir un _chat_ avec le sponsor et rester indépendant de lui, sinon il accepte et _sponsor / sponsorisé_ seront des contacts.
 
 La _phrase de sponsoring_ est obsolète au plus 30 jours après création de la fiche de sponsoring. 
 
@@ -73,7 +73,7 @@ Typiquement y mettre une photo et plus d'information à propos de soi-même que 
 
 ### Accéder à sa _liste de contacts_
 A cet instant elle a (au plus) **un** contact, son _sponsor_, sauf si l'un des deux sponsor / sponsorisé n'ont pas voulu de ce contact.
-- il est possible / souhaitable d'attacher donner à son sponsor un _commentaire_ qui rappelle au moins comment il s'appelait au moment du sponsoring: le sponsor peut en effet changer sa carte de visite quand il veut. En attribuant un nom / commentaire personnel le sponsor pourra être retrouvé par filtrage sur le contenu du commentaire personnel attaché au sponsor.
+- il est possible / souhaitable d'attacher à son sponsor un _commentaire_ qui rappelle au moins comment il s'appelait au moment du sponsoring: le sponsor peut en effet changer sa carte de visite quand il veut. En attribuant un nom / commentaire personnel le sponsor pourra être retrouvé par filtrage sur le contenu du commentaire personnel attaché au sponsor.
 - il est possible de lui attacher des _hashtags_, qui facilitent les filtrages par _catégorie_ de contact.
 - on peut aussi ouvrir le _chat_ d'un contact: on y voit pour l'instant le mot de bienvenu du sponsor et le mot de remerciement du sponsorisé.
 
@@ -100,7 +100,7 @@ Un compte _délégué_ peut ajuster les quotas des comptes "O" de sa partition, 
 Afin de préserver l'anonymat dans le _vrai_ monde des comptes, la procédure de _paiement_ et d'enregistrement des crédits s'effectue de la manière suivante.
 
 Le compte, 
-- ouvre la fenêtre des paiements et on déclare un paiement avec son montant. Il en résulte un _numéro de ticket de paiement_ et un paiement enregistré en attente.
+- ouvre la fenêtre des paiements et déclare un paiement avec son montant. Il en résulte un _numéro de ticket de paiement_ et un paiement enregistré en attente.
 - il fait parvenir au Comptable par le moyen prévu par l'organisation (typiquement un virement d'une banque, mais aussi tout autre procédé accepté par l'organisation) le montant correspondant accompagné du numéro du ticket obtenu ci-avant.
 
 Quand le Comptable reçoit un paiement avec un numéro qui l’anonymise, il enregistre le montant reçu pour le ticket (qu'il trouve dans la liste des tickets en attente).
@@ -132,7 +132,7 @@ Un compte peut s'auto-résilier : tous ses avatars secondaires doivent avoir ét
 - Si c'est un compte "O" ses quotas d'abonnement / consommation sont rendus à sa partition.
 - Toutes ses données sont effacées, sauf ...
   - _ses notes de groupe_: dans un groupe une note _appartient_ au groupe et reste normalement accessible aux autres membres.
-  - pour ses chats personnels: son exemplaire disparaît mais l'exemplaire de son contact reste accessible, quoique sans mise à jour. Si le contact déclare le chat _passif / raccroché_, le contenu du chat disparaît.
+  - pour ses _chats_ personnels: son exemplaire disparaît mais l'exemplaire de son contact reste accessible, quoique sans mise à jour. Si le contact déclare le chat _passif / indésirable_, le contenu du _chat_ disparaît.
 
 # Disparition d'un compte
 
@@ -140,7 +140,7 @@ Un compte peut s'auto-résilier : tous ses avatars secondaires doivent avoir ét
 
 Comme rien ne raccorde un compte au monde réel, ni adresse e-mail, ni numéro de téléphone ... il n'est pas possible d'informer quiconque de la disparition prochaine de son compte.
 
-> Attention: un compte en _ACCÈS RESTREINT_, typiquement parce que son solde est débiteur, s'auto-détruit 6 mois après la date de son passage en _ACCÈS RESTREINT_.
+> Un compte en _ACCÈS RESTREINT_, typiquement parce que son solde est débiteur, s'auto-détruit 6 mois après la date de son passage en _ACCÈS RESTREINT_.
 
 # Mutation de comptes "A" en "O" et réciproquement
 

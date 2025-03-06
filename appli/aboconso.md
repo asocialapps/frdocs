@@ -6,20 +6,20 @@ title: Abonnement, consommation, tarifs
 Le coût d'usage de l'application pour une organisation correspond aux coûts d'hébergement des données et de traitement de celles-ci. Selon les techniques et les prestataires choisis, les coûts unitaires varient mais existent dans tous les cas.
 
 ## _Base de données_ et _fichiers_ (Storage)
-Leur stockage ont des coûts unitaires très différents (variant d'un facteur de 1 à 6).
-- les _bases de données_ requièrent un stockage proche du serveur et des accès très rapides,
+Leur stockage ont des coûts unitaires très différents (variant d'un facteur de 1 à 8).
+- les _bases de données_ requièrent un stockage proche des serveurs de traitement et des accès rapides,
 - les fichiers sont enregistrés dans des _Storage_, des stockages techniques distants ayant une gestion spécifique et économique du fait d'être soumis à peu d'accès (mais de plus fort volume).
 
 ## Abonnement: coût de l'espace occupé en permanence
 Un abonnement correspond aux coûts récurrents mensuels pour un compte:  même quand il ne se connecte pas, le stockage de ses sonnées a un coût.
 
-L'abonnement est décomposé en deux lignes de coûts correspondant à l'occupation d'espace en base de données et en _storage_:
-- **Prix unitaire de stockage d'un document** multiplié par le **nombre total de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels non _indésirables_, nombre de participations actives aux groupes.
-- **Prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **volume total des fichiers attachés aux notes**.
+L'abonnement couvre les frais fixes d'un compte: même quand il ne se connecte pas, le stockage de ses données a un coût. Il est décomposé en deux lignes de coûts correspondant à l'occupation d'espace forfaitaire en _base de données_ et en _storage_:
+- _Coût 1_ : **prix unitaire de stockage d'un document** multiplié par le **le nombre maximal du quota de _documents_ de l'abonnement**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels, nombre de participations actives aux groupes.
+- _Coût 2_ : **prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **le volume maximal du quota de l'abonnement des fichiers attachés aux notes**.
 
-Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _volumes maximaux_ forfaitaires** auquel le compte est abonné (ses _quotas_).
+> Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _quotas_ (_volumes maximaux_)** auquel le compte est abonné.
 
-> Les volumes _effectivement utilisés_ ne peuvent pas dépasser les volumes maximum de l'abonnement. Dans le cas où un changement de l'abonnement réduit a posteriori ces maximum en dessous des volumes utilisés, les volumes n'auront plus le droit de croître.
+> Les volumes _effectivement utilisés_ ne peuvent pas dépasser les quotas (volumes maximum) déclarés pour l'abonnement. Dans le cas où un changement de l'abonnement réduit a posteriori ces maximum en dessous des volumes utilisés, les volumes n'auront plus le droit de croître.
 
 ## Consommation : coût de calcul et de transfert des fichiers
 La consommation correspond à l'usage effectif de l'application quand une session d'un compte est ouverte. Elle comporte 4 lignes:
@@ -62,23 +62,23 @@ Il n'est considéré ci-après que l'estimation d'un _tarif_ basé sur la seule 
 Ce sont des ordres de grandeur, les vrais coûts sont complexes, dépendent de la localisation des serveurs, etc.
 
 Prix mensuels du stockage (abonnement)
-  - Base de Données (1GB) : 16c
-  - Storage (1GB) : 2.6c
+- Base de Données (1GB) : 16c
+- Storage (1GB) : 2.6c
 
 Prix des consommations:
-  - Lectures en base (1M): 31c
-  - Écritures en base (1M): 94c
-  - Download (1GB): 2c
+- Lectures en base (1M): 31c
+- Écritures en base (1M): 94c
+- Download (1GB): 2c
 
 ### Exemple de _tarif_ basé sur ces prix
 Les quotas sont exprimés en _nombre d'unités_ de 0 à 200 (exceptionnellement plus), afin de manipuler des ordres de grandeurs simples: 
-- 1 est un minimum réaliste (XS), 
-- 200 est un quota très important (XXL).
+- 1 est un minimum réaliste, 
+- 200 est un quota très important.
 
 #### Prix d'abonnement mensuel par _document_
 Un document est une note, un chat, une participation à un groupe. Le volume moyen est estimé à 10K par document, englobant les index et les autres documents non décomptés (les comptes, avatars, groupes, etc.).
 
-**Une _unité_ de 250 documents** correspond à un volume en base de 2.5MB: **0,04c mensuels**
+**Une _unité_ de 100 documents** correspond à un volume en base de 2.5MB: **0,02c mensuels**
 
 #### Prix d'abonnement mensuel par _volume de fichier_
 **Une _unité_ de 100MB de _Storage_** : **0,26c mensuels**

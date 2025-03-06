@@ -37,19 +37,19 @@ Il est conseillé de n'enregistrer une telle phrase que pour un objectif précis
 #### Usage 1 : mise en contact d'avatars ne se connaissant pas directement
 La _phrase de contact_ permet à un avatar A qui n'a pas connaissance de la _carte de visite_ de B de permettre à B d'ouvrir un chat avec lui A, A et B devenant après cela des contacts permanents.
 - le titulaire du compte A peut communiquer cette phrase à B rencontré dans le vrai monde mais qu'il n'a pas en _contact_ personnel. 
-- il peut aussi la communiquer dans un chat avec un contact M qui a pour B dans ses contacts pour que M la communique à B. En l'occurrence M joue un rôle de _médiateur_ entre A et B pour les mettre en contact, sans pour autant avoir un groupe en commun.
+- il peut aussi la communiquer dans un _chat_ avec un contact M qui a pour B dans ses contacts pour que M la communique à B. En l'occurrence M joue un rôle de _médiateur_ entre A et B pour les mettre en contact, sans pour autant avoir un groupe en commun.
 
 La phrase DOIT être détruite dès son office rempli afin que personne d'autre ne puisse l'utiliser pour ouvrir un chat non sollicité.
 
 #### Usage 2 : donner son accord pour muter de compte A en O ou O en A
 Muter de type de compte _Autonome_ / _Organisation_ est une opération qui a des conséquences pour l'organisation: seuls le Comptable ou un de ses _délégués_ peuvent l'exécuter.
 
-Mais ceci suppose l'accord du compte à muter: le Comptable ou son délégué doit citer la _phrase de contact_ du compte à muter valant accord, par exemple `Bon pour accord de mutation: signé Jules l'intrépide`.
+Les demandes de mutation "A <-> O" passent par un _chat_.
 
 ## Suppression d'un avatar
 Elle peut être demandée par le titulaire du compte et peut avoir des conséquences importantes:
 - perte définitive des notes personnelles de l'avatar.
-- tous les chats de l'avatar sont marqués pour les interlocuteurs comme s'adressant à un avatar _disparu_: les textes sont désormais non modifiables.
+- tous les _chats_ de l'avatar sont marqués pour les interlocuteurs comme s'adressant à un avatar _disparu_: les textes sont désormais non modifiables.
 - les participations aux groupes sont supprimées:
   - si l'avatar était _hébergeur_ du groupe, celui-ci se retrouve contraint à décroître en volume et à devoir être remplacé en tant qu'hébergeur sous peine de disparition du groupe au bout de 3 mois.
   - si l'avatar était le dernier _actif_, le groupe disparaît, ces invitations éventuellement en cours étant annulées.

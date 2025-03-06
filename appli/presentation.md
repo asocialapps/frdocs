@@ -7,26 +7,26 @@ Une organisation, association, un groupe de quelques amis ... peut décider de d
 - soit trouver un _prestataire_ qui l'accepte et dont les conditions générales de ventes, prix, éthique, etc. lui conviennent.
 - soit décider d'être son propre _prestataire_ et de déployer l'application dont le logiciel est disponible _open source_: ceci nécessite quelques compétences techniques et a minima une heure d'effort.
 
-In fine le _prestataire_ a initialisé un espace accessible par une URL comme `https://s1.monhebergeur.net` 
+In fine le _prestataire_ a initialisé un espace accessible par une URL comme `https://asocialapps.github.io/s1?monasso` 
 
-Pour se connecter à son espace, il suffit d'ouvrir dans un navigateur la page Web à cette adresse et de fournir: 
-- `monasso` : le code de son organisation enregistrée par l'hébergeur, 
-- `mabellephrasetressecrete` une phrase secrète personnelle d'au moins 24 signes.
+Pour se connecter à son compte, son titulaire ouvre dans un navigateur la page Web à cette adresse et saisit: 
+- `monasso` : le code de son organisation, mais il est pré-initialisée dans l'URL après `?`, 
+- `mabellephrasetressecrete` sa phrase secrète personnelle de connexion d'au moins 24 signes.
 
-> Derrière cette URL, un _serveur_ délivre l'application Web et gère les accès à une base centrale où les données de chaque organisation sont stockées. Jusqu'à 60 organisations étanches les unes des autres peuvent être gérées depuis une même URL, l'enregistrement d'une nouvelle organisation prenant moins d'une minute.
+> Derrière cette URL, un _serveur_ délivre l'application Web et gère les accès à une base centrale où les données de chaque organisation sont stockées. Plusieurs organisations étanches les unes des autres peuvent être gérées depuis une même URL, l'enregistrement d'une nouvelle organisation prenant moins d'une minute.
 
-> Une organisation n'est pas attachée à son prestataire initial qui peut _exporter_ les données de l'organisation pour un autre, ce qui ne prend que le temps de la copie des données.
+> Une organisation n'est PAS attachée à son prestataire initial qui peut _exporter_ les données de l'organisation pour un autre prestataire, ce qui ne prend que le temps de la copie des données.
 
 ## Les comptes et leurs avatars
 
 Avant de pouvoir accéder à l'application une personne doit créer son propre compte **sponsorisé par un autre compte**. Sponsor et sponsorisé ont convenu entre eux,
 - du nom du sponsorisé, par exemple `Charles`, qui pourra changer.
-- d'une preuve de sponsoring par une expression comme `le hibou n'est vraiement pas chouette`.
+- d'une preuve de sponsoring par une expression comme `le hibou n'est vraiment pas chouette`.
 
 Le _sponosirisé_ initie la création de son compte après avoir cité le nom de l'organisation `monasso` et la phrase preuve de sponsoring.
 
 Si le titulaire du nouveau compte accepte les conditions proposées par le sponsor, il finalise la création de son compte en déclarant sa **propre phrase secrète de connexion**.
-- elle a au moins 24 signes et reste uniquement dans la tête du titulaire, n'est enregistrée sous aucune forme nulle-part et pourra être changée à condition de pouvoir fournir celle actuelle.
+- elle a au moins 24 signes et reste uniquement dans la tête du titulaire, n'est enregistrée sous aucune forme nulle-part et pourra être changée par son titulaire à condition de pouvoir fournir celle actuelle.
 - le début de la phrase ne doit pas être le même que celui d'une phrase déjà enregistrée afin d'éviter de tomber _par hasard_ sur la phrase d'un autre compte.
 
 > La phrase secrète crypte indirectement toutes les données du compte aussi bien dans la base centrale que dans les micro bases locales de chacun des navigateurs utilisés par le compte. Un piratage des appareils des titulaires des comptes ou de la base centrale ne donnerait au _pirate_ que des informations indéchiffrables.
@@ -41,7 +41,7 @@ Un avatar,
 - a un _identifiant_ aléatoire de 12 lettres / chiffres: ce code est immuable et non interprétable.
 - a une **carte de visite** cryptée constituée,
   - d'une photo facultative,
-  - d'un court texte (son _nom / pseudo_) d'au moins 6 signes, par exemple `Charles III, roi des esturgeons et d’Écosse`.
+  - d'un court texte (son _nom / pseudo_) d'au moins 6 signes, par exemple `Charles III, roi des esturgeons et d’Écosse`. Ce texte peut en dire beaucoup plus, mais sous la seule responsabilité du titulaire.
 
 Ultérieurement le titulaire du compte peut créer des **avatars secondaires**, 
 - chacun a son identifiant et sa carte de visite. 
@@ -61,7 +61,7 @@ _Le Comptable_ **est un compte** qui a reçu de l'administrateur technique à la
   - il _partitionne_ les quotas globaux de l'application,
   - pour chaque _partition_ définie, il _délègue_ à certains comptes la capacité à répartir les quotas de la partition aux comptes.
 
-> Le **Comptable** n'a pas plus que les autres comptes les moyens cryptographiques de s'immiscer dans les notes des avatars des comptes et leurs chats: ce n'est en aucune façon un modérateur et il n'a aucun moyen d'accéder aux contenus, pas plus qu'à l'identité des avatars, sauf de ceux qu'il connaît personnellement.
+> Le **Comptable** n'a pas plus que les autres comptes les moyens cryptographiques de s'immiscer dans les notes des avatars des comptes et leurs chats: ce n'est en aucune façon un modérateur et il n'a aucun moyen d'accéder aux contenus, pas plus qu'à l'identité des avatars, sauf bien entendu de ceux qu'il connaît personnellement.
 
 ### Les comptes autonomes "A"
 Un compte _autonome_:
@@ -79,13 +79,23 @@ L'organisation supporte de facto les coûts d'abonnement et de consommation pour
 - elle lui fixe des **quotas** d'abonnement et de consommation contraignants,
 - elle peut restreindre voire bloquer le compte.
 
-Toutefois il peut être compliqué pour le Comptable de gérer les quotas de _tous_ les compte:
+Il peut être compliqué pour le Comptable de gérer les quotas de _tous_ les compte:
 - beaucoup d'organisations ont une structure décentralisée en sous-organisations géographiques ou thématiques ayant une part d'autonomie de gestion de leurs adhérents.
-- il existe aussi des structures _clanique_, où un ou quelques représentants du clan ont toute liberté pour sponsoriser de nouveaux comptes et leur distribuer des quotas. Le cas échéant un protocole, non géré par l'application, définit comment chaque clan participe aux frais d'hébergement sur la base des quotas qui lui sont attribués.  
+- il existe aussi des structures _clanique_, où un ou quelques représentants du clan ont toute liberté pour sponsoriser de nouveaux comptes et leur distribuer des quotas. Le cas échéant un protocole, non géré par l'application, définit comment chaque clan participe aux frais d'hébergement sur la base des quotas qui lui sont attribués.
 
+#### Le Comptable peut _partitionner_ ses quotas globaux d'espace et de calcul
+Il peut réserver des quotas pour l'ensemble des comptes "A".
+
+Il peut aussi créer des _partitions_ de l'espace global,
+- attribuer à chaque partition des quotas spécifiques d'espace et de calcul,
+- confier chaque partition à un ou des _délégués_, leur laissant la possibilité d'attribuer des quotas à chaque compte attachés à leur partition.
+
+### Paiements et dons
 > Un compte _augmente son solde_ en faisant parvenir des _paiements_ que le Comptable va enregistrer sans qu'il puisse faire le rapprochement entre un _paiement_ et le compte crédité. 
 
 > Un compte peut _effectuer des dons_ à d'autres comptes à condition de rester créditeur.
+
+> Un compte "O" peut vivre sans effectuer de paiements et des dons, mais il peut aussi disposer d'un solde créditeur et effectuer des dons à des comptes "A" amis.
 
 [Information détaillée à propos de la gestion des comptes](./comptes.html)
 
@@ -101,7 +111,7 @@ Toutefois il peut être compliqué pour le Comptable de gérer les quotas de _to
 - quand plusieurs fichiers portent le même _nom_ dans la note, ils sont vus comme des _révisions_ successives, qu'on peut garder, ou ne garder que la dernière, ou celles de son choix.
 
 ### Vue hiérarchique: note _parent_ d'un note
-- les notes apparaissent à l'écran sous forme hiérarchique, une note _parent_ ayant en dessous d'elle des notes _enfants_ (ou aucune).
+- les notes apparaissent à l'écran sous forme _hiérarchique_, une note _parent_ ayant en dessous d'elle des notes _enfants_ (ou aucune).
 - les notes n'ayant pas de note _parent_ apparaissent rattachées à celui des avatars du compte a qui elle appartient: cet avatar est une _racine_ de la hiérarchie des notes.
 
 > Un avatar peut créer des notes **personnelles**, les mettre à jour, les supprimer et **les indexer par des mots clés personnels**. Elles sont cryptées, comme toutes les données des comptes, et seul le titulaire du compte a, par l'intermédiaire de sa phrase secrète, la clé de cryptage apte à les décrypter.
@@ -113,14 +123,14 @@ Toutefois il peut être compliqué pour le Comptable de gérer les quotas de _to
 Un contact est _un avatar_ dont le compte connaît **la carte de visite** cryptée. 
 
 ### Contact _permanent_
-Un contact _permanent_ est établi entre deux avatars quand ils ont ouvert un _chat_ entre eux (un _chat_ ne peut pas être supprimé). La clé de la carte de visite a été échangée à la création du _chat_.
+Un contact _permanent_ est établi entre deux avatars quand ils ont ouvert un _chat_ entre eux (un _chat_ ne peut pas être supprimé, mais on peut se dispenser de voir ceux _indésirables_). La clé de la carte de visite a été échangée à la création du _chat_.
 
 ### Contact _temporaire_
-Lorsque **deux avatars sont membres d'un même groupe**, les clés de leur cartes de visites sont inscrites dans le groupe et sont ainsi accessibles à tous les membres (ayant droit d'accès aux membres). 
+Lorsque **deux avatars sont membres d'un même groupe** (voir un peu plus avant les _groupes_), les clés de leur cartes de visites sont inscrites dans le groupe et sont ainsi accessibles à tous les membres (du moins à ceux ayant droit d'accès aux membres). 
 
 **Ce contact est temporaire**, dure tant que les deux avatars sont membres du groupe.
-- si l'un des deux avatars souhaite rendre ce contact **permanent** il ouvre un _chat_ avec l'autre.
 - un tel contact _disparaît_ quand l'avatar correspondant est résilié du groupe ou disparaît.
+- si l'un des deux avatars souhaite rendre ce contact **permanent** il ouvre un _chat_ avec l'autre.
 
 > Un compte peut rester totalement isolé et n'avoir _aucun contact_ avec les autres: à la création de son compte par _sponsoring_, le sponsor comme le sponsorisé peuvent déclarer vouloir ou non **ouvrir un _chat_** entre eux (ce qui les rend _contacts mutuels permanent_).
 
@@ -129,7 +139,7 @@ Lorsque **deux avatars sont membres d'un même groupe**, les clés de leur carte
 ### Commentaire personnel et _hashtags_ attachés à ses _contacts_ 
 Ils ont pour but de faciliter le filtrage dans le répertoire de ses _contacts_. Le commentaire et les hashtags attachés à un contact, sont spécifiques du compte, lui seul peut les décrypter. La _carte de visite_ d'un contact pouvant évoluer selon la volonté de ce dernier, conserver un nom / commentaire personnel à son propos est une bonne idée.
 
-> Les _hashtags_ attribués par un compte à un contact lui permettent de le classer comme _expert_ _oubliette_ ou _ami_ et de s'en servir comme filtre du répertoire de ses contacts et récupérer par exemple tous les _expert_ sauf les _amis_ ...
+> Les _hashtags_ attribués par un compte à un contact lui permettent de le classer comme _expert_ _oubliette_ ou _ami_, de s'en servir comme filtre du répertoire de ses contacts et récupérer par exemple tous les _expert_ sauf les _ami_ ...
 
 ## "Chats" entre avatars
 
@@ -143,7 +153,7 @@ Les deux avatars peuvent écrire des textes courts:
 - le volume total des textes sur le _chat_ est limité à 5000 signes, les plus anciens étant perdus en cas de dépassement de cette limite.
 
 Une fois créé un _chat_ ne disparaît que quand les deux avatars qui le partage ont disparu.
-- pour ne pas être importuné, l'un des 2 peut _déclarer le chat indésirable_, ce qui en efface le contenu pour lui. Le _chat_ n'est plus décompte plus pour lui dans son nombre de documents. L'autre peut toujours continuer à y écrire des textes sans être certain d'être lu ... Le _chat_ n'est plus _indésirable_ dès que l'avatar qui l'a déclaré tel y écrit un texte (et compte à nouveau dans son décompte de documents).
+- pour ne pas être importuné, l'un des 2 peut _déclarer le chat indésirable_, ce qui en efface le contenu pour lui. Le _chat_ n'est plus décompte plus pour lui dans son nombre de documents. L'autre peut toujours continuer à y écrire des textes sans être certain d'être lu ... Le _chat_ cesse d'être _indésirable_ dès que l'avatar qui l'a déclaré tel y écrit un texte (et compte à nouveau dans son décompte de documents).
 - chacun peut attacher au _contact du chat_ ses propres _hashtags_ (par exemple _copain_ ou _important_ ...) que l'autre ne voit pas, et les utiliser pour filtrer ses _chats_.
 
 ### Contact par une _phrase de contact_ d'un avatar
@@ -165,7 +175,7 @@ Un avatar peut créer un **groupe** dont il sera le premier membre _actif_ et y 
 
 Un avatar connu dans un groupe peut avoir plusieurs états successifs:
 - **simple contact**: il a été inscrit comme contact du groupe le sait et peut voir la _carte de visite_ du groupe.
-- **contact invité**: un membre actif ayant pouvoir d'animateur a invité le contact à devenir membre actif. L'avatar invité voit cette invitation et s'il l'accepte deviendra membre actif, sinon il retournera à l'état de simple contact. Nul ne devient membre actif à son insu.
+- **contact invité**: un membre actif ayant pouvoir d'animateur a invité le contact à devenir membre actif. L'avatar invité voit cette invitation et s'il l'accepte deviendra membre _actif_, sinon il retournera à l'état de simple contact. Nul ne devient membre actif à son insu.
 - **membre actif**: il peut participer à la vie du groupe.
 
 Par défaut le mode d'invitation dans un groupe est **simple**: il suffit **qu'un** animateur invite un contact pour que ce dernier soit invité.
@@ -174,7 +184,7 @@ Par défaut le mode d'invitation dans un groupe est **simple**: il suffit **qu'u
 
 ### Accès aux membres et / ou aux notes
 Un membre actif _peut_ recevoir lors de son invitation deux _droits_:
-- **droit d'accès aux autres membres** et au _chat_ (ou non),
+- **droit d'accès aux autres membres** et au _chat du groupe_ (ou non),
 - **droit d'accès aux notes** en lecture, en lecture et écriture ou pas du tout.
 
 Lors de son invitation il peut aussi recevoir le **pouvoir d'animation**. S'il ne l'a pas, un membre _animateur_ peut lui conférer ce pouvoir (mais ne pourra plus lui enlever).
@@ -186,21 +196,21 @@ Lors de son invitation il peut aussi recevoir le **pouvoir d'animation**. S'il n
 En général les groupes sont créés avec le double objectif de réunir des avatars qui se connaissent mutuellement, échangent sur le chat et partagent des notes.
 
 ### Commentaire personnel et _hashtags_ attachés à un groupe
-Tout membre actif peut attacher un commentaire personnel et ses propres _hashtags_ à un groupe. Personne d'autre n'en a connaissance, son commentaire et ses _hashtags_ restent strictement privés.
+Tout membre actif peut attacher un commentaire personnel et ses propres _hashtags_ à un groupe. Personne d'autre n'en a connaissance, son commentaire et ses _hashtags_ restent strictement privés et cryptés.
 
 La recherche d'un groupe quand on est membre de beaucoup de groupes en est facilitée.
 
 ### Notes d'un groupe
-- elles sont cryptées par la clé aléatoire spécifique au groupe qui a été transmise à chaque membre lors de son invitation au groupe.
+- elles sont cryptées par la clé générée pour le groupe à sa création et qui a été transmise à chaque membre lors de son invitation au groupe.
 - hormis les membres actifs du groupe ayant droit d'accès aux notes, personne ne peut accéder aux notes du groupe.
 - quand un nouveau membre accepte une invitation au groupe avec droits d'accès aux notes, il a immédiatement accès à toutes les notes existantes du groupe. S'il redevient _simple contact_ ou perd son droit d'accès aux notes (de par sa volonté ou celle d'un _animateur_), il n'a plus accès à aucune de celles-ci (ce qui allège ses sessions).
 - pour écrire / modifier / supprimer une note du groupe, il faut avoir le droit d'accès en écriture aux notes.
-- chaque note détient la liste des membres qui y sont intervenus.
+- chaque note détient la liste des membres qui y sont intervenus en mise à jour.
 
 ### _Hashtags_ d'un membre à une note d'un groupe
-Chaque membre d'un groupe peut attacher à la note ses _propres hashtags_ que les autres membres ne sont pas en mesure de décrypter. Ceci facilite les recherches d'un compte dans ses notes, le filtrage par _hashtags_ s'effectuant sur l'ensemble des notes auxquelles le compte a accès.
+Chaque membre d'un groupe peut attacher à une note ses _propres hashtags_ que les autres membres ne sont pas en mesure de décrypter. Ceci facilite les recherches d'un compte dans ses notes, le filtrage par _hashtags_ s'effectuant sur l'ensemble des notes auxquelles le compte a accès.
 
-Par ailleurs, un _animateur_ peut attacher des _hashtags publics_ à une note: ils sont lisibles de tous les membres.
+Par ailleurs, un _animateur_ peut attacher des _hashtags publics_ à une note, lisibles de tous les membres et seulement d'eux.
 
 ### Vue hiérarchique: note de groupe _parent_ d'une autre note du même groupe
 Ceci fait apparaître visuellement à l'écran une hiérarchie.
@@ -212,7 +222,7 @@ _L'hébergeur du groupe_ est un membre qui s'est dévoué pour supporter les co�
 
 [Information détaillée à propos des groupes et de leurs notes](./notes.html)
 
-## Modes de connexion *synchronisé*, *incognito* et *avion*
+# Modes de connexion *synchronisé*, *incognito* et *avion*
 
 Pour se connecter à son compte, le titulaire d'un compte choisit sous quel **mode** sa session va s'exécuter: _synchronisé_, _avion_ ou _incognito_.
 
@@ -224,7 +234,7 @@ Une connexion ultérieure après une session synchronisée est rapide et économ
 ### Mode _avion_
 Pour que ce mode fonctionne il faut qu'une session antérieure en mode _synchronisé_ ait été exécutée dans ce navigateur pour le compte. A la connexion le titulaire du compte y voit l'état dans lequel étaient ses données à la fin de sa dernière session synchronisée dans ce navigateur. **L'application ne fonctionne qu'en lecture**.
 
-> On peut couper le réseau (le mode _avion_ sur un mobile), de façon à ce que l'ouverture de la page de l'application ne cherche même pas à vérifier si une version plus récente est disponible.
+> Avant d'appeler l'application, on peut couper le réseau (le mode _avion_ sur un mobile), de façon à ce que même l'ouverture de la page de l'application ne cherche pas à vérifier si une version plus récente est disponible.
 
 ### Mode _incognito_
 **Aucun stockage local n'est utilisé, toutes les données viennent du serveur central**, l'initialisation de la session est plus longue qu'en mode synchronisé. Aucune trace n'est laissée sur l'appareil (utile au cyber-café ou sur le mobile d'un.e ami.e).
@@ -235,22 +245,22 @@ Pour que ce mode fonctionne il faut qu'une session antérieure en mode _synchron
 
 [En savoir plus sur les modes, l'accessibilité des fichiers en mode _avion_, le _presse-papier_](./modessync.html)
 
-## Coûts d'hébergement de l'application
+# Coûts d'hébergement de l'application
 
 Le coût d'usage de l'application pour une organisation correspond aux coûts d'hébergement des données et de traitement de celles-ci. Selon les techniques et les prestataires choisis, les coûts unitaires varient mais existent dans tous les cas.
 
 ### _Base de données_ et _Storage_
-- la _bases de données_ enregistre toutes les données de l'application **SAUF** les fichiers attachés aux notes. Elle requiert des accès très rapides.
+- la _bases de données_ enregistre toutes les données de l'application **SAUF** les fichiers attachés aux notes. Elle requiert des accès rapides.
 - les fichiers attachés aux notes sont enregistrés dans un _Storage_, stockage distant ayant une gestion spécifique et économique du fait d'être soumis à peu d'accès mais de plus fort volume.
 
 Leur stockage ont des coûts unitaires très différents (variant d'un facteur de 1 à 6).
 
 ### Abonnement: coût de l'espace occupé en permanence
-L'abonnement couvre les frais fixes d'un compte: même quand il ne se connecte pas, le stockage de ses données a un coût. Il est décomposé en deux lignes de coûts correspondant à l'occupation d'espace en _base de données_ et en _storage_:
-- **Prix unitaire de stockage d'un document** multiplié par le **nombre de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels, nombre de participations actives aux groupes.
-- **Prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **volume des fichiers attachés aux notes**.
+L'abonnement couvre les frais fixes d'un compte: même quand il ne se connecte pas, le stockage de ses données a un coût. Il est décomposé en deux lignes de coûts correspondant à l'occupation d'espace forfaitaire en _base de données_ et en _storage_:
+- _Coût 1_ : **prix unitaire de stockage d'un document** multiplié par le **le nombre maximal du quota de _documents_ de l'abonnement**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels, nombre de participations actives aux groupes.
+- _Coût 2_ : **prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **le volume maximal du quota de l'abonnement des fichiers attachés aux notes**.
 
-Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _quotas_ (_volumes maximaux_)** auquel le compte est abonné.
+> Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _quotas_ (_volumes maximaux_)** auquel le compte est abonné.
 
 > Les volumes _effectivement utilisés_ ne peuvent pas dépasser les quotas (volumes maximum) déclarés pour l'abonnement. Dans le cas où un changement de l'abonnement réduit a posteriori ces maximum en dessous des volumes utilisés, les volumes n'auront plus le droit de croître.
 
@@ -273,7 +283,7 @@ Le solde d'un compte est calculé à tout instant,
 > Les tarifs peuvent changer d'un mois à l'autre, mais sont fixes dans un mois donné.
 
 Un compte peut afficher à tout instant,
-- l'état de sa comptabilité **calculée à l'instant de l'affichage**: quotas, nombre de documents et volumes de fichiers effectivement occupés, **solde courant**.
+- l'état de sa comptabilité **calculée à l'instant de l'affichage**: quotas de l'abonnement, nombre de documents et volumes de fichiers effectivement occupés, **solde courant**.
 - l'historique de l'évolution mois par mois sur les 12 derniers mois: moyennes des quotas, des consommations, coût total sur le mois (réel et facturé), débits et crédits, soldes en début et fin de mois.
 
 > L'unité monétaire interne est le _centime_ (c). Son ordre de grandeur est voisin d'un centime d'euro en appliquant des tarifs proches des coûts _de base_ des hébergements sur le marché. Chaque fournisseur a ses propres tarifs qui peuvent être significativement éloignés des coûts _de base_.
@@ -284,7 +294,7 @@ Un compte peut afficher à tout instant,
 Le principe est pour le Comptable de confier la distribution fine des quotas à des _délégués_ responsables eux-mêmes de les répartir entre les comptes qui dépendent d'eux en procédant à un _découpage en partitions_ des ressources globales dont il dispose. Chacune _partition_ est dotée de trois quotas, 
 - un quota QN de _nombre de documents_ qui ne doit pas être dépassé, 
 - un quota QV de _volume de fichiers_ qui ne doit pas être dépassé,
-- un quota QC de _coût calcul_: c'est en _centime_ le coût calcul maximal sur un mois.
+- un quota QC de _coût calcul_: c'est en _centime_ le coût calcul maximal sur un mois (calculé et moyenné sur M / M-1).
 
 Tout compte "O" est attaché à une _partition_ à son sponsoring, le Comptable seul pouvant ensuite éventuellement le basculer dans une autre _partition_.
 
@@ -300,10 +310,10 @@ Le décompte des coûts est susceptible de **lever des alertes** à chaque compt
 
 #### Coût de calcul excédant son quota (QC): ralentissements
 Les coûts de calcul relevés sur le mois en cours et le précédent sont ramenés à un _mois de 30 jours_. Il y a excès quand ce coût moyen de calcul excède le quota QC.
-- les opérations sont artificiellement ralenties par un délai d'attente d'autant plus grand que l'excès est fort.
+- les opérations sont artificiellement ralenties par un délai d'attente d'autant plus grand que l'écart avec le quota est fort.
 - les transferts de fichiers le sont également selon le même coefficient mais proportionnellement au volume du fichier.
 
-> Remarque: un compte "A" étant lui-même maître de son quota QC peut éviter les ralentissements en augmentant fortement son quota QC: ce faisant il inhibe une alerte de surconsommation de calcul qui peut s'avérer coûteuse.
+> Remarque: un compte "A" étant lui-même maître de son quota QC peut éviter les ralentissements en augmentant fortement son quota QC: ce faisant il inhibe une alerte de surconsommation de calcul qui peut s'avérer coûteuse pour lui.
 
 > Remarque: à tout instant un compte peut voir le nombre de jours estimé en solde positif en considérant la prolongation de sa situation actuelle (mêmes quotas, même consommation moyenne de calcul).
 
@@ -324,19 +334,20 @@ Le compte ne peut pas ajouter de fichiers ou remplacer un fichier par un autre d
 Le compte ne peut plus ni lire ses données, ni les mettre à jour. Toutefois il conserve les possibilités de:
 - visualiser ses alertes et sa comptabilité,
 - effectuer des versements et les enregistrer afin que le Comptable les créditent,
-- discuter sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O" de sa situation, voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
+- recevoir des dons,
+- discuter de sa situation sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O", voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
 
 ## Alerte de l'Administrateur Technique à l'organisation
 **Cette alerte porte toujours un message d'information** (_arrêt programmé ..._).
 
 Elle _peut_, soit ne porter aucune restriction, soit porter l'une de celles-ci:
 - **Espace figé**. Aucune écriture ne peut être faite, typiquement afin de procéder à une opération technique d'export, verrouillage d'une archive d'un espace ... mais peut aussi être une mesure de rétorsion.
-- **Espace clos**. L'Administrateur Technique a effacé les données de l'espace dont il ne subsiste plus que cette alerte dont le texte donne la raison et le cas échéant indique si l'espace est accessible à une autre URL.
+- **Espace clos**. L'Administrateur Technique a effacé les données de l'espace dont il ne subsiste plus que cette alerte dont le texte donne la raison et le cas échéant indique si l'espace est accessible par une autre URL.
 - **Connexions bloquées à partir d'une date d**: les comptes ne seront pas détruits à cette date mais plus aucune connexion ne pourra être faite à partir de d.
 
 ### Alerte du _Comptable_ ou de ses _délégués_ aux comptes "O"
 Le Comptable ou ses délégués peuvent inscrire une _alerte_:
-- adressée à TOUS les comptes d'un _partition_,
+- adressée à TOUS les comptes "O" d'une _partition_,
 - adressée à UN compte "O" spécifique.
 
 Chaque compte "O" est en conséquence potentiellement la cible de deux alertes.
@@ -352,7 +363,7 @@ Le compte ne peut plus ni lire ses données, ni les mettre à jour.
 Dans tous les cas il conserve toutefois les possibilités de:
 - visualiser ses alertes et sa comptabilité,
 - effectuer des versements et les enregistrer afin que le Comptable les créditent,
-- discuter sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O" de sa situation, voire de bénéficier d'un _don_ (à rembourser plus tard le cas échéant).
+- discuter de sa situation sur les _chats d'urgence_ avec le Comptable et ses _délégués_ pour un compte "O".
 
 ## Date limite de vie d'un compte
 Cette date, toujours le dernier jour d'un mois, signifie que le jour suivant le compte sera irrémédiablement détruit sans possibilité de récupération.
@@ -361,7 +372,7 @@ Cette date est fixée lorsqu'un compte se connecte: en conséquence le compte en
 
 Quand le compte **N'EST PAS en ACCÈS RESTREINT** elle est fixée à 12 mois plus tard. En d'autres termes le compte a toujours un an de vie après sa dernière connexion.
 
-Quand le compte **EST en ACCÈS RESTREINT** elle est fixée à 6 mois après que le compte a basculé en ACCÈS RESTREINT.
+Quand le compte **EST en ACCÈS RESTREINT** elle est fixée à 6 mois après le jour du basculement du compte en ACCÈS RESTREINT.
 
 A chaque connexion un compte voit la date limite de vie de son compte et le nombre de jours à partir du jour courant. Si ce nombre est faible (inférieur à 30), l'alerte est **rouge**.
 
@@ -382,7 +393,7 @@ Quand le Comptable reçoit un paiement avec un numéro qui l’anonymise, il enr
 
 > Les _tickets_ étant enregistrés cryptés par la clé des comptes, aucune corrélation ne peut être faite entre la source d'un _paiement_ et le compte qui en bénéficie.
 
-## Statistiques partagées entre le Comptable et l'Administrateur Technique
+# Statistiques partagées entre le Comptable et l'Administrateur Technique
 
 Tous deux ont besoin d'éléments statistiques de consommation afin d'ajuster si nécessaire les bases de facturation en fonction d'un usage réel.
 
@@ -390,28 +401,28 @@ Ces statistiques sont calculées mensuellement et sont des fichiers CSV.
 - elles sont anonymes: les identifiants des comptes concernés n'y figurent pas.
 - pour un mois donné elles sont immuables, calculées à un moment où le mois étant terminé, les compteurs mensuels ne sont plus susceptibles de changer.
 
-**Abonnement / consommation des comptes**
+**Abonnement / consommation des comptes**: cette statistique est importante pour l'Administrateur Technique pour lui donner une vue comparative des quotas (_abonnements_) et des espaces effectivement occupés.
 
-**Archive des _tickets_ de paiement des comptes "A"**
+**Archive des _tickets_ de paiement des comptes "A"**: cette statistique n'est accessible que par le Comptable, l'Administrateur Technnique n'en a cure.
 
 [Détail des statistiques](./stats.html)
 
-## Gestion des _espaces_
+# Gestion des _espaces_
 
-**L'administrateur technique** d'un site peut y héberger techniquement jusqu'à 60 **espaces**.
+**L'administrateur technique** d'un site peut y héberger techniquement plusieurs **espaces / organisations**.
 
-Tout ce qui précède se rapporte à UN espace et les utilisateurs n'ont aucune perception des autres espaces hébergés par le même serveur technique.
-- dans la base de données, les informations sont partitionnées.
+Tout ce qui précède se rapporte à UN espace et les utilisateurs d'une organisation n'ont aucune perception des autres espaces hébergés pour d'autres organisations par les mêmes services techniques.
+- dans la base de données, les informations sont partitionnées par nom de l'organisation.
 - dans l'espace de stockage des fichiers, des sous-espaces sont séparés par nom de l'organisation.
 
 > Certaines organisations peuvent souhaiter avoir plus d'un espace pour elle: par exemple un espace de _production_, un espace de _démonstration / training_, un espace _archive récente_ ...
 
-L'administrateur technique a la possibilité d'ouvrir _instantanément_ un nouvel espace pour une organisation en faisant la demande. 
-- Le Comptable et l'administrateur technique se sont mis d'accord sur le volume utilisable et la participation aux frais d'hébergement.
-- Cette ouverture crée une phrase de _sponsoring_ à destination du Comptable de l'organisation, 
+L'Administrateur Technique a la possibilité d'ouvrir _instantanément_ un nouvel espace pour une organisation en faisant la demande. 
+- Le Comptable et l'Administrateur Technique se sont mis d'accord sur le volume utilisable et la participation aux frais d'hébergement.
+- Cette ouverture crée une phrase de _sponsoring_ à destination du Comptable de la nouvelle organisation, 
 - Le Comptable créé son compte en utilisant cette phrase de _sponsoring_ et en fixant sa phrase secrète.
 
-_Rappel_; l'administrateur technique peut,
+_Rappel_; l'Administrateur Technique peut,
 - émettre une notification d'information visible de tous les comptes,
 - interdire toute connexion à partir d'une date donnée,
 - bloquer l'espace de l'organisation en _lecture seule_,
