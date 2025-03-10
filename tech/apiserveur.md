@@ -290,37 +290,37 @@ POST `/pubsub/...`
 
 ### Dans `src/operations3.mjs`
 
-#### EchoTexte: Echo du texte envoyé
+#### EchoTexte: Écho du texte envoyé
 
     to: { t: 'int', min: 0, max: 10 },
     texte: { t: 'string' }
 
 Retour:
-- echo : texte d'entrée retourné
+- `echo` : texte d'entrée retourné.
 
 #### ErreurFonc: Erreur fonctionnelle simulée du texte envoyé
 
     to: { t: 'int', min: 0, max: 10 },
     texte: { t: 'string' }
 
-Exception: F_SRV, 10
+Exception: A_SRV, 10
 
 #### PingDB: Test d'accès à la base - GET
 Insère un item de ping dans la table singletons/1
 
 Retour:
-- un string avec les date-heures de ping (le précédent et celui posé)
+- un `text/plain` avec les date-heures de ping (le précédent et celui posé).
 
 #### GetEspaces : pour admin seulement, retourne tous les rows espaces
 Retour:
-- espaces : array de row espaces
+- `espaces` : array de rows `espaces`.
 
 #### GetPub: retourne la clé RSA publique d'un avatar
 
     id: { t: 'ida' } // id de l'avatar
 
 Retour:
-- pub: clé RSA
+- `pub`: clé RSA publique de l'avatar.
 
 #### GetPubOrg: retourne la clé RSA publique d'un avatar NON authentifié
 
@@ -328,7 +328,7 @@ Retour:
     id: { t: 'ida' }  // id de l'avatar
 
 Retour:
-- pub: clé RSA
+- `pub`: clé RSA publique.
 
 #### GetSponsoring : obtention d'un sponsoring par le hash de sa phrase
 
@@ -337,7 +337,7 @@ Retour:
     hTC: { t: 'ids' } // hash de la phrase de sponsoring complète
 
 Retour:
-- rowSponsoring s'il existe
+- `rowSponsoring` s'il existe
 
 #### ExistePhrase1: Recherche hash de phrase de connexion
 
@@ -345,7 +345,7 @@ Retour:
   hps1: { t: 'ids' } // hash9 du PBKFD de la phrase de contact réduite
 
 Retour:
-- existe : true si le hash de la phrase existe
+- `existe` : `true` si le hash de la phrase existe.
 
 #### ExistePhrase: Recherche hash de phrase
 
@@ -355,11 +355,11 @@ Retour:
     hps1: { t: 'ids' } // hash9 du PBKFD de la phrase de contact réduite
 
 Retour:
-- existe : true si le hash de la phrase existe
+- `existe` : `true` si le hash de la phrase existe.
 
-#### SyncSp - synchronisation sur ouverture d'une session à l'acceptation d'un sponsoring
+#### AcceptationSponsoring - synchronisation sur ouverture d'une session à l'acceptation d'un sponsoring
 
-    subJSON: { t: 'string' }, // subscription de la session
+    org: { t: 'org' }, // organisation
     idsp: { t: 'ida' }, // identifiant du sponsor
     idssp: { t: 'ids' }, // identifiant du sponsoring
     id: { t: 'ida' }, // id du compte sponsorisé à créer
@@ -386,12 +386,7 @@ Retour:
     htK: { t: 'u8' }, // hashtag relatif au sponsor
     txK: { t: 'u8' } // texte relatif au sponsor
 
-Retour: 
-- rowEspace
-- rowCompte
-- rowCompti
-- rowAvater 
-- rowChat si la confidentialité n'a pas été requise
+Retour:
 
 #### RefusSponsoring: Rejet d'une proposition de sponsoring
 
@@ -403,48 +398,59 @@ Retour:
 
 #### GetSynthese : retourne la synthèse de l'espace ns ou courant
 
-      ns: { t: 'ns', n: true } // id de l'espace (pour admin seulement, sinon c'est celui de l'espace courant)
+    org: { t: 'org', n: true } // id de l'espace (pour admin seulement, sinon c'est celui de l'espace courant)
 
 Retour:
-- rowSynthese
+- `rowSynthese`
 
 #### GetPartition : retourne une partition
 
     id: { t: 'idp', n: true } // id de la partition
 
 Retour:
-- rowPartition
+- `rowPartition`
 
 #### GetEspace : retourne certaines propriétés de l'espace
 
-    ns: { t: 'ns', n: true } // id de l'espace (pour admin seulement, sinon c'est celui de l'espace courant)
+Et enregistre la notification éventuelle dans la compta du demandeur.
 
 Retour:
 - rowEspace s'il existe
 
+
 #### Sync : opération générique de synchronisation d'une session cliente
 
-    subJSON: { t: 'string', n: true }, // subscription de la session
-    dataSync: { t: 'u8', n: true }, // sérialisation de l'état de synchro de la session
-    // null : C'EST UNE PREMIERE CONNEXION - Création du DataSync
-    // recherche des versions "base" de TOUS les sous-arbres du périmètre, inscription en DataSync
-    lids: { t: 'lids', n: true }, // liste des ids des sous-arbres à recharger (dataSync n'est pas null)
-    full: { t: 'bool', n: true } // si true, revérifie tout le périmètre
+      subJSON: { t: 'string', n: true }, // subscription de la session
+      nhb: { t: 'int', n: true}, // numéro de HB pour un login / relogin
+      nbIter: { t: 'int' },
+      dataSync: { t: 'u8', n: true }, // sérialisation de l'état de synchro de la session
+      // null : C'EST UNE PREMIERE CONNEXION - Création du DataSync
+      // recherche des versions "base" de TOUS les sous-arbres du périmètre, inscription en DataSync
+      lids: { t: 'lids', n: true }, // liste des ids des sous-arbres à recharger (dataSync n'est pas null)
+      full: { t: 'bool', n: true } // si true, revérifie tout le périmètre
 
-LE PERIMETRE est mis à jour: DataSync aligné OU créé avec les avatars / groupes tirés du compte.
+
+LE PÉRIMÈTRE est mis à jour: `DataSync` aligné OU créé avec les avatars / groupes tirés du compte.
 
 Retour:
-- datasync
+- `datasync`
+- `rowGroupes rowMembres rowChatgrs`
+- `rowNotes`
+- `rowAvatars rowChats rowSponsorings rowTickets`
+- `rowEspace tarifs`
+- `rowCompti rowInvit rowCompte`
+
+#### Adq : cette opération ne fait rien mais force le retour du record `adq`
 
 #### SetEspaceQuotas: Déclaration des quotas globaux de l'espace par l'administrateur technique
 
-    ns: { t: 'ns' }, // id de l'espace modifié
+    org: { t: 'org' }, // id de l'espace modifié
     quotas: { t: 'q' } // quotas globaux
 
 #### SetNotifE : déclaration d'une notification à un espace par l'administrateur
 
-    ns: { t: 'ns' }, // id de l'espace notifié
-    ntf: { t: 'ntf' } // sérialisation de l'objet notif, cryptée par la clé du comptable de l'espace. Cette clé étant publique, le cryptage est symbolique et vise seulement à éviter une lecture simple en base
+    org: { t: 'org' }, // id de l'espace notifié
+    ntf: { t: 'ntf' } // sérialisation de l'objet `notif`, cryptée par la clé du comptable de l'espace. Cette clé étant publique, le cryptage est symbolique et vise seulement à éviter une lecture simple en base
 
 #### GetNotifC : obtention de la notification d'un compte
 Réservée au comptable et aux délégués de la partition du compte
@@ -452,11 +458,10 @@ Réservée au comptable et aux délégués de la partition du compte
     id: { t: 'ida' } // id du compte dont on cherche la notification
 
 Retour:
-- notif
+- `notif`
 
 #### CreationEspace : création d'un nouvel espace
 
-    ns: { t: 'ns' }, // ID de l'espace [0-9][a-z][A-Z]
     org: { t: 'org' }, // code de l'organisation
     TC: { t: 'u8' }, // PBKFD de la phrase de sponsoring du Comptable par l'AT
     hTC: { t: 'ids' } // hash de TC
@@ -465,13 +470,12 @@ Traitement ssi:
 - soit espace n'existe pas, 
 - soit espace existe et a un `hTC` : re-création avec une nouvelle phrase de sponsoring.
 
-Création des rows espace, synthese
+Création des rows `espaces`, `synthese`
 - génération de la `cleE` de l'espace: -> `cleET` (par TC) et `cleES` (par clé système).
 - stocke dans l'espace: `hTC cleES cleET`. Il est _à demi_ créé, son Comptable n'a pas encore crée son compte.
 
 #### MajSponsEspace : Changement de la phrase de contact du Comptable
 
-    ns: { t: 'ns' }, // ID de l'espace [0-9][a-z][A-Z]
     org: { t: 'org' }, // code de l'organisation
     TC: { t: 'u8' }, // PBKFD de la phrase de sponsoring du Comptable par l'AT
     hTC: { t: 'ids' } // hash de TC
@@ -496,8 +500,8 @@ Création des rows espace, synthese
       // code : code / commentaire court de convenance attribué par le Comptable
 
 Création des rows:
-- partition : primitive, avec le Comptable comme premier participant et délégué
-- compte / compti / compta, avatar du Comptable
+- `partitions` : primitive, avec le Comptable comme premier participant et délégué
+- `comptes comptis comptas avatars` du Comptable
 
 ### Dans `src/operations4.mjs`
 
@@ -513,22 +517,26 @@ Pour avoir le format _row_ une propriété _nom a été ajoutée :
 
     { _nom: 'avatars', id ... }
 
-Ce format _row_ est celui utilisé entre session UI et serveur, dans les arguments d'opérations et en synchronisation.
+Ce format _row_ est celui utilisé entre session Web et serveur, dans les arguments d'opérations et en synchronisation.
 
 #### Format _compilé_
 Les attributs _data_ contiennent toutes les propriétés sérialisées, celles externalisées `id v ...` et celles internes. 
 
-- la fonction `avatar = compile(row)` désérialise le contenu de _data_ d'un objet row et retourne une instance `Avatar` de la classe correspondant au nom (par exemple `Avatars` qui hérite de la classe `GenDoc`) avec les attributs externalisés `id v` et ceux internes sérialisés dans _data_. Si _data_ est `null`, il est reconstitué avec les seules propriétés externalisées et la propriété `_zombi` à `true`. Le serveur peut effectuer des calculs depuis tous les attributs.
-- la méthode `row = avatar.toRow()` reconstitue un objet au format _row_ depuis une instance `avatar`.
+La fonction `avatar = compile(row)` désérialise le contenu de _data_ d'un objet row et retourne une instance `Avatar` de la classe correspondant au nom (par exemple `Avatars` qui hérite de la classe `GenDoc`) avec les attributs externalisés `id v` et ceux internes sérialisés dans _data_.
+  - dans le cas de `versions`, _data_ est reconstitué avec les seules propriétés externalisées.
+- 
+La méthode `row = avatar.toData()` reconstitue un objet _data_ sérialisé depuis une instance `avatar`. Elle est utilisée pour exporter une base.
 
-En session UI le même principe est adopté avec deux différences : 
+La méthode `avatar.toShortData(op)` est invoquée par l'opération `Sync` et retourne un _data_ dont certains attributs peuvent être omis selon le compte qui a sollicité l'opération `op`.
+
+En session Web le même principe est adopté avec deux différences : 
 - `compile()` sur le serveur est **synchrone et générique**.
 - en session `async compile()` est écrite pour chaque classe : les méthodes effectuent des opérations de cryptage / décryptage asynchrones et de calculs de propriétés complémentaires spécifiques de chaque classe de document.
 - en session il n'y a pas d'équivalent à `toRow()`. 
 
 Sur le serveur, le _data_ est crypté par la _clé du site_ fixée par l'administrateur:
 - _data_ est décrypté après lecteur de la base,
-- _data_ est encrypté avant écriture de la base.
+- _data_ est encrypté avant écriture sur la base.
 
 ### Opérations authentifiées de création de compte et connexion
 **Remarques:**
