@@ -3,6 +3,8 @@ layout: page
 title: Design des "serveurs", leur API
 ---
 
+**EN REVISION  cette documentation n'est pas totalement alignée avec le code actuel**
+
 Ce design a été conçu afin de pouvoir opter entre plusieurs schémas de déploiement selon l'option de configuration choisie:
 - un serveur HTTP unique assurant les services OP+PUBSUB,
 - des serveurs ou des instances de Cloud Function assurant le service OP,
@@ -15,11 +17,11 @@ Les sources sont hébergés dans github sous le nom de projet `asocial-srv`
 - `node.js` (donc `npm`) par `nvm`, 
 - `yarn`
 - `SQLite` : `sqlite(.exe)` est utilisé pour effectuer des backup / restore
-- `DBBrowser for SQLite`  pour charger le schémas, exécuter des scripts, parcourir les tables ...
+- `DBBrowser for SQLite`  pour charger le schéma, exécuter des scripts, parcourir les tables ...
 - `VSCode`
 
-- `firebase CLI` : pour les tests en Firestore / Storage de GCP
-- `minio` : pour les tests S3
+- `firebase CLI` : pour les tests en Firestore / Storage de GCP.
+- `minio` : pour les tests S3.
 
 ## Structure du folder de développement
 `src/*`
@@ -35,42 +37,51 @@ Les sources sont hébergés dans github sous le nom de projet `asocial-srv`
 - amorce du service PUBSUB quand il est géré en _Cloud function_.
 
 **Folders / fichiers liés à VSCode**
-- `.vscode .yarn .editorconfig .eslintignore .eslintrc.cjs`
+- `.vscode .yarn .yarnrc.yml .editorconfig .eslintignore .eslintrc.cjs`
 
 **Folders / fichiers de données de test**
 - `keys`: **hors git**, contient le certificat HTTPS du serveur en test `fullchain.pem privkey.pem` renouvelés assez fréquemment.
-- `emulators/*`: sauvegarde des états internes des exécution d'émulation Firebase / Storage (GCP)
-- `fsstorage/* fsstorageb/*`: storage de test en File-System
+- `fsstoragea/* fsstorageb/*`: storage de test en File-System.
 - `sqlite`: base de données de test SqLite:
   - `schema.sql` : script de création d'initialisation de la base.
   - `delete.sql` : script de reset des tables.
-  - `test.db3` et 2 fichiers `wal` associés
-  - `test1.bk test2.bk ...` : backups de la base dans des états privilégiés
-  - `bk.sh bk.cmd` : shell scripts de backups de la base courante en `testX.bk`
-  - `rst.sh rst.cmd` : shell scripts de restauration d'un textX.bk sur la base courante.
+  - `testa.db3 testb.db3` et 2 fichiers `wal` associés, bases de 2 environnements de test en sqlite.
+  - `test1a.bk test2a.bk ...` : backups de la base de l'envrionnement 'a' dans des états privilégiés '1' et '2'
+  - `bkp.sh bkp.ps1` : shell scripts de backups de la base courante en `testXY.bk`
+  - `rst.sh rst.ps1` : shell scripts de restauration d'un textXY.bk sur la base courante.
 
-**Fichiers liés au test / déploiement de Firestore**
+`emulators/` : **Fichiers liés au test / déploiement de Firestore**
+- `bk1/* bk2/*`: sauvegardes des états internes des exécutions d'émulation Firebase / Storage (GCP).
+- `.firebaserc` : afin que le client Firebase n'exige pas le code du projet.
 - `firebase.json` : configuration de test local
 - `firebase-debug.log ui-debug.log`
-- `firestore.indexes.json` : index Firestore
-- `firestore.rules` : droits d'accès
+- `firestore.indexes.json` : index Firestore (source).
+- `firestore.indexes.EXP.json` : index Firestore _exporté_ de la base réelle.
+- `firestore.rules` : droits d'accès à Firestore.
+- `storage.rules` : droits d'accès au Storage.
 
+`gae/` : **Fichiers pour le déploiement en GAE**
+- `.gcloudignore` : fichiers que gcloud ne doit pas importer lors du déploiement.
+- `app.yaml` : descriptif du déploiement de l'application en GAE.
+- `config.mjs` : configuration pour GAE (issu de src/config.mjs).
+- `cron.yaml` : condition de lancement du GC quotidien.
+- `depl.ps1 depl.sh` : scripts de recopie de fichiers dans le folder de de déploiement GAE.
 
 **Fichier de configuration de minio pour tests S3 locaux**
 - `minio.json`
 
 **Autres folders / fichiers**
 - `node_modules/*`
-- `.gitignore` : fichiers à ne pas gérer dans git
+- `.gitignore` : fichiers à ne pas gérer dans git;
 - `package.json`
 - `yarn.lock`
-- `webpack.config.mjs` : pour génération d'un distribuable
+- `webpack.config.mjs` : pour génération d'un distribuable.
 - `README.md`
-- `etc/*` : quelques fichiers temporaires pour mémoire
-- `depl.sh ...` : shell scripts d'aide au déploiements.
+- `etc/*` : quelques fichiers de diverses utilités (dont `minio.json`).
+- `tmp/` : folder temporaire de convenance..
 
 ## Modules du serveur
-### Configuration: `src/config.mjs src/icon.mjs keys.json src/genicon.mjs`
+### Configuration: `src/config.mjs src/secret.mjs keys.json src/gensecret.mjs`
 La configuration _de base_ (options par défaut, mais incomplète) est inscrite dans `src/config.mjs`.
 
 Elle est surchargée à l'exécution par la configuration spécifique donnée par l'administrateur technique exprimée dans `keys.json` qui contient:
@@ -80,17 +91,17 @@ Elle est surchargée à l'exécution par la configuration spécifique donnée pa
 - les clés publique / privée VAPID de notification web-push.
 
 En conséquence en raison de la confidentialité requise pour ces données sensibles, `keys.json` n'est pas disponible dans le dépôt git du serveur.
-- en développement / déploiement, ce fichier est _crypté_ et devient le fichier `src/icon.mjs`
+- en développement / déploiement, ce fichier est _crypté_ et devient le fichier `src/secret.mjs`
 - au lancement de l'application serveur, `config.mjs` importe ce fichier, en décrypte le contenu et installe toutes ses entrées dans l'objet `config` du module `config.mjs`
 - l'objet `config` est importé ensuite dans les autres modules en ayant besoin.
 
-Le cryptage de `keys.json` en `src/icon.mjs` est assuré par la commande :
+Le cryptage de `keys.json` en `src/secret.mjs` est assuré par la commande :
 
-    node src/genicon.mjs
+    node src/gensecret.mjs
 
 ### Utilitaires
 `src/api.mjs`
-- module comprenant des constantes et des classes / fonctions utilitaires devant être strictement identiques entre le serveut et l'application Web.
+- module comprenant des constantes et des classes / fonctions utilitaires devant être strictement identiques entre le serveur et l'application Web.
 
 `src/base64.mjs`
 - module lui aussi identique en application Web et serveur, principalement pour uniformité d'API utilisé dans d'autres modules(l'application Web n'a pas accès à node).
@@ -100,9 +111,6 @@ Le cryptage de `keys.json` en `src/icon.mjs` est assuré par la commande :
 
 `src/util.mjs`
 - fonctions utilitaires diverses (dont encryption).
-
-`src/sendgrid.mjs`
-- fonction de post d'un mail d'alerte par l'API-HTTP de SendGrid.
 
 ### Module d'accès à la base de données
 Les modules présentent exactement le même API externe: les autres modules ignorent quelle implémentation est utilisée, le choix étant fixé à la configuration.
@@ -117,8 +125,8 @@ Les modules présentent exactement le même API externe: les autres modules igno
 
 ### Outil en CLI
 `src/tools.mjs`
-- propose les commandes: export-db export-fs purge-db purge-fs
-- la commande vapid génère un couple de clé publique / privée VAPID pour le push-web. La clé publique est à communiquer à la configuration de l'application Web.
+- propose les commandes: `export-db export-fs purge-db purge-fs`
+- la commande `vapid` génère un couple de clé publique / privée VAPID pour le push-web. La clé publique est à communiquer à la configuration de l'application Web.
 
 ### Module du service PUBSUB
 `src/pubsub.mjs`
@@ -128,12 +136,12 @@ Les modules présentent exactement le même API externe: les autres modules igno
 
 ### Amorce des _serveurs_ et _cloud functions_
 `src/server.js`
-- amorce d'un _serveur_ assurant les services OP+PUBSUB
+- amorce d'un _serveur_ assurant les services OP+PUBSUB.
 
 `index.mjs`
 - amorce _Cloud function_ d'un service OP seul.
 
-Ces deux amorces importent src/cfgexpress.mjs qui configure express pour les URLs d'entrée.
+Ces deux amorces importent `src/cfgexpress.mjs` qui configure express pour les URLs d'entrée.
 
 `src/pubsub.js`
 - amorce d'un _serveur_ n'assurant que le service PUBSUB.
@@ -141,21 +149,21 @@ Ces deux amorces importent src/cfgexpress.mjs qui configure express pour les URL
 `index2.mjs`
 - amorce _Cloud function_ d'un service PUBSUB seul.
 
-Ces deux amorces importent src/cfgexpress2.mjs qui configure express pour les seules URLs d'entrée du service PUBSUB.
+Ces deux amorces importent `src/cfgexpress2.mjs` qui configure express pour les seules URLs d'entrée du service PUBSUB.
 
 `src/cfgexpress.mjs`
-- configure les URLs d'entrée
-- l'URL /op/... invoque une fonction operation qui,
-  - instancie un objet de classe Operation correspondant à l'opération souhaitée,
-  - l'initialise
-  - invoque sa méthode run(args, dbp, storage),
+- configure les URLs d'entrée.
+- l'URL `/op/...` invoque une fonction operation qui,
+  - instancie un objet de classe `Operation` correspondant à l'opération souhaitée,
+  - l'initialise,
+  - invoque sa méthode `run(args, dbp, storage)`,
     - arguments de la requête, providers d'accès à la base et provider du storage 
   - retourne son résultat comme retour du POST de la requête qui l'a déclenché,
   - récupère ses exceptions et gère le retour correspondant de la requête.
 
 `src/cfgexpress2.mjs`
 - configure les URLs d'entrée
-- l'URL /pubsub/... invoque la fonction pubsub de notif.mjs.
+- l'URL `/pubsub/...` invoque la fonction pubsub de `notif.mjs`.
 
 ### Service PUBSUB: module `src/notif.mjs`
 Ce module expose trois entrées:
@@ -176,16 +184,15 @@ Ainsi vu du service OP, le fait que PUBSUB soit ou non hébergé dans le même s
 Les commentaires et le code de `notif.mjs` sont suffisants pour le comprendre (400 lignes de code).
 
 ### Les 5 modules du service OP
-`src/modele.mjs` : documentation détaillée ci-après
-- gestion d'une mémoire cache des documents espaces,
-- gestion d'une mémoire cache des documents majeurs,
-- classe Operation
-  - gestion d'une mémoire cache des documents créés / accédés au cours d'UNE opération
-  - gestion des phases d'exécution de l'opération: authentification, phase 1, phase 2 transactionnelle, phase 3, fin d'opération.
+`src/modele.mjs` : documentation détaillée ci-après:
+- classe `Cache` : gestion d'une mémoire cache des documents majeurs.
+- classe `TrLog` : gère l'objet de communication d'une opération au service PUBSUB.
+- classe `GD` : pour chaque opération un objet de classe GD est un gestionnaire d'une mémoire cache des documents lus et modifiés par l'opération AVANT son commit.
+- classe `Operation` : gestion des phases d'exécution de l'opération: authentification, phase 1, phase 2 transactionnelle, phase 3, fin d'opération.
 
 `src/gendoc.mjs`
-- une classe Document (générique) à des méthodes applicables à tous les documents.
-- chaque sous-classe correspond à un Document et comporte les méthodes de traitement spécifiques associés.
+- une classe `Document` (générique) à des méthodes applicables à tous les documents.
+- chaque sous-classe correspond à un `Document` et comporte les méthodes de traitement spécifiques associés.
 - les commentaires dans le code sont suffisants pour la compréhension.
 
 `src/taches.mjs`
@@ -211,11 +218,8 @@ La logique applicative est répartie entre:
 Les opérations sont invoquées sur l'URL du serveur : `https://.../op/MonOp1`
 - **GET** : le vecteur des arguments nommés sont dans le queryString :
   `../op/MonOp1&arg1=v1&arg2=v2 ...`
-  Ils se retrouvent à disposition dans l'opération dans l'objet `args` :
-  { **arg1**: v1, arg2: v2 }
-- **POST** : le body de la requête est la sérialisation de l'array `[args, apitk]` :
-  - `args` : `{ arg1: v1, arg2: v2 ... }`
-  - `apitk` : string donnant l'autorisation du client à utiliser l'API. Cette information figure en configuration du serveur et côté client dans `quasar.config.js / build / env / APITK` qui a été forcée lors du build webpack de l'application UI.
+  Ils se retrouvent à disposition dans l'opération dans l'objet `{ arg1: v1, arg2: v2 }`
+- **POST** : le body de la requête est la sérialisation de `{ arg1: v1, arg2: v2 ... }`
 
 ### `args.token` : le jeton d'authentification du compte
 Requis dans la quasi totalité des requêtes ce jeton est formé par la sérialisation de la map `{ sessionId, shax, org, hps1 }`:
@@ -224,9 +228,7 @@ Requis dans la quasi totalité des requêtes ce jeton est formé par la sériali
 - `shax` : SHA256 du PBKFD de la phrase secrète.
 - `hps1` : Hash (sur un entier _safe_ en Javascript) du SHA256 de l'extrait de la phrase secrète.
 
-> Remarque: le code `ns` ne figure pas en tête de `hps1`. A la connexion d'un compte celui-ci connaît son organisation pas son `ns`, il le récupère en retour, le serveur ayant lui la correspondance entre tous codes `org` et `ns`.
-
-L'extrait d'une phrase secrète consiste à prendre certains bytes du début de la représentation en UTF-8 de la phrase complète.
+L'extrait d'une phrase secrète consiste à prendre les 12 premiers caractères de la phrase complète.
 
 ### Headers requis
 - `origin` : site Web d'où l'application Web a été chargée. Au cas ou `origin` ne peut pas être obtenu, c'est `referer` qui est considéré. Les origines autorisées sont listées dans `config.mjs`.
@@ -244,7 +246,6 @@ L'extrait d'une phrase secrète consiste à prendre certains bytes du début de 
 - autre statuts (500, 0 ...) : une exception `AppExc` est générée (E_SRV, 0, ex.message)
 
 #### Retour OK d'un GET
-- requête `/fs` : retour 'true' si le serveur implémente Firestore, 'false' s'il implémente SQL (synchronisation par WebSocket).
 - requêtes `/op/yo` et `/op/yoyo` : texte. 
   - `yo` est traitée _avant_ contrôle de l'origine et retourne `yo`.
   - `yoyo` est traitée _après_ contrôle de l'origine et retourne `yoyo`.
@@ -253,16 +254,16 @@ L'extrait d'une phrase secrète consiste à prendre certains bytes du début de 
 #### Retour OK d'un POST
 Le résultat binaire est désérialisé, on en obtient une map dont les éléments sont :
 - de manière générique :
-  - `dh` : le `getTime` de l'exécution de la transaction,
-  - `sessionId` : la valeur de `sessionId` passée dans le token en argument ou 666.
+  - `adq` : le record de synthèse de comptabilité après l'opération.
+  - `trLog` : le record de notification web-push contenant les indications de mises à jour du périmètre du compte.
+  - `nhb` :  c'est le couple { sessionId, nhb } :
+    - `sessionId` passé dans le token en argument.
+    - `nhb` : numéro de _heartbeat_ courant dans le serveur PUBSUB pour vérification de séquence.
 - les autres termes sont spécifiques du _retour_ de chaque opération quand il y en a.
 
 ### Synthèse des URLs traitées
 OPTIONS `/*`
 - toutes les URLs sont concernées. Ne retourne rien mais est systématiquement invoquée par les browsers pour tester les accès cross-origin.
-
-GET `/fs`
-- Retour 'true' si le serveur implémente Firestore, 'false' s'il implémente SQL. Ceci évite dans le code de l'application d'avoir à configurer si la synchronisation est de type SQL (par WebSoket) ou Firestore, la découverte se faisant en runtime.
 
 GET `/favicon.ico`
 - retourne la favicon de l'application spécifiée en configuration.
@@ -273,16 +274,6 @@ GET `/robots.txt`
 GET `/ping`
 - retourne en string la date et l'heure UTC.
 
-GET `/`
-- en déploiement mono-serveur et GAE, redirige vers `/app/index.html`
-
-GET `/app/...`
-- en déploiement mono-serveur et GAE, ce sont les URLs de l'application UI.
-
-GET `/www/...`
-- en déploiement mono-serveur et GAE, ce sont les URLs du site Web statique.
-- pour des raisons de relativité d'URLs, `/www` renvoie sur `/www/index.html` qui est une redirection vers `/www/home.html`, la véritable entrée du site statique.
-
 GET `/storage/...`
 - utilisé pour télécharger un fichier quand le provider de storage est `fs` (ou `gc` en mode simulé). Retourne le fichier crypté en binaire `application/octet-stream`.
 
@@ -291,6 +282,9 @@ PUT `/storage/...`
 
 POST `/op/...`
 - les `opérations` de l'application détaillées ci-après.
+
+POST `/pubsub/...`
+- les opérations de PUBSUB quand elles parviennent en HTTP.
 
 ## Opérations `/op/...`
 
