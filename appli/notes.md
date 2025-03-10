@@ -12,13 +12,13 @@ title: Notes personnelles
 
 ### Vue hiérarchique: note _parent_ d'un note
 - les notes apparaissent à l'écran sous forme hiérarchique, une note _parent_ ayant en dessous d'elle des notes _enfants_ (ou aucune).
-- les notes n'ayant pas de note _parent_ apparaissent rattachées à celui des avatars du compte a qui elle appartient: cet avatar est une _racine_ de la hiérarchie des notes.
+- une note n'ayant pas de note _parent_ apparaît rattachée à celui des avatars du compte (ou du groupe) a qui elle appartient: cet avatar est une _racine_ de la hiérarchie des notes.
 
 > Un avatar peut créer des notes **personnelles**, les mettre à jour, les supprimer et **les indexer par des mots clés personnels**. Elles sont cryptées, comme toutes les données des comptes, et seul le titulaire du compte a, par l'intermédiaire de sa phrase secrète, la clé de cryptage apte à les décrypter.
 
 ### Informations à propos d'un fichiers attaché à une note
 Pour chaque fichier il est enregistré :
-- son identifiant aléatoire.
+- son identifiant généré.
 - son **nom** : comme un _nom de fichier_, d'où un certain nombre de caractères _interdits_ dont le `/`. Plusieurs fichiers attachés à une même note peuvent porter le même nom, ce sont des _révisions_ pour un nom donné.
 - son **a propos**, texte facultatif utile en particulier pour qualifier une _révision_ lorsqu'il existe plusieurs fichiers de même nom.
 - sa **date-heure d'enregistrement** dans l'application.
@@ -41,7 +41,7 @@ Une action _locale au poste_ de téléchargement permet d'écrire en clair sur u
 
 > Un navigateur n'a pas le droit d'écrire sur l'espace de fichiers de l'appareil, ce que l'utilitaire peut faire.
 
-> Les téléchargements peuvent être coûteux en transfert sur le réseau et les hébergeurs du serveur de fichiers peuvent les facturer et / ou les limiter. Ils peuvent **ralentis** par des temporisations si la consommation de calcul (qui inclut le volume téléchargé) est hors des limites des quotas du compte.
+> Les téléchargements peuvent être coûteux en transfert sur le réseau et les hébergeurs du serveur de fichiers peuvent les facturer et / ou les limiter. Ils peuvent être **ralentis** par des temporisations si la consommation de calcul (qui inclut le volume téléchargé) est hors des limites des quotas du compte.
 
 ## Fichiers accessibles en mode _avion_ et usage du _presse-papier_
 

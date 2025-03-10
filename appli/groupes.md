@@ -21,14 +21,14 @@ Un avatar connu dans un groupe peut avoir plusieurs états successifs:
 
 ## Accès aux membres et / ou aux notes
 Un membre actif _peut_ recevoir lors de son invitation des _droits_:
-- **droit d'accès aux autres membres** et au _chat_ (ou non),
+- **droit d'accès aux autres membres** et au _chat du groupe_ (ou non),
 - **droit d'accès aux notes** en _lecture_ ou en _lecture et écriture_ (ou pas du tout).
 
 Lors de son invitation il peut aussi recevoir le **pouvoir d'animation**. S'il ne l'a pas, un membre _animateur_ peut lui conférer ce pouvoir (mais ne pourra plus lui enlever).
 
 > **Certains groupes peuvent être créés à la seule fin d'être un répertoire de contacts** cooptés par affinité avec possibilités de _chat_. Personne n'y lit / écrit de notes.
 
-> **Certains groupes peuvent être créés afin de partager des notes _anonymes_ de discussion**: par exemple un animateur est seul à avoir droit d'accès aux membres, à les connaître: les notes sont de facto anonymes pour les autres membres.
+> **Certains groupes peuvent être créés afin de partager des notes _anonymes_ de discussion**. Par exemple un animateur est seul à avoir droit d'accès aux membres, à les connaître: les notes sont de facto anonymes pour les autres membres.
 
 En général les groupes sont créés avec le double objectif de réunir des avatars qui se connaissent mutuellement, échangent sur le chat et partagent des notes.
 
@@ -41,17 +41,17 @@ La recherche d'un groupe quand on est membre de beaucoup de groupes en est facil
 
 > Imaginons un _couple_ où tous deux sont à égalité _animateur_. Si le mode _unanime_ n'existait pas, l'un des deux pourrait inviter une tierce personne dans le couple, laquelle pourrait voir toutes les notes et le chat du couple, bref le groupe deviendrait un _trouple_ sans que l'autre n'ait accepté cette évolution.
 
-Pour un groupe en mode _unanime_ passe au mode d'invitation par _un seul animateur_, il faut que tous les animateurs aient _voté_ ce changement.
+Pour qu'un groupe en mode _unanime_ passe au mode d'invitation par _un seul animateur_, il faut que tous les animateurs aient _voté_ ce changement.
 
 A l'inverse un groupe en mode d'invitation par _un seul animateur_ peut passer en mode _unanime_ sur demande d'un seul animateur.
 
 ## Processus d'invitation
 **La première étape consiste à inscrire comme _simple contact du groupe_** l'un de ses propres contacts ce qui est possible pour tous les membres ayant accès aux membres du groupe.
-- les membres du groupe peuvent ainsi voir la _carte de visite_ de ce nouveau contact du groupe (mais pas ouvrir un _chat_ avec lui).
+- les membres du groupe peuvent ainsi voir la _carte de visite_ de ce nouveau contact du groupe, mais SANS pouvoir ouvrir un _chat_ avec lui (sauf s'il le connaissait par ailleurs).
 - uns discussion peut s'engager sur l'opportunité d'inviter ce contact, sur le _chat du groupe_, dans les notes, etc.
 
 A ce moment, le _simple contact_ peut être _effacé / oublié_ par un animateur.
-- il peut même être inscrit en liste noire afin de prévenir sa réinscription ultérieure comme _simple contact_.
+- il peut même être inscrit en liste noire afin d'empêcher sa réinscription ultérieure comme _simple contact_.
 
 **La seconde étape est l'invitation par un animateur du _simple contact_** en lui fixant ses conditions de participation au groupe:
 - accès ou non aux membres et au chat du groupe,
@@ -59,9 +59,9 @@ A ce moment, le _simple contact_ peut être _effacé / oublié_ par un animateur
 - droit d'animation. Le droit d'animation impose le droit d'accès aux membres.
 
 Si le mode d'invitation est _unanime_ tous les animateurs doivent valider cette invitation:
-- si l'un deux changent les conditions, ceci invalide les invitations des autres.
+- si l'un deux change les conditions, ceci invalide les invitations des autres.
 - si l'un deux le souhaite l'invitation est annulée.
-- tant que l'invitation n'a pas été validée par tous les animateurs, le contact est en état **pré-invité**.
+- tant que l'invitation n'a pas été validée par tous les animateurs, le contact est en état **simple contact pré-invité**.
 
 Tant que l'invitation n'a été ni acceptée, ni refusée, elle peut être annulée par un animateur.
 
@@ -79,10 +79,10 @@ Un animateur peut résilier un membre actif _non animateur_, le rendant simple c
 
 ## Quelques règles
 Seul um membre actif **ayant pouvoir d'animation** peut,
-- donner / retirer le droit d'accès aux autres membres et au _chat_ à un membre actif donné,
+- donner / retirer le droit d'accès aux autres membres et au _chat du groupe_ à un membre actif donné,
 - donner / retirer le droit d'accès aux notes à un membre actif non animateur (en lecture ou lecture / écriture), 
 - donner un pouvoir d'animation à un membre actif qui ne l'a pas,
-- inviter un _simple contact_ à devenir membre actif, avec ou sans droit accès aux autres membres et au _chat_, avec ou sans droit d'accès aux notes, avec ou sans pouvoir d'animateur,
+- inviter un _simple contact_ à devenir membre actif, avec ou sans droit accès aux autres membres et au _chat du groupe_, avec ou sans droit d'accès aux notes, avec ou sans pouvoir d'animateur,
 - _résilier_ un simple contact ou un membre actif non animateur qui n'apparaîtra plus dans le groupe.
 
 **Tout membre actif** peut,
@@ -109,11 +109,11 @@ Quand un membre actif en voit un autre, il l'a comme _contact temporaire_ et en 
 > Une résiliation ou auto-résiliation peut indiquer une inscription en _liste noire_: l'avatar ne pourra plus ni figurer comme contact, ni être inviter dans ce groupe.
 
 # Notes d'un groupe
-- elles sont cryptées par la clé aléatoire spécifique au groupe qui a été transmise à chaque membre lors de son invitation au groupe.
+- elles sont cryptées par la clé générée spécifique au groupe qui a été transmise à chaque membre lors de son invitation au groupe.
 - hormis les membres actifs du groupe ayant droit d'accès aux notes, personne ne peut accéder aux notes du groupe.
-- quand un nouveau membre accepte une invitation au groupe avec droits d'accès aux notes, il a immédiatement accès à toutes les notes existantes du groupe. S'il redevient _simple contact_ ou perd son droit d'accès aux notes (de par sa volonté ou celle d'un _animateur_), il n'a plus accès à aucune de celles-ci. Ceci allège ses sessions.
+- quand un nouveau membre accepte une invitation au groupe avec droits d'accès aux notes, il a immédiatement accès à toutes les notes existantes du groupe. S'il redevient _simple contact_ ou perd son droit d'accès aux notes (de par sa volonté ou celle d'un _animateur_), il n'a plus accès à aucune de celles-ci. Ceci allège ses sessions d'application Web.
 - pour écrire / modifier / supprimer une note du groupe, il faut avoir le droit d'accès en écriture aux notes.
-- chaque note est signée par la succession des membres qui y sont intervenu.
+- chaque note enregistre la succession des membres qui y sont intervenu.
 
 ## Tout membre ayant accès aux notes peut attacher ses propres _hashtags_ à chaque note du groupe
 - Le filtrage des notes par _hashtags_ s'effectue tous groupes confondus. 

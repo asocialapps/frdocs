@@ -3,7 +3,7 @@ layout: page
 title: Modes de connexion synchronisé, avion, incognito
 ---
 
-Pour se connecter à son compte, le titulaire d'un compte choisit sous quel **mode** sa session va s'exécuter: _synchronisé_, _avion_ ou _incognito_.
+Pour se connecter à son compte, son titulaire choisit sous quel **mode** sa session va s'exécuter: _synchronisé_, _avion_ ou _incognito_.
 
 ## Mode "normal" _synchronisé_ 
 C'est le mode préférentiel où toutes les données du périmètre d'un compte sont stockées dans une micro base locale cryptée dans le navigateur: elle est remise à niveau depuis le serveur central à la connexion d'une nouvelle session.
@@ -17,16 +17,16 @@ Pour que ce mode fonctionne il faut qu'une session antérieure en mode _synchron
 
 **L'application ne fonctionne qu'en lecture**, aucune mise à jour n'est possible. Aucun accès à Internet n'est effectué, ce qui est précieux _en avion_ ou dans les _zones blanches_ ou quand l'Internet est suspecté d'avoir de grandes oreilles indiscrètes : certes tout est crypté et illisible mais en mode avion personne ne peut même savoir que l'application a été ouverte, l'appareil peut être physiquement isolé du Net.
 
-> Toutefois on peut enregistrer des textes et des fichiers (des photos par exemple) localement (au _brouillon_): ils pourront être utilisés dans une future session _synchronisée_ (voir ci-après).
+> Toutefois on peut enregistrer des textes et des fichiers (des photos par exemple) localement, au _brouillon_: ils pourront être utilisés dans une future session _synchronisée_.
 
 En mode avion les fichiers attachés aux notes ne sont pas accessibles, **sauf** ceux qui ont été déclarés devoir l'être. Cette déclaration pour un compte s'effectue fichier par fichier pour chaque navigateur et ils sont mis à jour à l'ouverture de chaque session en mode _synchronisé_ (puis en cours de session). (voir ci-après)
 
-> On peut couper le réseau (le mode _avion_ sur un mobile), de façon à ce que l'ouverture de la page de l'application ne cherche même pas à vérifier si une version plus récente est disponible.
+> AVANT de lancer l'application, on peut couper le réseau (le mode _avion_ sur un mobile), de façon à ce que l'ouverture de la page de l'application ne cherche même pas à vérifier si une version plus récente est disponible.
 
 ## Mode _incognito_
 **Aucun stockage local n'est utilisé, toutes les données viennent du serveur central**, l'initialisation de la session est plus longue qu'en mode synchronisé. Aucune trace n'est laissée sur l'appareil (utile au cyber-café ou sur le mobile d'un.e ami.e) : certes les traces en question auraient été inutilisables car cryptées, mais il n'est pas poli d'encombrer la mémoire d'un appareil qu'on vous a prêté.
 
-> On peut ouvrir l'application dans une _fenêtre privée_ du navigateur, ainsi même le texte de la page de l'application sera effacé en fermant la fenêtre.
+> AVANT de lancer l'application, oOn peut une _fenêtre privée_ du navigateur, ainsi même le texte de la page de l'application sera effacé en fermant la fenêtre.
 
 > **En utilisant des sessions synchronisées sur plusieurs appareils, on a autant de copies synchronisées de ses notes et chats sur chacun de ceux-ci**, et chacun peut être utilisé en mode avion. Les copies ne sont pas exactement les mêmes, les _photographies_ de l'état des données du compte ne pouvant pas être effectuées exactement à la même seconde.
 
@@ -83,4 +83,4 @@ Il est possible toutefois de _préparer_ des mises à jour:
 
 Le contenu du _presse-papier_ est crypté, inaccessible à quiconque n'est pas le compte propriétaire: même si le mobile a été volé, son contenu reste indéchiffrable.
 
-Une fois retourné dans une zone ayant du réseau, on peut ouvrir une session en mode _synchronsé_. Le _brouillon_ de la note mise à jour et les photos mises en _presse-papier_ sont accessibles pour effectuer la véritable mise à jour.
+Une fois retourné dans une zone ayant du réseau, on peut ouvrir une session en mode _synchronisé_. Le _brouillon_ de la note mise à jour et les photos mises en _presse-papier_ sont accessibles pour effectuer la véritable mise à jour.

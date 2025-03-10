@@ -3,9 +3,9 @@ layout: page
 title: Partitions des comptes "O"
 ---
 
-Il peut être compliqué pour le Comptable de gérer les quotas de _tous_ les compte:
+Il peut être compliqué pour le Comptable de gérer les quotas de _tous_ les comptes:
 - beaucoup d'organisations ont une structure décentralisée en sous-organisations géographiques ou thématiques ayant une part d'autonomie de gestion de leurs adhérents.
-- il existe aussi des structures _clanique_, où un ou quelques représentants du clan ont toute liberté pour sponsoriser de nouveaux comptes et leur distribuer des quotas. Le cas échéant un protocole, non géré par l'application, définit comment chaque clan participe aux frais d'hébergement sur la base des quotas qui lui sont attribués.  
+- il existe aussi des structures _clanique_, où un ou quelques représentants du clan ont toute liberté pour sponsoriser de nouveaux comptes et leur distribuer des quotas. Le cas échéant un protocole, non géré par l'application, définit comment chaque _clan_ participe aux frais d'hébergement sur la base des quotas qui lui sont attribués.  
 
 Le principe est pour le Comptable de confier la distribution fine des quotas à des _délégués_ responsables eux-mêmes de les répartir entre les comptes qui dépendent d'eux en procédant à un _découpage en partitions_ des ressources globales dont il dispose. Chacune _partition_ est dotée de trois quotas, 
 - un quota QN de _nombre de documents_, 
