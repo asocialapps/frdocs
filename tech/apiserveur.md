@@ -420,15 +420,14 @@ Retour:
 
 #### Sync : opération générique de synchronisation d'une session cliente
 
-      subJSON: { t: 'string', n: true }, // subscription de la session
-      nhb: { t: 'int', n: true}, // numéro de HB pour un login / relogin
-      nbIter: { t: 'int' },
-      dataSync: { t: 'u8', n: true }, // sérialisation de l'état de synchro de la session
-      // null : C'EST UNE PREMIERE CONNEXION - Création du DataSync
-      // recherche des versions "base" de TOUS les sous-arbres du périmètre, inscription en DataSync
-      lids: { t: 'lids', n: true }, // liste des ids des sous-arbres à recharger (dataSync n'est pas null)
-      full: { t: 'bool', n: true } // si true, revérifie tout le périmètre
-
+    subJSON: { t: 'string', n: true }, // subscription de la session
+    nhb: { t: 'int', n: true}, // numéro de HB pour un login / relogin
+    nbIter: { t: 'int' },
+    dataSync: { t: 'u8', n: true }, // sérialisation de l'état de synchro de la session
+    // null : C'EST UNE PREMIERE CONNEXION - Création du DataSync
+    // recherche des versions "base" de TOUS les sous-arbres du périmètre, inscription en DataSync
+    lids: { t: 'lids', n: true }, // liste des ids des sous-arbres à recharger (dataSync n'est pas null)
+    full: { t: 'bool', n: true } // si true, revérifie tout le périmètre
 
 LE PÉRIMÈTRE est mis à jour: `DataSync` aligné OU créé avec les avatars / groupes tirés du compte.
 
@@ -505,36 +504,545 @@ Création des rows:
 
 ### Dans `src/operations4.mjs`
 
+#### SetEspaceOptionA : changement de l'option A, nbmi, par le Comptable
+
+    optionA: { t: 'int', min: 0, max: 1, n: true}, // true si accepte le s compte A
+    nbmi: { t: 'int', min: 3, max: 18, n: true } // nombre de mois d'inactivité avant suppression d'un compte
+
+#### SetEspaceDlvat : changement de dlvat par l'administrateur
+
+    org: { t: 'org'}, // ns de l'espace concerné
+    dlvat: { t: 'date' } // aaaammjj : date limite fixée par l'administrateur technique
+
+#### AjoutSponsoring : Ajout d'un sponsoring
+
+    id: { t: 'ida' }, // id du sponsor
+    hYR: { t: 'ids' }, // hash du PBKFD de la phrase réduite de sponsoring,
+    psK: { t: 'u8' }, // texte de la phrase de sponsoring cryptée par la clé K du sponsor.
+    YCK: { t: 'u8' }, // PBKFD de la phrase de sponsoring cryptée par la clé K du sponsor.
+    hYC: { t: 'ids' }, // hash du PBKFD de la phrase de sponsoring
+    cleAYC: { t: 'u8' }, // clé A du sponsor crypté par le PBKFD de la phrase complète de sponsoring
+    partitionId: { t: 'idp', n: true }, // id de la partition si compte "O" 
+    cleAP: { t: 'u8', n: true }, // clé A du COMPTE sponsor crypté par la clé P de la partition.
+    clePYC: { t: 'u8', n: true }, // clé P de sa partition (si c'est un compte "O") cryptée par le PBKFD de la phrase complète de sponsoring (donne l'id de la partition).
+    nomYC: { t: 'u8' }, // nom du sponsorisé, crypté par le PBKFD de la phrase complète de sponsoring.
+    cvA: { t: 'cv' }, // CV { id, v, ph, tx } du sponsor, (ph, tx) cryptés par sa cle A
+    ardYC: { t: 'u8' }, // ardoise de bienvenue du sponsor / réponse du sponsorisé cryptée par le PBKFD de la phrase de sponsoring.
+    htK: { t: 'u8' }, // hashtag attribué par le sponsor au sponsorisé (crypté cmlé K)
+    txK: { t: 'u8' }, // texte attribué par le sponsor au sponsorisé (crypté cmlé K)
+    quotas: { t: 'q' }, // quotas {qc, qn, qv} attribués par le sponsor
+    don: { t: 'int', min: 1, max: 1000, n: true }, // montant du don pour un compte autonome sponsorisé par un compte autonome
+    dconf: { t: 'bool' }, // true, si le sponsor demande la confidentialité (pas de chat à l'avcceptation)
+    del: { t: 'bool', n: true }, // true si le compte est délégué de la partition
+
+#### ProlongerSponsoring : prolongation d'un sponsoring existant
+
+    id: { t: 'ida'}, // identifiant de l'avatar du du sponsoring
+    ids: { t: 'ids' }, // identifiant du sponsoring
+    dlv: { t: 'date', n: true } // nouvelle date limite de validité `aaaammjj`ou 0 pour une  annulation.
+
+#### GetCompta : retourne la compta d'un compte
+Le demandeur doit être:
+- le comptable,
+- OU un délégué de sa partition si c'est un compte O
+- OU avec un chat ayant un "mut" avec le demandé si c'est un compte A.
+
+Retour: `rowCompta` s'il existe
+
+    id: { t: 'ida' }, // id du compte dont la compta est demandée
+    ids: { t: 'ids', n: true }
+
+#### GetComptaQv : retourne les compteurs qv de compteurs de la compta d'un compte
+Retour: `comptaQV`: rowCompta
+
+    id: { t: 'ida' } // id du compte
+
+#### GetAvatarPC : Récupération d\'un avatar par sa phrase de contact
+Retour:
+- `cleAZC` : clé A cryptée par ZC (PBKFD de la phrase de contact complète)
+- `cvA`: carte de visite cryptée par sa clé A
+- `collision`: true si la phrase courte pointe sur un  autre avatar
+
+    hZR: { t: 'ids' }, // hash de la phrase de contact réduite
+    hZC: { t: 'ids' } // hash de la phrase de contact complète
+
+#### OperationCh : super classe abstraite permettant d'utiliser les méthodes intro1/2()
+
+#### NouveauChat : Création d'un nouveau chat
+Retour:
+- `rowChat` : row du chat I.
+
+    idI: { t: 'ida' }, // id de l'vatar du chat "interne"
+    idE: { t: 'ida' }, // id de l'vatar du chat "externe"
+    urgence: { t: 'bool', n: true }, // chats ouvert d'urgence
+    mode: { t: 'modech' }, 
+    // - 0: par phrase de contact - hZC en est le hash
+    // - 1: idE est Comptable
+    // - 2: idE est délégué de la partition de idI
+    // - idg: idE et idI sont co-membres du groupe idg (idI a accès aux membres)
+  
+    // 0: par phrase de contact (hZC en est le hash),  
+    // 1: idE est délégué de la partition de idI, 
+    // idg: idE et idI sont co-membres du groupe idg (idI a accès aux membres)
+
+    hZC : { t: 'ids', n: true }, // hash du PBKFD de la phrase de contact compléte pour le mode 0
+    ch: { t: 'nvch' }, // { cck, ccP, cleE1C, cleE2C, t1c }
+    // ccK: clé C du chat cryptée par la clé K du compte de idI
+    // ccP: clé C du chat cryptée par la clé publique de idE
+    // cleE1C: clé A de l'avatar E (idI) cryptée par la clé du chat.
+    // cleE2C: clé A de l'avatar E (idE) cryptée par la clé du chat.
+    // txt: item crypté par la clé C
+
+#### MutChat : Ajout ou suppression d'une demande de mutation sur un chat 
+
+    id: { t: 'ida' }, // id de l'avatar du chat (principal)
+    ids: { t: 'ids' },  // ids du chat
+    mut: { t: 'int', min: 0, max: 2 } // type de demande - 1 muter en O, 2 muter en A
+
+#### MajLectChat : mise à jour de la date-heure de lecture du chat ***********
+
+    id: { t: 'ida' }, // id de l'avatar du chat
+    ids: { t: 'ids' },  // ids du chat
+
+#### MajChat : Ajout ou suppression d'un item à un chat
+Retour:
+- `disp`: `true` si E a disparu (pas de maj faite).
+
+    id: { t: 'ida' }, // id de l'avatar du chat
+    ids: { t: 'ids' },  // ids du chat
+    t: { t: 'u8', n: true }, // texte gzippé crypté par la clé C du chat (null si suppression)
+    dh: { t: 'dh', n: true }, // 0 ou date-heure de l'item du chat à supprimer
+    urgence: { t: 'bool', n: true }, // chat d'urgence
+    don: { t: 'int', min: 0, max: 1000, n: true } // montant du don de I à E
+
+#### PassifChat : Mise en état "passif" d'un chat
+Retour
+- `disp`: true si E a disparu
+
+    id: { t: 'ida' }, // id de l'avatar du chat
+    ids: { t: 'ids' }  // ids du chat
+
+#### ChangementPC : Changement de la phrase de contact d'un avatar
+Exceptions:
+- F_SRV, 26: Phrase de contact trop proche d'une phrase existante.
+
+    id: { t: 'ida' }, // id de l'avatar
+    hZR: { t: 'ids', n: true }, // hash de la phrase de contact réduite (SUPPRESSION si null)
+    cleAZC: { t: 'u8', n: true }, //  clé A cryptée par ZC (PBKFD de la phrase de contact complète).
+    pcK: { t: 'u8', n: true }, //  phrase de contact complète cryptée par la clé K du compte.
+    hZC: { t: 'ids', n: true } // hash du PBKFD de la phrase de contact complète.
+
+#### StatutChatE : Statut du contact d'un chat
+Retour: 
+- `statut` : `{ cpt, idp, del }`
+  - `cpt`: true si avatar principal
+  - `idp`: id de la partition si compte "0", 
+  - `del`: true si délégué
+
+    ids: { t: 'ids' } // ids = chat
+
+#### RafraichirCvsAv : Rafraîchissement des CVs des membres / chats de l'avatar
+Retour: 
+- `ncnv` : [nc, nv]
+  - `nc`: nombre de CV mises à jour
+  - `nv`: nombre de chats / membres scannés
+
+Exception générique:
+- 8001: avatar disparu
+
+    id: { t: 'ida' }, // id de l'avatar
+    lch: { t: 'array' }, // liste des chats: [{ ids, idE, vcv } ...]
+    lmb: { t: 'array' } // liste des membres: [{ id, im, ida, vcv} ...]
+
+#### RafraichirCvsGr : Rafraîchissement des CVs des membres d'un groupe
+Retour: 
+- `ncnv` : `[nc, nv]`
+  - `nc`: nombre de CV mises à jour
+  - `nv` : nombre de chats existants
+
+Exception générique:
+- 8002: groupe disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    lmb: { t: 'array' } // liste des membres: [{ id, im, ida, vcv} ...]
+
+#### SetQuotas: Fixation des quotas d'un compte dans sa partition ou comme compte A
+
+    idp: { t: 'idp' }, // id de la partition
+    idc: { t: 'idc' }, // id du compte
+    q: { t: 'q' } // quotas: {qc, qn, qv}
+
+#### NouvellePartition : Création d'une nouvelle partition
+
+    idp: { t: 'idp' }, // id de la partition
+    itemK: { t: 'u8' }, //  {cleP, code} crypté par la clé K du Comptable.
+    quotas: { t: 'q' } // quotas: {qc, qn, qv}
+
+#### SupprPartition : Suppression d'une partition
+
+    idp: { t: 'idp' } // id de la partition
+
+#### SetQuotasPart : Mise à jour des quotas d'une partition
+
+    idp: { t: 'idp' }, // id de la partition
+    quotas: { t: 'q' } // quotas: {qc, qn, qv}
+
+#### SetQuotasA : Mise à jour des quotas pour les comptes A
+
+    quotas: { t: 'q' } // quotas: {qc, qn, qv}
+
+#### SetCodePart : Mise à jour du code d'une partition
+
+    idp: { t: 'idp' }, // id de la partition
+    etpk: { t: 'u8' } // {codeP, code} crypté par la clé K du Comptable
+
+####  MuterCompteAauto : Auto mutation du compte O en compte A
+Mutation d'un compte `c` O de la partition `p` en compte A
+- augmente `syntheses.qtA`.
+- diminue `partition[p].mcpt[c].q` ce qui se répercute sur `syntheses.tsp[p].qt`.
+- bloqué si l'augmentation de `syntheses.qtA` fait dépasser `syntheses.qA`.
+
+    quotas: { t: 'q' } // quotas: { qc, qn, qv }  
+
+####  MuterCompte : classe abstraite
+
+#### MuterCompteA : Mutation du compte O en compte A
+Mutation d'un compte `c` O de la partition `p` en compte A
+- augmente `syntheses.qtA`.
+- diminue `partition[p].mcpt[c].q` ce qui se répercute sur `syntheses.tsp[p].qt`.
+- bloqué si l'augmentation de `syntheses.qtA` fait dépasser `syntheses.qA`.
+
+    id: { t: 'ida' }, // id du compte devenant A
+    ids: { t: 'ids' }, // ids du chat du compte demandeur (Comptable / Délégué)
+    quotas: { t: 'q' }, // quotas: { qc, qn, qv }   
+    t: { t: 'u8' } // texte (crypté) de l'item à ajouter au chat
+
+#### MuterCompteO: Mutation d'un compte A en compte O
+Mutation d'un compte `c` A en compte O de la partition `p`
+- diminue `syntheses.qtA`
+- augmente `partition[p].mcpt[c].q` (si c'est possible) ce qui se répercute sur `syntheses.tsp[p].qt`
+- blocage si les quotas de la partition ne supportent pas les quotas du compte muté.
+
+    id: { t: 'ida' }, // id du compte devenant O
+    quotas: { t: 'q' }, // quotas: { qc, qn, qv }   
+    cleAP: { t: 'u8' }, // clé A du compte cryptée par la clé P de la partition
+    clePK: { t: 'u8' }, // clé de la nouvelle partition cryptée par la clé publique du compte
+    ids: { t: 'ids' }, // ids du chat du compte demandeur (Comptable / Délégué)
+    t: { t: 'u8' } // texte (crypté) de l'item à ajouter au chat
+
+#### FixerQuotasA : Attribution par le Comptable de quotas globaux pour les comptes A
+
+    quotas: { t: 'q' } // quotas: { qc, qn, qv } 
+
+#### ChangerPartition : Transfert d'un compte O dans une autre partition
+
+    id: { t: 'ida' }, // id du compte qui change de partition
+    idp: { t: 'idp' }, // id de la nouvelle partition
+    cleAP: { t: 'u8' }, // clé A du compte cryptée par la clé P de la nouvelle partition
+    clePK: { t: 'u8' }, // clé de la nouvelle partition cryptée par la clé publique du compte
+    notif: { t: 'ntf', n: true } // notificcation du compte en cours
+
+#### DeleguePartition : Changement de statut délégué d'un compte dans sa partition
+
+    id: { t: 'ida' }, // id du compte qui change de statut
+    del: { t: 'bool' } // true / false, statut délégué
+
+#### SetNotifP : notification d'une partition
+
+    idp: { t: 'idp' }, // id de la partition
+    notif: { t: 'ntf', n: true } // notification cryptée par la clé de la partition.
+
+#### SetNotifC : notification d'un compte "O"
+
+    idc: { t: 'ida' }, // id du compte
+    notif: { t: 'ntf', n: true } // notification du compte cryptée par la clé de partition
+
+#### PlusTicket : Génération d'un ticket de crédit et ajout du ticket au Comptable
+Retour: 
+- `rowCompta`: du compte après insertion du ticket
+
+    ids: { t: 'ids' }, // ids du ticket généré
+    dlv: { t: 'date', n: true },
+    ma : { t:'int', min: 0, max: 100000 }, // montant du ticket
+    refa: { t: 'string', n: true } // référence éventuelle
+
+#### MoinsTicket: retrait d'un ticket à un compte A et retrait d'un ticket au Comptable
+Retour: 
+- `rowCompta` : du compte
+
+    ids: { t: 'ids' } // ids du ticket à enlever
+
+#### ReceptionTicket : Réception d'un ticket par le Comptable
+
+    ids: { t: 'ids' }, // ids du ticket reçu
+    mc : { t:'int', min: 0, max: 100000 }, // montant du ticket reçu
+    refc: { t: 'string', n: true } // référence éventuelle du Comptable
+
+#### MajCv : Mise à jour de la carte de visite d'un avatar ou d'un groupe*/
+
+    cv: { t: 'cv' } // carte de visite (photo / texte cryptés)
+
+#### GetCv : Obtention de la carte de visite d'un avatar OU d'un groupe
+- `id` : id du people ou du groupe
+- `r` : A quel titre le PEOPLE id est contact du compte ?
+  `{ del: true }` : parce que id est délégué de la partition du compte
+  `{ id, ids }` : parce qu'il a un chat id / ids avec l'avatar id du compte
+  `{ idg, imp, ida, ima }` : parce qu'il est membre d'indice imp du groupe idg
+    dont le compte a un avatar ida / ima ayant accès aux membres
+- `r` : A quel titre le GROUPE id est visible du compte ?
+  `{ ida, ima }`:  parce que l'avatar ida indice ima dans le groupe id a accès aux membres
+
+Retour:
+- `cv`: si trouvée
+
+#### NouvelAvatar : Création d'un nouvel avatar du compte
+
+    id: { t: 'ida' }, // id de l'avatar à créér
+    cleAK: { t: 'u8' }, // sa clé A cryptée par la clé K
+    pub: { t: 'u8' }, // sa clé RSA publique
+    cleAK: { t: 'u8' }, // sa clé RSA privée cryptée par la clé K
+    cvA: { t: 'cv' } // sa carte de visite, texte et photocryptée par sa clé A
+
+#### McMemo : Changement des mots clés (hashtags) et mémo attachés à un contact ou groupe 
+
+    id: { t: 'idag' }, // id de l'avatar ou du groupe
+    htK: { t: 'u8', n: true }, // hashtags séparés par un espace et crypté par la clé K
+    txK: { t: 'u8', n: true } // texte du mémo gzippé et crypté par la clé K
+
+#### ChangementPS : Changement de la phrase secrète de connexion du compte
+
+    hps1: { t: 'ids' }, // hash9 du PBKFD de la phrase secrète réduite du compte.
+    hXC: { t: 'ids' }, // hash du PBKFD de la phrase secrète complète
+    cleKXC: { t: 'u8' } // clé K cryptée par la phrase secrète
+
+#### NouveauGroupe : Nouveau groupe 
+Exception:
+- 8001: avatar disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    ida: { t: 'ida' }, // id de l'avatar fondateur
+    cleAG: { t: 'u8' }, // clé A de l'avatar cryptée par la clé G
+    cleGK: { t: 'u8' }, // clé du groupe cryptée par la clé K du compte
+    cvG: { t: 'cv' }, // carte de visite du groupe crypté par la clé G du groupe
+    msu: { t: 'bool' }, // true si mode simple
+    quotas: { t: 'q2' } // {qn, qv} maximum de nombre de notes et de volume fichiers
+
+#### NouveauContact : Nouveau contact 
+Exception: 
+- 8002: groupe disparu
+- 8001: avatar disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    ida: { t: 'ida' }, // id de l'avatar contact
+    cleAG: { t: 'u8' }, // clé A du contact cryptée par la clé G du groupe
+    cleGA: { t: 'u8' } // clé G du groupe cryptée par la clé A du contact
+
+#### ModeSimple: Demande de retour au mode simple d'invitation à un groupe
+Exception: 
+- 8002: groupe disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    ida: { t: 'ida' }, // id de l'avatar demandant le retour au mode simple
+    simple: { t: 'bool' } 
+    // true 'Je vote pour passer au mode "SIMPLE"'
+    // false: 'Annuler les votes et rester en mode UNANIME'
+
+#### AnnulerContact : Annulation du statut de contact d'un groupe par un avatar
+Exception: 
+- 8002: groupe disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    ida: { t: 'ida' }, // id de l'avatar demandant l'annulation.
+    ln: { t: 'bool' }  // true Inscription en liste noire
+
+#### InvitationGroupe : Invitation à un groupe'
+Exception: 
+- 8002: groupe disparu
+- 8001: avatar disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    idm: { t: 'ida' }, // id du membre invité
+    rmsv: { t: 'int', min: 0, max: 4 }, // 0: inviter, 2: modifier, 3: supprimer, 4: voter pour
+    flags: { t: 'int', min: 0, max: 255 }, // flags d'invitation
+    msgG: { t: 'u8' }, // message de bienvenue crypté par la clé G du groupe
+    idi: { t: 'ida', n: true }, // id de l'invitant pour le mode d'invitation simple
+    // sinon tous les avatars du comptes animateurs du groupe
+    suppr: { t: 'int', min: 0, max: 3 }, // 1-contact, 2:radié, 3-radié + LN
+    cleGA: { t: 'u8' } // clé G du groupe cryptée par la clé A de l'invité
+
+#### AcceptInvitation : Acceptation d'une invitation à un groupe
+Exception: 
+- 8002: groupe disparu
+- 8001: avatar disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    idm: { t: 'ida' }, // id du membre invité
+    iam: { t: 'bool' }, // accepte accès aux membres
+    ian: { t: 'bool' }, // accepte l'accès aux notes
+    cleGK: { t: 'u8' }, // cle du groupe cryptée par la clé K du compte
+    cas: { t: 'int', min: 1, max: 4 }, // 1:accepte 2:contact 3:radié 4:radié + LN
+    msgG: { t: 'u8' }, // message de bienvenue crypté par la clé G du groupe
+    txK: { t: 'u8', n: true } // texte à attacher à compti/idg s'il n'y en a pas
+
+#### ItemChatgr : Ajout ou effacement d'un item au chat du groupe
+Exception: 
+- 8002: groupe disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    idaut: { t: 'ida', n: true }, // id du membre auteur du texte
+    dh: { t: 'dh', n: true }, // date-heure de l'item effacé
+    msgG: { t: 'u8', n: true } // texte de l'item
+
+#### MajLectChatgr : mise à jour de la lecture d'un chat du groupe
+
+    idg: { t: 'idg' }, // id du groupe
+    lstIm: { t: 'array' } // liste des im des membres ayant lu
+
+#### MajDroitsMembre: Mise à jour des droits d'un membre sur un groupe
+Exception: 
+- 8002: groupe disparu
+- 8001: avatar disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    idm: { t: 'ida' }, // id du membre
+    nvflags: { t: 'int', min: 0, max: 255 }, // nouveau flags. Peuvent changer DM DN DE AM AN
+    anim: { t: 'bool' } // true si animateur
+
+#### RadierMembre : Radiation d'un membre d'un groupe
+Exception: 
+- 8002: groupe disparu
+- 8001: avatar disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    idm: { t: 'ida' }, // id du membre
+    rad: { t: 'int', min: 1, max: 3 }, // 1-redevient contact, 2-radiation, 3-radiation + ln
+    cleGA: { t: 'u8' } // cle G du groupe cryptée par la clé du membre
+
+#### HebGroupe : Gestion de l'hébergement et des quotas d'un grouper
+Exception générique:
+- 8001: avatar disparu
+- 8002: groupe disparu
+
+    idg: { t: 'idg' }, // id du groupe
+    nvHeb: { t: 'ida' }, // id de l'avatar nouvel hébergeur
+    action: { t: 'int', min: 1, max: 4 }, 
+    // 1: 'Je prends l\'hébergement à mon compte',
+    // 2: 'Je cesse d\'héberger ce groupe',
+    // 3: 'Je transmet l\'hébergement à un autre de mes avatars',
+    // 4: 'Je met seulement à jour les nombres de notes et volumes de fichiers maximum attribués au groupe',
+    qn: { t: 'int', min: 0 }, // qn: nombre maximum de notes, qv : volume maximum des fichiers
+    qv: { t: 'int', min: 0 } // qn: nombre maximum de notes, qv : volume maximum des fichiers
+
+#### SupprAvatar : Suppression d'un avatar
+Exception:
+- 8001: avatar disparu
+
+    id: { t: 'ida' } // id de l'avatar
+
+#### SupprCompte : Suppression du compte
+Exception:
+- 8001: avatar disparu
+
+#### NouvelleNote : Création d'une nouvelle note
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ida: { t: 'ida', n: true }, // pour une note de groupe, id de son avatar auteur
+    exclu: { t: 'bool', n: true }, // true si l'auteur est exclusif
+    pid: { t: 'idag' }, // id de la note parente pour une note rattachée
+    pids: { t: 'ids', n: true }, // ids de la note parente pour une note rattachée
+    t: { t: 'u8' } // texte crypté
+
+#### RattNote : Gestion du rattachement d'une note à une autre */
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ids: { t: 'ids' }, // ids de la note
+    pid: { t: 'idag', n: true }, // id de la note parente pour une note rattachée
+    pids: { t: 'ids', n: true} // ids de la note parente pour une note rattachée
+
+#### MajNote : Mise à jour du texte d'une note
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ids: { t: 'ids' }, // ids de la note
+    ida: { t: 'ida', n: true }, // pour une note de groupe, id de son avatar auteur
+    t: { t: 'u8' } // texte crypté
+
+#### SupprNote : Suppression d'une note
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ids: { t: 'ids' } // ids de la note
+
+#### HTNote : Changement des hashtags attachés à une note par un compte
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ids: { t: 'ids' }, // ids de la note
+    htK: { t: 'u8', n: true }, // ht personels
+    htG: { t: 'u8', n: true }, // hashtags du groupe
+
+#### ExcluNote : Changement de l'attribution de l'exclusivité d'écriture d'une note
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ids: { t: 'ids' }, // ids de la note
+    ida: { t: 'ida', n: true } // id de l'avatar prenant l'exclusivité
+
+#### GetUrlNf : retourne l'URL de get d'un fichier d'une note
+Retour:
+- `url` : url de get
+
+#### PutUrlNf : retourne l'URL de put d'un fichier d'une note
+Retour:
+- `idf` : identifiant du fichier
+- `url` : url à passer sur le PUT de son contenu
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ids: { t: 'ids' }, // ids de la note
+    lg: {t: 'int', min: 0, max: 500000000}, // taille du fichier
+    aut: { t: 'ida', n: true }, // pour une note de groupe, id de l'auteur de l'enregistrement
+    lidf: { t: 'lidf', n: true } // liste des idf fichiers de la note à supprimer
+
+#### ValiderUpload : validation de l'upload d'un fichier
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ids: { t: 'ids' }, // ids de la note
+    fic: { t: 'fic' }, // { idf, lg, ficN }
+    ida: { t: 'ida', n: true }, // id de l'auteur (pour une note de groupe)
+    lidf: { t: 'lidf', n: true } // liste des idf fichiers de la note à supprimer
+
+#### SupprFichier : Suppression d'un fichier d'une note
+
+    id: { t: 'idag' }, // id de la note (avatar ou groupe)
+    ids: { t: 'ids' }, // ids de la note
+    idf: { t: 'idf' }, // id du fichier à supprimer
+    ida: { t: 'ida', n: true } // id de l'auteur (pour une note de groupe)
+
 ## Documents
-### Les formats _row_ et _compilé_
+### Les formats _data_ et _compilé_
 Que ce soit en SQL ou en Firestore, l'insertion ou la mise à jour d'un document se fait depuis un _objet Javascript_ ou chaque attribut correspond à une propriété de l'objet. 
 
 Par exemple un document `avatars` pour mise à jour en SQL ou Firestore est celui-ci : 
 
     { id: '3200...00', v: 4, _data_: (Uint8Array) }
 
-Pour avoir le format _row_ une propriété _nom a été ajoutée : 
+Pour avoir le format _data_ une propriété _nom a été ajoutée : 
 
     { _nom: 'avatars', id ... }
 
-Ce format _row_ est celui utilisé entre session Web et serveur, dans les arguments d'opérations et en synchronisation.
+Ce format _data_ est celui utilisé entre session Web et serveur, dans les arguments d'opérations et en synchronisation.
 
-#### Format _compilé_
+#### Objets _compilé_
 Les attributs _data_ contiennent toutes les propriétés sérialisées, celles externalisées `id v ...` et celles internes. 
 
-La fonction `avatar = compile(row)` désérialise le contenu de _data_ d'un objet row et retourne une instance `Avatar` de la classe correspondant au nom (par exemple `Avatars` qui hérite de la classe `GenDoc`) avec les attributs externalisés `id v` et ceux internes sérialisés dans _data_.
-  - dans le cas de `versions`, _data_ est reconstitué avec les seules propriétés externalisées.
-- 
-La méthode `row = avatar.toData()` reconstitue un objet _data_ sérialisé depuis une instance `avatar`. Elle est utilisée pour exporter une base.
+La fonction `avatar = compile(_data_)` désérialise le contenu de _data_ d'un objet et retourne une instance `avatar` de la classe correspondant au nom (par exemple `Avatars` qui hérite de la classe `GenDoc`) avec tous les attributs sérialisés dans _data_.
+- dans le cas de `versions`, _data_ est reconstitué par le provider d'accès à la base avec les seules propriétés externalisées.
+
+La méthode `_data_ = avatar.toData()` reconstitue un objet _data_ sérialisé depuis une instance `avatar`. Elle est utilisée pour exporter une base et est la valeur par défaut de `toShortData()`.
 
 La méthode `avatar.toShortData(op)` est invoquée par l'opération `Sync` et retourne un _data_ dont certains attributs peuvent être omis selon le compte qui a sollicité l'opération `op`.
 
 En session Web le même principe est adopté avec deux différences : 
 - `compile()` sur le serveur est **synchrone et générique**.
-- en session `async compile()` est écrite pour chaque classe : les méthodes effectuent des opérations de cryptage / décryptage asynchrones et de calculs de propriétés complémentaires spécifiques de chaque classe de document.
-- en session il n'y a pas d'équivalent à `toRow()`. 
+- en session `async compile()` est écrite pour chaque classe : les méthodes effectuent des opérations de cryptage / décryptage asynchrones et de calculs de propriétés complémentaires spécifiques de chaque classe de document. 
 
-Sur le serveur, le _data_ est crypté par la _clé du site_ fixée par l'administrateur:
+Dans les bases de données, les attributs _data_ sont cryptés par la _clé du site_ fixée par l'administrateur:
 - _data_ est décrypté après lecteur de la base,
 - _data_ est encrypté avant écriture sur la base.
 
@@ -546,15 +1054,19 @@ Sur le serveur, le _data_ est crypté par la _clé du site_ fixée par l'adminis
 - ces opérations sont _authentifiées_ et transmettent les données d'authentification par le _token_ passé en argument porteur du hash de la phrase secrète: dans le cas de l'acceptation d'un sponsoring, la reconnaissance du compte précède de peu sa création effective.
 
 ### Opérations authentifiées pour un compte APRÈS sa connexion
-Ces opérations permettent à la session cliente de récupérer toutes les données du compte afin d'initialiser son état interne.
+Ces opérations permettent à la session Web de récupérer toutes les données du compte afin d'initialiser son état interne.
 
 # Annexe I: Providers Storage
-Trois classes _provider_ gèrent le storage et ont un même interface:
+Trois classes _provider_ gèrent le storage, hérite de la classe `GenStProvider` et ont un même interface:
 - `FsProvider` : un file-system local du serveur,
 - `S3Provider` : un Storage S3 de AWS (éventuellement _minio_).
 - `GcProvider` : un Storage Google Cloud Storage.
 
-En pratique il n'y a pas de raisons à assurer un Storage `s3` sous GAE.
+> En pratique il n'y a pas de raisons à assurer un Storage `s3` sous GAE.
+
+**Constructor**
+- `code` : `gc_a fs_a `...
+- `site` : lettre du site dans la configuration `keys.json`.
 
 **Méthodes:**
 
@@ -568,6 +1080,9 @@ En pratique il n'y a pas de raisons à assurer un Storage `s3` sous GAE.
     async delOrg (org)
     async listFiles (org, id)
     async listIds (org)
+
+Les _paths_ sur Storage sont de la forme `org/id/idf`:
+- selon la configuration donnée dans keys.json les données `org` `id` `idf` sont ou non cryptées par la clé du site (et mise en base64 URL)
 
 Le **serveur** gère le storage pour:
 - `del...` les suppressions,
