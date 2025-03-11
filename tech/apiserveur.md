@@ -1056,7 +1056,7 @@ Dans les bases de données, les attributs _data_ sont cryptés par la _clé du s
 ### Opérations authentifiées pour un compte APRÈS sa connexion
 Ces opérations permettent à la session Web de récupérer toutes les données du compte afin d'initialiser son état interne.
 
-# Annexe I: Providers Storage
+# Providers Storage
 Trois classes _provider_ gèrent le storage, hérite de la classe `GenStProvider` et ont un même interface:
 - `FsProvider` : un file-system local du serveur,
 - `S3Provider` : un Storage S3 de AWS (éventuellement _minio_).
@@ -1125,136 +1125,211 @@ Le provider `GcProvider` (_Google Cloud Storage_) propose bien `getUrl / putURL`
 - C'est pour cela que l'implémentation de `getUrl / putUrl` utilise l'URL générique et le transfert intermédiaire par le serveur, ce qui n'a aucune importance en test. 
 - A noter qu'in fine les fichiers se retrouvent bien dans le storage émulé, ils ont juste fait un transit supplémentaire en mémoire dans le cas d'usage de _emulator_.
 
-# Annexe II : plus d'information sur certains modules dans `src/`
+# Providers d'accès aux bases de données
+Deux _providers_ ont été écrits:
+- `dbSqlite` : classe `SqliteProvider` pour accéder à d'autres bases SQL (comme PostgresQL) cette classe doit être dédoublée et ajustée.
+- `dbFirestore` : classe `FirestoreProvider` pour Google Firestore (NoSql).
 
-**************EN REVISION********************
+Les deux classes ont leur propre constructor qui admet deux arguments:
+- `code` : `sqlite_a firestore_a` ...
+- `site` : `A B` ... identifie le site et ses conditions de cryptage dans `keys.json`.
+
+Le `constructor` récupère les éléments de configuration qui lui sont nécessaires dont les clés d'accès / paths requis et présents dans `config / keys.json`.
+
+La classe a une méthode `async connect(op)`:
+- elle retourne un objet de classe `Connx` qui étend `GenConnx` définissant LA connexion utilisée exclusivement par l'opération (non partagée avec d'autres opérations).
+
+### Classe / interface `GenConnx`
+
+#### Méthode PUBLIQUE de connexion: retourne l'objet de connexion à la base
+
+    async connect (op, provider) { ... }
+
+#### Méthode PUBLIQUE de déconnexion, impérative et sans exception
+
+    async disconnect () { ... }
+
+#### Méthode PUBLIQUE d'exécution de la transaction:
+- se met en mode transaction.
+- invoque la méthode `transac()` de l'opération.
+- mise à jour finale effective de la transaction: (écritures groupées à la fin)
+- commit et déconnexion
+- retour [0, '']
+
+Erreurs trappées:
+- SI ce n'est pas une exception de DB: `throw` de l'exception.
+- si c'est une erreur de LOCK: retourne [1, 'msg de détail] - Le retry fonctionnera.
+- sinon (autre erreur de DB, retry inutile): retourne [2, 'msg de détail]
+
+    async doTransaction () { ... }
+
+#### Méthode PUBLIQUE de test: retour comme doTransaction [0 / 1 / 2, detail]
+
+    async ping () { ... }
+
+#### Méthodes PUBLIQUES POUR EXPORT / PURGE
+
+    async deleteOrg(log) { ... }
+    // log est une fonction de log acceptant un string de trace
+
+    async batchInsertRows (rows) { ... }
+
+#### Méthodes de gestion des tâches
+
+    async setTache (t)
+    async delTache (top, porg, pid)
+    async recTache (top, porg, pid, dhf, nb)
+
+    /* Obtention de la prochaine tâche */
+    async prochTache (dh)
+
+    /* Obtention des taches d'une org */
+    async orgTaches (porg)
+
+    async toutesTaches ()
+
+    /* Obtention des espaces modifiés après v */
+    async getRowEspaces()
+
+    async getRowEspacesCalc (dpt)
+
+#### Méthodes d'accès aux documents
+
+    async getV (nom, pid, v)
+    async getNV (nom, pid, exportDb)
+    async get (nom, pid, pids)
+    async getAvatarVCV (pid, vcv)
+    async getCompteHk (phk)
+    async getAvatarHk (phk)
+    async getSponsoringIds (phk)
+    async getGroupesDfh (dfh)
+    async getComptasDlv (dlvmax)
+    async coll (nom)
+    async collOrg (nom, fnprocess, exportDb)
+    async scoll (nom, pid, v, exportDb)
+    async selTickets (pid, dlv, fnprocess)
+    async delScoll (nom, pid)
+    async delTickets (pid, dlv)
+    async listeFpurges ()
+    async listeTransfertsDlv (dlv)
+    async purgeFpurge (pid)
+    async purgeTransferts (pid)
+    async purgeVER (suppr)
+    async purgeSPO (dlv)
+    async deleteRows (rows)
+    async insertRows (rows)
+    async updateRows (rows)
+
+# Annexe I : plus d'information sur certains modules dans `src/`
 
 ## `api.mjs`
 Ce module **est strictement le même** que `api.mjs` dans l'application Web afin d'être certain que certaines interprétations sont bien identiques de part et d'autres:
 - quelques constantes exportées.
 - les classes,
   - `AppExc` : format général d'une exception permettant son affichage en session, en particulier en supportant la traduction des messages.
-  - `ID` : les quelques fonctions statiques permettant de déterminer depuis une id si c'est celle d'un avatar, groupe, tribu, ou celle du Comptable.
-  - `Compteurs` : calcul et traitement des compteurs statistiques des compteurs statistiques des documents `comptas`.
+  - classe `AL` : code des alertes.
+  - classe `Cles ID` : les quelques fonctions statiques permettant de déterminer depuis une id si c'est celle d'un avatar, groupe, partition, ou celle du Comptable.
+  - classe `FLAGS` des droits d'accès aux groupes.
+  - `Tarifs Compteurs` : calcul et traitement des compteurs statistiques des compteurs statistiques des documents `comptas`.
   - `AMJ` : une date en jour sous la forme d'un entier `aaaammjj`. Cette classe gère les opérations sur ce format.
+  - `DataSync` : objet de synchronisation application Web / Services.
+  - `function synthesesPartition (p)`
+  - `function synthesePartPC (r)`
 
 ### `gendoc.mjs`
-La classe `GenDoc` représente un document _générique_.
+`GenStDb GenStProvider` sont des classes abstraites pour les méthodes communes à `GenStProvider` et `GenConnx` des providers DB.
+
+La classe `MuterRow` est un transcoder des rows dans un export-db.
+
+#### La classe `GenDoc` représente un document _générique_.
 
 Une classe y est déclarée pour chaque collection / table de documents:
 - elle hérite de `GenDoc`
 - elle n'est porteuse que de quelques méthodes.
 
-    Espaces Gcvols Tribus Tribu2s COmptas Versions Avataars Groupes
-    Notes Transferts Sponsorings Chats Membres
+    Espaces Syntheses Partitions 
+    Comptes Comptis Comptas Versions Avatars 
+    Groupes Chatgrs Invits
+    Notes Transferts Sponsorings Chats Membres Tickets
+    Fpurges Transferts
 
-### Fonction `compile (row) -> Objet`
-Cette fonction aurait pu être déclarée static de `GenDoc` et a été écrite comme fonction pour raccourcir le texte d'appel très fréquent.
-
+**Fonction `compile (_data_) -> Objet`**
 Chaque **row** d'une table SQL ou **document** Firestore apparaît sous deux formes :
-- **row** : c'est l'objet Javascript directement stocké en tant que row d'une table SQL ou document Firestore.
+- avec un attribut **_data_** : c'est la sérialisation (cryptée en bas) de l'objet Javascript directement stocké en tant que row d'une table SQL ou document Firestore.
 - **objet compilé** : c'est une instance d'un des classes de document ci-dessus.
 
-La méthode `compile()` retourne l'objet compilé depuis sa forme row et son nom symbolique : si l'argument row est null, le retour est null (sans levée d'exception).
+La méthode `compile()` retourne l'objet compilé depuis sa forme _data_ et son nom symbolique : si l'argument _data_ est null, le retour est null (sans levée d'exception).
 
-### Méthode `GenDoc.toRow()`
-Réciproquement depuis un objet `a` par exemple de classe `Avatars`, `a.toRow()` retourne sa forme **row** prête à être stockée en row SQL ou document Firestore.
-
-La fonction `compile()` retourne la forme compilée (un objet de sa class spécifique) depuis un row, est dans l'esprit une méthode `statique` de GenDoc mais sous la forme d'une fonction pour commodité d'écriture.
-
-Deux autres fonctions `decryptRow (op, row)` et `prepRow (op, row)` sont utilisés par les providers DB pour crypter / décrypter le _data_ d'un row des classes pour lesquelles le _data_ est crypté par la clé du site.
+### Méthode `GenDoc.toData()`
+Réciproquement depuis un objet `a` par exemple de classe `Avatars`, `a.toData()` retourne l'attribut sérialisé _data_ prête à être stockée en row SQL ou document Firestore.
 
 ### Liste restrictive des attributs d'un row
 Cette liste est fermée : pour chaque classe la liste exhaustive est donnée.
 - `_nom` : nom symbolique de la classe dont est issue le row ('avatar', 'groupe', ...).
 - `id` : l'id principale (et unique pour les objets majeurs).
 - `ids` : l'id secondaire pour les `Notes Transferts Sponsorings Chats Membres`.
-- `v` : sauf Gcvols. Version de l'objet.
+- `v` : version de l'objet.
 - `vcv` : pour Avatars Chats Membres : version de la carte de visite.
-- `dlv`: pour Versions Transferts Sponsorings Membres : date limite de validité (`aaaammjj`). A partir de cette date, le document n'est plus _valide_, il est sémantiquement _disparu_. En compilé l'attribut `_zombi` vaut `true`.
-- `hps1` : sur Comptas, hash de la phrase secrète raccourcie.
+- `dlv`: pour `Comptas Versions Transferts Sponsorings Membres` : date limite de validité (`aaaammjj`). A partir de cette date, le document n'est plus _valide_, il est sémantiquement _disparu_. En compilé l'attribut `_zombi` vaut `true`.
+- `hk` : sur `Comptes Avatars Sponsorings`, hash de la phrase secrète raccourcie pour accès direct au document sans connaissance de son id.
 - `dfh` : sur Groupes date de fin d'hébergement.
-- `hpc` : sur Avatars, hash de la phrase de contact (pseudo plus ou moins temporaire).
 - `_data_` : sérialisation de tous les attributs, dont ceux ci-dessus.
-
-En forme compilé la propriété `_data_` n'est pas elle-même présente mais à la place tous les attributs de la classe sont présents.
-- quand _data_ n'existe pas ou est null dans le format row, l'attribut _zombi de la classe correspondante vaut true.
 
 En statique `GenDoc` donne aussi des listes de documents selon leurs modes de gestion afin de faciliter les traitements génériques en particulier d'export et des accès génériques (documents _majeurs-, documents _sous-collection d'un document majeur_) ...
 
 ### `modele.mjs`
 Ce module comporte trois classes: `Cache Operation AuthSession`.
 
-#### `Cache` : cache des objets majeurs `espaces tribus comptas avatars groupes`
+#### `Cache` : cache des objets majeurs `espaces partitions comptes comptis comptas avatars groupes`
 
-Cet objet gére une mémoire cache des derniers documents demandés dans leur version la plus récente.
+Cet objet gère une mémoire cache des derniers documents demandés dans leur version la plus récente.
 
-Le test pour savoir si la version détenue est la dernière s'effectue dans une transaction et permet de ne pas lire le document de la table ou de la collection si sa version n'est pas plus récente ce qui évite des lectures coûteuses inutiles (et coûteuses monaiterement en Firestore).
+Le test pour savoir si la version détenue est la dernière s'effectue dans une transaction et permet de ne pas lire le document de la table ou de la collection si sa version n'est pas plus récente ce qui évite des lectures coûteuses inutiles (et facturées en Firestore).
 
-Cache gère aussi une mémoire cache de `checkpoint` le document de suivi du GC.
-
-En stockant les document `espaces`, `Cache` fournit également le code de l'organisation d'un espace connu par son ns (son id).
-
-##### `static getRow (op, nom, id)`
+##### `static getRow (op, nom, id, lazy)`
 Obtient le row de la cache ou va le chercher.
 - Si le row actuellement en cache est le plus récent on a évité une lecture effective et la méthode s'est limité à un filtre sur index qui ne coûte rien en FireStore et pas grand chose en SQL.
 - Si le row n'était pas en cache ou que la version lue est plus récente IL Y EST MIS:
   - certes la transaction _peut_ échouer, mais au pire on a lu une version, pas forcément la dernière, mais plus récente.
 
-##### `static async getEspaceLazy (op, ns)`
-Retourne l'espace depuis celui détenu en cache. C'est seulement s'il a plus de PINGTO minutes d'âge qu'on vérifie sa version et qu'on la recharge le cas échéant.
-PAR PRINCIPE, elle est retardée: convient pour checker une restriction éventuelle.
-
-##### `static update (newRows, delRowPaths)`
-Utilisée en fin de transaction pour enrichir la cache APRES le commit de la transaction avec tous les rows créés, mis à jour ou accédés (en ayant obtenu la _dernière_ version).
-
-##### `static async getCheckpoint ()`
-Retourne le dernier checkpoint enregistré parle GC.
-
-##### `async setCheckpoint (obj)`
-Enregistre en base et dans Cache le dernier objet de checkpoint défini par le GC.
-
-##### `static async getEspaceOrg (op, org)`
-Retourne le row compilé de l'espace obtenu par son code d'organisation.
-
-##### `static async org (op, id)`
-Retourne le code de l'organisation pour un ns donné.
-
-#### `AuthSession`
-Cette classe conserve une entrée par session authentifiée et en gère la disparition par défaut d'activité (heartbeat).
-
-#### `Operation`
-C'est la classe générique ancêtre des opérations. Chaque opération a une classe spécifique dans le module `operation.mjs` qui hérite de cette classe générique:
+#### Classe `Operation`
+C'est la classe générique ancêtre des opérations. Chaque opération a une classe spécifique dans le module `operation3.mjs / operation4.mjs` qui hérite de cette classe générique:
 - authentification de l'opération,
 - enchaînement des phases 1 2 et 3,
 - enregistrement effectif des mises à jour en fin de phase-2 (juste avant commit de la transaction),
-- signalement des mises à jour au module ws.mjs (en SQL) pour synchronisation WebSocket,
+- signalement des mises à jour au module `notif.mjs`,
 - retour du résultat.
 
-Cette classe propose des méthodes d'interface vers les métodes des providers DB et vers l'accès à Cache: ce ne sont que des commodités syntaxiques.
+Cette classe propose des méthodes d'interface vers les méthodes des providers DB et vers l'accès à Cache: ce ne sont que des commodités syntaxiques.
 
 Enfin cette classe expose aussi une dizaine de méthodes fonctionnelles ayant à être sollicitées depuis plus d'une opération.
 
-_Remarque_: la logique aurait voulu que la classe `Operation` soit incrite dans le module `operations.mjs` : il a été préféré d'isoler le code générique dans un module à part, choix discutable certes mais qui se défend aussi.
+#### Classe `TrLog`
+Cet objet accumule les mises à jour **d'une** opération à notifier au module `notif.mjs` de gestion des publications web-push.
 
-Plus de détail en annexe.
+#### Classe `GD` (Gestion de documents)
+Cet objet est une mémoire cache des documents accédés / mis à jour dans une opération.
+- après mise à jour au cours de l'opération, on retrouve l'objet mis à jour quand il est demandé à nouveau dans la même opération.
+- à la fin de l'opération permet d'obtenir toutes les mises à jours à effectuer.
 
-# Annexe: détails à propos de la classe `Operation`
+# Détails à propos de la classe `Operation`
 Le déclenchement d'une opération `MonOp` sur réception d'une requête `.../op/MonOp`,
 - créé un objet `MonOp` héritant de `Operation`,
 - invoque successivement :
-  - sa méthode `phase1()` qui s'exécute hors de toute transaction, typiquement pour des contrôles d'argments,
+  - sa méthode `phase1()` qui s'exécute hors de toute transaction, typiquement pour des contrôles d'arguments,
   - sa méthode `phase2()` qui s'exécute dans le contexte d'une unique transaction.
-  - sa `phase3()` qui s'exécute après le commit de la transaction pour certaines actions de nettoyge et / ou d'accès au storage.
+  - sa `phase3()` qui s'exécute après le commit de la transaction pour certaines actions de nettoyage et / ou d'accès au storage.
 
 Dans une transaction Firestore aucune lecture n'est autorisée dès qu'une mise à jour a été effectuée. Les mises à jour sont de ce fait _enregistrées et mises en attente_ au cours de la phase 2 et ne seront effectivement faites qu'après la phase 2.
 
 En conséquence, 
-- les opérations doivent prendre en compte que la modification d'un document n'est jamais perceptible dans la même transction par une lecture : le cas échéant si nécessaire stocker en mémoire de l'objet opération les mises à jour si elles participent de la logique de l'opération.
-- une opération doit veiller à ne pas construire plusieurs mies à jour d'un même document dans des méthodes qui s'ignoreraient.
+- les opérations doivent prendre en compte que la modification d'un document n'est jamais perceptible dans la même transaction par une lecture : le cas échéant si nécessaire stocker en mémoire de l'objet opération les mises à jour si elles participent de la logique de l'opération.
+- une opération doit veiller à ne pas construire plusieurs mises à jour d'un même document dans des méthodes qui s'ignoreraient.
+
+La classe `GD` a été construite à cet effet.
 
 ### Authentification avant `phase1()`
-Chaque classe Operation spécifie un attribut authMode qui déclare comment interpréter l'attribut `token` reçu dans l'objet `args` (argments sérialisés reçu dans le body de la requête ou queryString de l'URL). Cet objet est disponible dans `this.args` :
+Chaque classe Operation spécifie un attribut `authMode` qui déclare comment interpréter l'attribut `token` reçu dans l'objet `args` (arguments sérialisés reçu dans le _body_ de la requête ou _queryString_ de l'URL). Cet objet est disponible dans `this.args` :
 - `authMode === 3` : SANS TOKEN, pings et accès non authentifiés (recherche phrase de sponsoring).
 - `authMode === 2` : AVEC TOKEN, créations de compte. Elles ne sont pas encore enregistrées, elles vont justement enregistrer leur authentification.
 - `authMode === 1` : AVEC TOKEN, première connexion à un compte : `this.rowComptas` et `this.compta` sont disponibles.
@@ -1276,3 +1351,21 @@ Chaque classe Operation spécifie un attribut authMode qui déclare comment inte
 
 `delete (row) `
 - Inscrit row dans les rows à détruire en phase finale d'écritue, juste après la phase 2.
+
+# Module `notif.mjs` : service PUBSUB
+Ce module gère les abonnements des sessions des applications Web en cours à leurs périmètres de documents.
+
+Les débuts de session sont notifiées au service PUBSUB.
+
+Un _heartbeat_ est envoyé par les sessions en cours.
+
+Les fins d'opération signalent:
+- les changements de version des espaces,
+- les changements _significatifs_ des record adq (synthèse comptas).
+- les changements de versions des documents comptes avatars groupes.
+- les changement de périmètre des comptes.
+
+A partir de ces données, `notif` peut publier aux sessions connectées les changements de versions / périmètres qui les concernent.
+
+# Module `taches.mjs`
+Il gère la queue des tâches en attente et périodiques (GC), contrôle leurs exécutions et récupère / recycle leurs exceptions.
