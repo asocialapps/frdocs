@@ -1379,8 +1379,10 @@ _data_:
 
 ## Map des fichiers attachés
 - _clé_ `idf`: identifiant aléatoire (absolu) généré à la création.
-- _valeur_ : `{ idf, lg, ficN }`
-  - `ficN` : `{ nom, info, dh, type, gz, lg, sha }` crypté par la clé de la note
+- _valeur_ : `{ idf, lg, ficN, pic }`
+  - `ficN` : `{ nom, info, dh, type, gz, lg, sha, thn }` crypté par la clé de la note.
+  - `pic` : true si le fichier est une _photo_ et a un _thumbnail_.
+  - `thn` : pour un fichier photo, la miniature 96x96 de la photo.
 
 **Identifiant de _storage_ :** `org/id/idf`
 - `org` : code de l'organisation.

@@ -989,13 +989,20 @@ Retour:
 - `url` : url de get
 
 #### PutUrlNf : retourne l'URL de put d'un fichier d'une note
-Retour:
+Retour si OK:
 - `idf` : identifiant du fichier
 - `url` : url à passer sur le PUT de son contenu
+
+Retour si KO: { code, n1, n2 }
+- 1 - excès de taille / quota
+- 2 - excès de note / photo quota
+- 3 - excès volume / groupe
+- 4 - excès note / photo groupe
 
     id: { t: 'idag' }, // id de la note (avatar ou groupe)
     ids: { t: 'ids' }, // ids de la note
     lg: {t: 'int', min: 0, max: 500000000}, // taille du fichier
+    pic: { t: 'bool' }, // est une photo (avec thumbnail)
     aut: { t: 'ida', n: true }, // pour une note de groupe, id de l'auteur de l'enregistrement
     lidf: { t: 'lidf', n: true } // liste des idf fichiers de la note à supprimer
 
@@ -1003,7 +1010,7 @@ Retour:
 
     id: { t: 'idag' }, // id de la note (avatar ou groupe)
     ids: { t: 'ids' }, // ids de la note
-    fic: { t: 'fic' }, // { idf, lg, ficN }
+    fic: { t: 'fic' }, // { idf, lg, ficN, pic }
     ida: { t: 'ida', n: true }, // id de l'auteur (pour une note de groupe)
     lidf: { t: 'lidf', n: true } // liste des idf fichiers de la note à supprimer
 
