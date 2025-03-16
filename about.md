@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Contact/A propos
+title: A propos
 ---
 
 Ce site contient les manuels relatifs à l'application **AsocialApp**.

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Spécifications techniques
+title: Spécifications
 ---
 
 # Architecture, développement, déploiements

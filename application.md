@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Utiliser l'application
+title: Utiliser l'application 
 ---
 
 [Présentation Générale](appli/presentation.html)
