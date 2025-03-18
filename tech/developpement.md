@@ -7,7 +7,7 @@ Le développement a été réalisé avec le studio `VScode`.
 
 Installations préliminaires requises:
 - `node (npm)`, installé par `nvm`.
-- `yarn`(plutôt que npm) gère les dépendances envers les modules externes.
+- `yarn`(plutôt que `npm`) gère les dépendances envers les modules externes.
 - `webpack` est utilisé pour le packaging mais est installé directement dans les applications.
 
 L'application Web est basée sur **Vue.js** (`vuejs.org`) avec la surcouche **Quasar** (`quasar.dev`).
@@ -38,7 +38,7 @@ Le _mélange à éviter_ npm/yarn est apparu temporairement nécessaire. Les com
 ### Problèmes de build des binaires
 Concerne a minima `better-sqlite3` qui a besoin d'être buildé.
 
-yarn le fait, **MAIS** il faut avoir installé build-tools:
+`yarn` le fait, **MAIS** il faut avoir installé build-tools:
 
         npm install build-tools -g
 
@@ -50,9 +50,15 @@ yarn le fait, **MAIS** il faut avoir installé build-tools:
 
         yarn quasar build -m pwa
 
+        # OU
+        npm run build:pwa
+
         # https://github.com/http-party/http-server
+        # Installation: npm install -g http-server
+
         npx http-server dist/pwa -p 8080 --cors -S --cert ../asocial-srv/keys/fullchain.pem --key ../asocial-srv/keys/privkey.pem
 
+        # Plus simplement
         npx http-server dist/pwa -p 8080 --cors
 
 L'application est une **PWA** (Progressive Web App) avec gestion d'un service_worker.
@@ -120,9 +126,9 @@ Les services sont à la base des serveurs HTTP même quand ils sont déployés e
 
 ### Principaux modules requis
 - `@aws-sdk...` : 5 modules implémentant l'interface AWS S3.
-- `@google-cloud...` : 3 modules requis pour accès à firestore, storage et d'interfaçage du logging Winston.
+- `@google-cloud...` : 3 modules requis pour accès à Firestore, storage et d'interfaçage du logging Winston.
 - `@open-wc/webpack-import-meta-loader` : Webpack loader for supporting import.meta in webpack.
-- `msgpack` : sérialisation / désérialisation d'bjets Javascript.
+- `msgpack` : sérialisation / désérialisation d'objets Javascript.
 - `js-sha256` : hash SHA256 synchrone. Invoqué depuis LE module commun à l'applicationWeb (qui ne dépend pas de nodejs) et les services.
 - `express` : serveur HTTP.
 - `better-sqlite3` : accès à la base SQLite.
@@ -130,7 +136,6 @@ Les services sont à la base des serveurs HTTP même quand ils sont déployés e
 - `node-fetch` : pour le service OP quand il doit soumettre des requêtes à PUBSUB.
 - `web-push` : envoi de notifications aux browsers des sessions Web.
 - `winston` : gestionnaire de logs.
-- `sendgrid/mail` : service d'envoi de mails _d'alerte_ par HTTP.
 
 ### Serveur de test
 Depuis l'environnement de développement on peut lancer:
@@ -148,11 +153,11 @@ L'outil _DB Browser for SQLite_ est utilisé pour déclarer le schéma (voir le 
 
 Le folder `sqlite` contient : 
 - `schema.sql` : le schéma de la base qui peut être traité par DB Browser for SQLite.
-- `delete.sql` : rest des données d'une base.
+- `delete.sql` : reset des données d'une base.
 - `testa.db3` `testb.db3` : deux bases de données _courantes_ de test.
 - `test1a.bk` : _backup_ #1 de la base SQLite `a`.
 - les scripts de _backup / restore_ en shell `.sh` et powershell `.ps1`: `bkp.sh bkp.ps1 rst.sh rst.ps1`
-    - argument 1: numéro de la sauvegard,
+    - argument 1: numéro de la sauvegarde,
     - argument 2: lettre de la base.
 
 **Le mode WAL de SQLite**
@@ -161,7 +166,7 @@ Ce mode implique que deux fichiers `test.db3-shm` et `test.db3-wal` existent apr
 
 La commende `./bk1.sh 2 a` (extension `.ps1` en Windows) effectue  dans `sqlite` un backup de la base courante `a` dans le fichier `test2a.bk`. On peut ainsi avoir plusieurs _backups_ de base pris à des instants différents. Ce fichier est _propre_ et a intégré les transactions en cours dans le WAL.
 
-La commande `./rst.sh 2 a` restaure le backup `test2a.bk` sur la base courante `a` et à ce moment il n'y a ni `-wal` ni `-shm`. A la limite le fichier `test.db3` pourrait, à cet instant, être stocké et diffusé, **pour autant que la base ne soit pas ouverte par ailleurs** par exemple par DB Browser.
+La commande `./rst.sh 2 a` restaure le backup `test2a.bk` sur la base courante `a` et à ce moment il n'y a ni `-wal` ni `-shm`. A la limite le fichier `testa.db3` pourrait, à cet instant, être stocké et diffusé, **pour autant que la base ne soit pas ouverte par ailleurs** par exemple par DB Browser.
 
 #### Storage `fs` (file-system)
 Le folder déclaré à la configuration (`fstoragea` `fstorageb` ...) doit exister.
@@ -193,7 +198,7 @@ Consoles:
 Quelques fichiers de configuration y sont installés:
 
 `.firebaserc`
-- évite de spécifierle code projet sur chaque commande.
+- évite de spécifier le code projet sur chaque commande.
 
         {
             "projects": {
@@ -202,7 +207,7 @@ Quelques fichiers de configuration y sont installés:
         }
 
 `firebase.json`
-- indique à emulator où se trouvent ses fichiers et fixe le port de l'émulator de firestore à sa valeur qui n'est PAS celle par défaut.
+- indique à emulator où se trouvent ses fichiers et fixe le port de l'émulator de Firestore à sa valeur qui n'est PAS celle par défaut.
 
         {
         "firestore": {
@@ -247,7 +252,6 @@ Installation ou mise à jour de l'installation
 
         firebase login --reauth
 
-
 ### Delete ALL collections
 Aide: `firebase firestore:delete -`
 
@@ -282,7 +286,7 @@ Le port par défaut de `FIRESTORE_EMULATOR_HOST` étant `8080` il se télescope 
 Remarques:
 - Pour storage: 
   - le nom de variable a changé au cours du temps. C'est bien STORAGE_...
-  - il faut `http://` devant le host sinon il tente https
+  - il faut `http://` devant le host sinon il tente https.
 - Le port par défaut de `FIRESTORE_EMULATOR_HOST` étant `8080` il se télescope avec celui par défaut du serveur (en particulier pour déploiement GAE): lui affecter `8085`.
 - En cas de message `cannot determine the project_id ...`
   `export GOOGLE_CLOUD_PROJECT="asocial-test1"`
@@ -311,19 +315,19 @@ En cours d'exécution, on peut faire un export depuis un autre terminal:
 # Storage S3 : par min.io
 `min.io` est une application serveur qui offre un service de _Storage_ selon le protocole S3 de AWS. 
 
-Son usage _local_ permet de tester un accès  par l'API AWS-S3, sachant qu'il existe plusieurs fournisseurs proposant ce service (pas seulement AWS).
+Son usage _local_ permet de tester un accès par l'API AWS-S3, sachant qu'il existe plusieurs fournisseurs proposant ce service (pas seulement AWS).
 
 Un objet de configuration, nommé par exemple `S3_config` a la syntaxe suivante dans `keys.json`:
 
         "s3_config" : {
-        "credentials": {
-            "accessKeyId": "access-asocial",
-            "secretAccessKey": "secret-asocial"
-        },
-        "endpoint": "http://localhost:9000",
-        "region": "us-east-1",
-        "forcePathStyle": true,
-        "signatureVersion": "v4"
+                "credentials": {
+                        "accessKeyId": "access-asocial",
+                        "secretAccessKey": "secret-asocial"
+                },
+                "endpoint": "http://localhost:9000",
+                "region": "us-east-1",
+                "forcePathStyle": true,
+                "signatureVersion": "v4"
         }
 
 Les clés `access` et `secret` sont données par le fournisseur d'accès choisi.
@@ -346,7 +350,7 @@ On peut browser le contenu d'un bucket depuis la console.
 
 # Création / gestion d'un `Google account`
 
-(todo)
+Suivre les instructions de Google. 
 
 ### Création d'un `service_account` Google
 

@@ -354,8 +354,6 @@ Les propriétés sont celles d'un serveur externe d'envoi de mail mis en place p
   - dont l'url est donnée ici,
   - et dont un mot de passe est donné ici.
   - Voir en annexe l'API que doit implémenter un tel serveur.
-- le couple `_sendgrid_api_key _from` sont deux propriétés pour solliciter le service sendGrid (Twilio). Usage expérimental en évaluation. Dans le cas d'usage d'autres services du marché, leur configuration serait données ici.
-
 
 ### Folder `keys`
 **Ce folder contient le certificat du domaine de l'application** tels que générés par `Lets Encrypt` (https://letsencrypt.org/) par exemple:
@@ -376,8 +374,8 @@ Ce folder,
   - une partie _technique_ spécifique de chaque déploiement et détaillée ci-après.
 
 Il comporte des lignes donnant les _configurations_ des _providers_ de DB et de Storage:
-- pouvant être cités dans la section `run`,
-- pouvant être cité sur les lignes de commande: `node src/tools.mjs ...`
+- pouvant être citées dans la section `run`,
+- pouvant être citées sur les lignes de commande: `node src/tools.mjs ...`
 
       // Configuration nommées des providers db et storage
       s3_a: { bucket: 'asocial' },
@@ -403,7 +401,7 @@ Chaque nom de configuration comporte: le `nom du provider`, `_`, `lettre d'ident
     - `{ bucket: '...' }` identifiant du bucket réservé à cet usage.
 
 #### La section env: {...}
-_Certains_ paramètres (typiquement ceux de _l'emulator de Google Cloud Platform) **doivent** figurer en variables d'environnement. On les déclare dans la section env.
+_Certains_ paramètres (typiquement ceux de l'emulator de Google Cloud Platform) **doivent** figurer en variables d'environnement. On les déclare dans la section env.
 Cas identifiés:
 - `STORAGE_EMULATOR_HOST`: pour EMULATOR de Google Storage
 - `FIRESTORE_EMULATOR_HOST`: pour EMULATOR de Google Firestore
@@ -438,7 +436,7 @@ Chaque déploiement demande:
 `s3_config`
 - uniquement si le _provider_ de Storage est S3.
 
-alertes
+**alertes**
 - uniquement si les alertes graves sont poussées sur le mail de l'administrateur technique.
 
 ### Folder `keys`
@@ -851,7 +849,7 @@ Les fichiers spécifiques au déploiement GAE sont à préparer dans `asocial-sr
   - `app.yaml`: vérifier la version de node.
   - `cron.yaml`: ajuster l'heure si nécessaire.
   - `.cloudignore`
-  - `depl.sh`. Ce fichier recopie les fichiers nécessaires dans le directory de déploiement.
+  - `depl.sh` `depl.ps1`. Ces scripts recopient les fichiers nécessaires dans le directory de déploiement.
 
 ## Scénario de déploiement
 
@@ -870,10 +868,10 @@ Y créer les folders `src` et `node_modules`.
 
 `npm install` à deux fonctions:
 - permettre d'effectuer un test final après déploiement,
-- générer un package-lock.json qui accélère le déploiement ET fixe les versions exactes des modules.
+- générer un `package-lock.json` qui accélère le déploiement ET fixe les versions exactes des modules.
 
 #### Tester localement
-On peut tester le serveur avec: node src/server.js
+On peut tester le serveur avec: `node src/server.js`
 
 **MAIS ça s'exécuterait sur la base de production**, c'est inopportun. Il faut donc:
 - changer dans `config.mjs` la première ligne `EMULATOR = true`
@@ -885,7 +883,7 @@ Après tests, changer à nouveau dans `config.mjs` la première ligne `EMULATOR 
 
     gcloud app deploy --verbosity debug --no-cache
 
-no-cache : sinon plantage du build step 2 en cherchant à comparer avec une version antérieure.
+`no-cache` : sinon plantage du build step 2 en cherchant à comparer avec une version antérieure.
 
 Quelques minutes ..., puis si nécessaire (si `cron.yaml` a changé par rapport à l'opérationnel):
 
@@ -897,6 +895,8 @@ Dans un autre terminal `gcloud app logs tail` permet de voir les logs de l'appli
 
 Les logs complets s'obtienne depuis la console Google du projet (menu hamburger en haut à gauche `>>> Logs >>> Logs Explorer`).
 
+> On pourrait croire qu'un déploiement lance le serveur: il n'en est rien, la console ne montre pas d'instance active. Lancer une connexion pour voir _monter_ une instance.
+
 # Déploiements _Cloud Function_ des services OP et PUBSUB
 A rédiger, après un premier déploiement réel.
 
@@ -904,7 +904,7 @@ A rédiger, après un premier déploiement réel.
 
 Un _browser_ ne peut pas écrire dans le _file-system_ de son poste. L'application Web offre la possibilité du _download_ d'une sélection de notes et de leurs fichiers attachés. Pour ce faire elle invoque l'URL http://localhost:33666
 
-upload est un micro serveur Web qui, une fois lancé, écoute ce port: il reçoit des requêtes PUT émises par l'application Web, une par _fichier_ à écrire localement, et en écrit le contenu sur le répertoire local:
+`upload` est un micro serveur Web qui, une fois lancé, écoute ce port: il reçoit des requêtes PUT émises par l'application Web, une par _fichier_ à écrire localement, et en écrit le contenu sur le répertoire local:
 - **le path du fichier 'abcd...'** en relatif au directory courant d'exécution, est donné dans l'URL en base64 URL: http://localhost:33666/abcd...
 - le contenu du fichier est dans le body de la requête.
 
@@ -980,17 +980,15 @@ Les commandes sont:
 
 ### `export-db -s --in ... --out ...`
 - `-s` : optionnel. Simulation, rien n'est écrit.
-- `--in N,org,prov_x,S` - Espace _source_
-  - `N`: lettre / chiffre de l'espace `0..9 a..z A..Z`
+- `--in org,prov_x,S` - Espace _source_
   - `org`: code de l'organisation
   - `prov`: nom du provider: `sqlite firestore`
   - `x`: le provider `prov_x` doit être décrit dans la configuration.
   - `S`: lettre du site dans la liste des sites de la configuration.
-- `--out N,org,prov_x,S` - Espace _cible_
+- `--out org,prov_x,S` - Espace _cible_
 
 ### `purge-db --in ...`
-- `--in N,org,prov_x,S` - Espace à purger
-  - `N`: lettre / chiffre de l'espace `0..9 a..z A..Z`
+- `--in org,prov_x,S` - Espace à purger
   - `org`: code de l'organisation
   - `prov`: nom du provider: `sqlite firestore`
   - `x`: le provider `prov_x` doit être décrit dans la configuration.
@@ -1006,16 +1004,16 @@ Les commandes sont:
 
 ### Exemples:
 
-    node tools export-db --in 1,doda,sqlite_a,A --out 2,coltes,sqlite_b,B
-    node tools export-db --in 1,doda,sqlite_a,A --out 1,doda,firestore_a,A
-    node tools export-db --in A,doda,firestore_a,A --out A,doda,sqlite_b,A
+    node tools export-db --in doda,sqlite_a,A --out coltes,sqlite_b,B
+    node tools export-db --in doda,sqlite_a,A --out doda,firestore_a,A
+    node tools export-db --in doda,firestore_a,A --out doda,sqlite_b,A
 
     Exemple export-st:
     node tools export-st --in doda,fs_a --out doda,gc_a
 
     Exemple purge-db
-    node tools purge-db --in 2,coltes,firebase_b,A
-    node tools purge-db --in 2,coltes,sqlite_b,B
+    node tools purge-db --in coltes,firebase_b,A
+    node tools purge-db --in coltes,sqlite_b,B
 
 # Utilitaire d'envoi de mails d'alertes
 

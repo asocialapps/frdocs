@@ -42,7 +42,7 @@ _Technologie_: Javascript avec _Node.js_
 ### La base de données centrale**
 Ses données sont stockées à l'occasion des opérations de mises à jour effectuées par une instance de service **OP**, qui est le seul à pouvoir accéder à la base.
 
-Une base de données est virtuellement _partitionnée_ en espaces (jusqu'à 60), étanches entre eux, afin d'héberger techniquement plusieurs organisations dans une même base.
+Une base de données est virtuellement _partitionnée_ en espaces, étanches entre eux, afin d'héberger techniquement plusieurs organisations dans une même base.
 
 _Technologies_: SQL (SqLite, PostgreSQL ...) et NOSQL (Firestore de Google).
 
@@ -65,7 +65,7 @@ _Technologie_: _node.js_
 ### L'utilitaire d'administration d'EXPORT d'un espace
 L'export d'un espace de la base se fait en l'important dans une autre, éventuellement locale au poste de l'administrateur.
 
-L'export d'un espace du Storage se fait en l'import dans un autre Storage, le cas échéant un répertoire du File-System local au poste de l'administrateur.
+L'export d'un espace du Storage se fait en l'important dans un autre Storage, le cas échéant un répertoire du File-System local au poste de l'administrateur.
 
 _Technologie_: _node.js_
 
@@ -86,9 +86,9 @@ En effet administrateur et comptables ne sont pas en général en permanence der
 
 **Technologies développées:**
 - service Node émettant un mail pat SMTP à brancher derrière le serveur Web de l'administration technique,
-- service PHP ayant la même fonction,
-- appel au service `SendGrid` aui propose une API-HTTP d'envoi de mails, libre en dessous de 100 mails par jour.
-- la technologie `AWS SES` offre le même type de service mais reste à écrire en cas de mauvais fonctionnement des précédentes.
+- service PHP ayant la même fonction.
+
+> La technologie `AWS SES` offre le même type de service mais reste à écrire en cas de mauvais fonctionnement de la précédente.
 
 ### Langues
 
@@ -108,7 +108,7 @@ C'est une _page Web index.html_ standard, plus précisément une **_PWA Progress
 Quand la page a été chargée une première fois, avec toutes les ressources requises par la page _index.html_, depuis un browser connecté à Internet par son URL, le browser en conserve l'image dans une mémoire dédiée au browser sur le poste (assuré par le script _service worker_ de l'application).
 
 Lors des prochains appels depuis ce même browser à cette URL, le browser,
-- obtiendra du site CDN les seuls éléments nouveaux depuis le chargement précédent,
+- obtiendra du site CDN les seuls éléments nouveaux depuis le chargement précédent (mais en pratique presque tout -sauf des ressources CSS-, le webpack ayant généré un js complet),
 - si le browser n'est pas connecté à Internet, il utilisera la version la plus récente obtenue antérieurement permettant un fonctionnement _offline_(en mode _avion_, en consultation seulement).
 
 L'application Web,
