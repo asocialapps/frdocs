@@ -8,7 +8,7 @@ L'application est une page Web, _PWA: progressive web app_:
 - un script _service worker_ assure la disponibilité de la page en l'absence de réseau,
 - l'application **reçoit** des notifications web-push transmises par le browser qui les a reçues du service PUBSUB afin de notifier une évolution des documents du périmètre du compte connecté.
 - l'application **émet** des requêtes HTTP:
-  - vers le service OP, opérations de mises à jour / consultations / synchronisation,
+  - vers le _service OP_, opérations de mises à jour / consultations / synchronisation,
   - vers le _Storage_ pour upload / download de fichiers attachés aux notes.
 
 Elle est structurée,
@@ -29,23 +29,23 @@ L'architecture de l'application sépare:
 # Configuration de l'application
 
 ## Configuration _personnalisée et buildée_
-La _configuration_ peut être personnalisée (ce n'est pas du tout obligatoire), puis l'application est _buildée_, la configuration ne peut pas être modifiée après _build_.
+La _configuration_ peut être personnalisée (ce n'est pas obligatoire), puis l'application est _buildée_: la configuration ne peut pas être modifiée après _build_.
 
 #### Personnalisation du script `src/app/config.mjs`
-Elle peut être conservée par défaut, sauf la propriété `BUILD` qui donne la date-heure du build de l'application.
+Elle peut être conservée par défaut, sauf la propriété `BUILD` qui donne une référence du build de l'application.
 
 #### Personnalisation des traductions dans les scripts `src/i18n/fr-FR/index.js`
 Les scripts `fr-FR` et `en-EN` donnent les _traductions_ en français et en anglais.
 
-Une personnalisation est possible mais à gérer par concaténation du script _par défaut_ avec un script de _surcharges ponctuelles_.
+> Une personnalisation est possible mais à gérer par concaténation du script _par défaut_ avec un script de _surcharges ponctuelles_.
 
 #### Personnalisation de l'aide en ligne `src/assets/help/...`
 L'aide en ligne peut aussi être personnalisée: les fichiers d'aide _par défaut_ sont à fusionner avec des fichiers de _surcharges ponctuelles_.
 
-> Un hébergeur procédant à une _personnalisation_ doit rendre public une liste de fichiers ayant patché les fichiers par défaut et le script de _patch_ associé afin que n'importe soit en mesure de refaire le _build_ correspondant depuis les sources _open source_ de départ et s'assurer ainsi qu'ils n'ont pas été altérés par des patchs compromettant la confidentialité.
+> Un hébergeur procédant à une _personnalisation_ doit rendre public une liste de fichiers ayant patché les fichiers par défaut et le script de _patch_ associé afin que n'importe qui soit en mesure de refaire le _build_ correspondant depuis les sources _open source_ de départ et s'assurer ainsi qu'ils n'ont pas été altérés par des patchs compromettant la confidentialité.
 
 ## Configuration de _runtime_
-L'application une fois _buildée_ (distribuable `[distrib]/`) est un folder comportant peu de fichiers:
+L'application une fois _buildée_ (distribuable `dist/pwa`) est un folder comportant peu de fichiers:
 - elle peut être utilisée par plusieurs hébergeurs, tous ceux ayant opté pour cette même personnalisation.
 - chaque hébergeur doit écrire son propre ficher `[distrib]/etc/urls.json` avant distribution par le serveur Web statique mettant à disposition l'application.
 
