@@ -224,7 +224,7 @@ L'instance **unique à un instant donné** est un serveur HTTP en charge:
   
 L'instance PUBSUB n'est pas forcément _permanente_: il y en a une (seule) active dès lors qu'une session s'est connectée à un compte et le reste jusqu'à déconnexion de la dernière session active.
 
-**A chaque transaction de mise à jour exécutée par une instance du service OP:** une requête `notif` au service PUBSUB est émise lui transmettant l'objet `trlog` de la transaction. PUSUB est ainsi en mesure,
+**A chaque transaction de mise à jour exécutée par une instance du service OP:** une requête `notif` au service PUBSUB est émise lui transmettant l'objet `trlog` de la transaction. PUBSUB est ainsi en mesure,
 - d'identifier toutes les sessions actives ayant un document de leur périmètre impacté (en ignorant la session origine de la transaction informée directement par OP),
 - de mettre à jour le cas échéant les périmètres des comptes modifiés.
 - d'émettre, de manière désynchronisée, à chacune de celles-ci la liste des IDs des documents mis à jour la concernant avec leurs versions (un objet `trlog` _raccourci_ construit spécifiquement pour chaque session),
@@ -283,13 +283,18 @@ Une page Web standard n'est pas autorisée à écrire sur le système de fichier
 
 Le source consiste en moins de 100 lignes de code écrite en `node.js` / Javascript.
 
-`upload` (Linux) peut être téléchargé par Internet (`upload.exe` pour la version Windows).
+`upload` (Linux) peut être téléchargé par Internet (`upload.exe` pour la version Windows). `upload.js` est un script qui peut être exécuté quand Node est installé sur le poste, donc pour toutes les autres plateformes (Mac...).
 
 Une fois téléchargé et lancé sur le poste où s'exécute le browser accédant à l'application, ce micro serveur HTTP permet de récupérer (en clair) dans un répertoire local au poste les notes sélectionnées par l'utilisateur et leurs fichiers. 
 
 # Services de mails d'alerte
-- L'implémentation du service SendGrid est inclus dans le service OP.
-Les implémentations, très simples, PHP et Node à intégrer dans le serveur Web de l'administrateur technique sont disponibles dans les projets `sitephp` et `sitenode`
+Des mails d'alertes peuvent être envoyés,
+- à l'administrateur en cas de présomption de bug, résultat d'une exception sur une assertion (la situation rencontrée ne devrait pas être possible).
+- aux comptables des organisations qui le souhaitent en cas d'insertion d'un item de _chat_ adressé en _urgence_ au Comptable.
+
+Le service OP n'envoie pas les mails mais soumet une requête à un serveur Web externe se chargeant d'émettre le mail. Une implémentation de quelques lignes en PHP est fournie et peut être branchée sur tout serveur Web autorisé à effectuer des sendMail PHP.
+
+Les mails envoyés ne sont qu'une alerte de réveil, avec un _sujet_ mais pas de texte, le destinataire ayant à consulter, qui les logs du service OP, qui ses _chats_ pour en savoir plus.
 
 # Variantes de mise en œuvre
 
@@ -297,7 +302,7 @@ Les implémentations, très simples, PHP et Node à intégrer dans le serveur We
 
 ## Hébergement NON géré des services OP et PUBSUB
 Typiquement, une VM, voire plusieurs VMs, hébergent les services OP et PUBSUB:
-- pour PUBSUB, une seule instance doit être en exécution. Si la puissance requise devient trop forte, il faut procéder à un développement complémentaire sommairement décrit en Annexe.
+- pour PUBSUB, une seule instance doit être en exécution. Si la puissance requise devient trop forte, il faut procéder à un développement complémentaire significatif.
 - pour OP, plusieurs instances peuvent être lancées avec un front-end de distribution du traffic, typiquement NGINX. Toutefois le provider SQLite n'est plus possible, il faut choisir l'un des 2 autres (PostgreSQL ou Firestore).
 
 Le fait d'être NON géré impose de consacrer de l'énergie à surveiller le bon fonctionnement et à relancer les services tombés. 
@@ -325,7 +330,7 @@ Pour le site distribuant l'application Web, pas de souci, les services gérés s
 
 L'augmentation de puissance pour OP se fait en service géré en autorisant un plus grand nombre d'instances.
 
-Concernant PUBSUB, si la puissance demandée excède ce que peut supporter une instance NodeJS, voir les possibilités de développement indiquées en annexe. Toutefois, PUBSUB n'effectue sur requête POST entrante QUE du travail en mémoire et des requêtes POST sortantes pour les notifications. Il faut vraiment un très gros traffic pour atteindre cette limite. 
+Concernant PUBSUB, si la puissance demandée excède ce que peut supporter une instance NodeJS, un développement significatif est à concevoir. Toutefois, PUBSUB n'effectue sur requête POST entrante QUE du travail en mémoire et des requêtes POST sortantes pour les notifications. Il faut vraiment un très gros traffic pour atteindre cette limite. 
 
 ## Service de base de données
 Firestore est un service de Google, géré et de puissance extensible: la limite n'a pas pu être mesurée. Pour un trafic faible, le seuil de facturation peut ne pas être atteint.
@@ -351,23 +356,23 @@ Chaque site a,
 - son _administrateur technique_, ayant sa phrase secrète de connexion qu'il est seul à connaître en clair,
 - une _clé technique de cryptage spécifique du site_ pour crypter les données en base de données (mais qui ne permet en rien d'accéder aux données cryptées par les comptes). Seul l'administrateur technique en connaît la source en clair.
 
-**UN _site_ peut héberger plusieurs organisations (jusqu'à 60) de manière totalement étanche entre elles.**
+**UN _site_ peut héberger plusieurs organisations de manière totalement étanche entre elles.**
 
 **Une organisation est identifiée par un code** de 4 à 8 lettres ou chiffres ou - comme `monorg`:
 - à la connexion un utilisateur fournit le code de son organisation et sa phrase secrète.
-- dans le _storage_ chaque organisation a un _folder_ portant le nom de l'organisation. Autre expression plus exacte les noms des fichiers des notes de l'organisation `monorg` commencent tous par `monorg/...`.
+- dans le _storage_ chaque organisation a un _folder_ portant le nom de l'organisation. Autre expression plus exacte les noms des fichiers des notes de l'organisation `monorg` commencent tous par `monorg/...`. Toutefois, sur option de l'administrateur technique, le _path_ lui-même peut être crypté de sorte que `monorg` n'apparaît pas ainsi.
 
-En base de données chaque organisation est identifiée par un code `ns` (_name space_) un signe `0-9 a-z A-Z` qui préfixe les identifiants des documents en base.
+En base de données le code de l'organisation préfixe les identifiants des documents en base.
 
 **Conséquences**
-- **on peut exporter une base** en lui changeant son couple _ns / org_:  `1 monorg` en un autre `4 monorg2`.
+- **on peut exporter une base** en lui changeant son code _org_:  `monorg` en un autre `monorg2`.
 - **on peut exporter un storage** `monorg` en `monorg2`, les fichiers étant copiés à l'identique mais avec un nom qui commence par `monorg2/...` au lieu de `monorg/...`
-- on peut purger une base de données d'un `ns` donné (`1` par exemple).
-- on peut purger un espace de nom `monorg` donné.
+- on peut purger une base de données d'une `org` donnée.
+- on peut purger un storage de nom `monorg` donné.
 
 Il est simple de procéder à l'exportation d'une organisation depuis un _site_ vers un autre _site_, de technologie différente ou non pour la base de données et le storage, et administrée par une entité complètement différente et autonome du _site_ source.
 
-Il est aussi simple de _prendre une photo_ à un instant donné d'un espace `1` par exemple et de l'exporter sur un espace `2` à des fins d'audit, d'archivage ou de debug.
+Il est aussi simple de _prendre une photo_ à un instant donné d'un espace `org1` par exemple et de l'exporter sur un espace `org2` à des fins d'audit, d'archivage ou de debug.
 - pendant l'export, l'espace source est figé par l'administrateur technique en lecture seule pour disposer d'un cliché cohérent, il est ensuite rouvert à la mise à jour à la fin de l'export.
 
 # Annexe I : _ES6_ versus _CommonJs_
@@ -400,7 +405,6 @@ _Remarques pour le build du serveur pour déploiement NON GAE_
 > Remarque : il n'existe que 3 entorses à ES6 et la présence de `require`: 
 - a) `pako` dans l'application Web : fichier `src/boot/appconfig.js`,
 - b) `better-sqlite3` dans le service OP : fichier `src/loadreq.mjs`.
-- c) `sendgrid` dans le service OP : fichier `src/sendgrid.mjs`.
 - c) `web-push` dans le service PUBSUB : fichier `src/notif.mjs`.
 
 # Annexe II : augmenter la puissance du service PURSUB
@@ -412,3 +416,5 @@ Augmenter la puissance de ce service si elle est insuffisante oblige à changer 
 - Postgresql offre aussi un mécanisme de souscription / publication utilisable.
 
 Il n'est pas certain qu'en servant une seule organisation, on atteigne la limite de saturation du service PUBSUB s'exécutant sur une VM ayant plusieurs CPU avant d'atteindre d'autres limites et contentions sur la base de données typiquement.
+
+"augmenter _par re-conception logicielle_ la puissance du service PURSUB" n'est probablement une question qui devrait se poser.

@@ -14,7 +14,7 @@ Leur stockage ont des coûts unitaires très différents (variant d'un facteur d
 
 ### Abonnement: coût de l'espace occupé en permanence
 L'abonnement couvre les frais fixes d'un compte:  même quand il ne se connecte pas, le stockage de ses données a un coût. Il est décomposé en deux lignes de coûts correspondant à l'occupation d'espace en _base de données_ et en _storage_:
-- **Prix unitaire de stockage d'un document** multiplié par le **nombre de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels non _indésirables_, nombre de participations actives aux groupes.
+- **Prix unitaire de stockage d'un document** multiplié par le **nombre de _documents_**: notes personnelles et notes d'un groupe hébergé par le compte, chats personnels non _indésirables_, nombre de participations actives aux groupes. Une note ayant N fichiers de type _image_ attachés est décompté pour N+1 afin de tenir compte du volume en base de l'image miniature.
 - **Prix unitaire du stockage des fichiers dans un _storage_** multiplié par le **volume des fichiers attachés aux notes**.
 
 Pour obtenir le coût correspondant à ces deux volumes il est pris en compte, non pas _le volume effectivement utilisé à chaque instant_ mais forfaitairement **les _quotas_ (_volumes maximaux_)** auquel le compte est abonné.
@@ -86,11 +86,11 @@ Les coûts unitaires en centimes sont donnés pour les 6 compteurs:
 - 1Gb de transfert descendant (download)
 - 1Gb de transfert montant (upload)
 
-    tarifs: [
-      { am: 202401, cu: [0.45, 0.10, 8, 20, 15, 15] },
-      { am: 202501, cu: [0.55, 0.15, 8, 18, 15, 15] },
-      { am: 202506, cu: [0.65, 0.10, 8, 15, 15, 15] }
-    ]
+      tarifs: [
+        { am: 202401, cu: [0.45, 0.10, 8, 20, 15, 15] },
+        { am: 202501, cu: [0.55, 0.15, 8, 18, 15, 15] },
+        { am: 202506, cu: [0.65, 0.10, 8, 15, 15, 15] }
+      ]
 
 # Procédé de calcul de la comptabilité à l'instant t
 La structure est la suivante:
@@ -143,7 +143,7 @@ Le principe de calcul est de partir avec la dernière photographie enregistrée 
 - le calcul démarre _maintenant_ à la date-heure `now`.
 - la première étape est d'établir le passé survenu entre `dh` et `now`: ce peut être quelques secondes comme 18 mois.
   - par principe aucun événement ne s'est produit entre ces deux instants, il s'agit donc de _prolonger_ l'état connu à `dh` jusqu'à `now`.
-  - le mois M de la photo précédente à dh doit être prolonger, soit jusqu'à now, soit jusqu'à la fin du mois.
+  - le mois M de la photo précédente à `dh` doit être prolongé, soit jusqu'à `now`, soit jusqu'à la fin du mois.
   - puis le cas échéant il _peut_ y avoir N mois entiers à prolonger dans l'état connu à fin M.
   - puis le cas échéant il _peut_ y avoir un dernier mois incomplet prolongeant le dernier calculé.
 
@@ -154,8 +154,8 @@ Quand on prolonge un mois selon les compteurs deux cas se présentent:
 Le calcul s'effectuant depuis le dernier mois calculé, mois par mois, le calcul peut s'effectuer sur plus de 12 mois, sachant que les onze derniers et le mois courant sont disponibles dans `vd`.
 
 Après la phase de prolongation de dh à now, on met à jour le nouvel état courant:
-- les compteurs qv peuvent être à mettre à jour,
+- les compteurs `qv` peuvent être à mettre à jour,
 - le statut O/A peut être à mettre à jour,
 - une consommation peut être à enregistrer: c'est au cycle suivant qu'elle _coûtera_.
 
-Le coût de calcul moyen sur M M-1 peut être effectué: si le nombre de ms de cette période est trop faible (moins de 10 jours) la moyenne peut être aberrante en survalorisant les opérations les plus récentes. Cette moyenne considère qu'il y a toujours eu au moins 10 jours de vie, m^me si la création remonte à moins que cela.
+Le coût de calcul moyen sur M M-1 peut être effectué: si le nombre de ms de cette période est trop faible (moins de 10 jours) la moyenne peut être aberrante en survalorisant les opérations les plus récentes. Cette moyenne considère qu'il y a toujours eu au moins 10 jours de vie, même si la création remonte à moins que cela.
