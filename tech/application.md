@@ -47,29 +47,70 @@ L'aide en ligne peut aussi être personnalisée: les fichiers d'aide _par défau
 ## Configuration de _runtime_
 L'application une fois _buildée_ (distribuable `dist/pwa`) est un folder comportant peu de fichiers:
 - elle peut être utilisée par plusieurs hébergeurs, tous ceux ayant opté pour cette même personnalisation.
-- chaque hébergeur doit écrire son propre ficher `[distrib]/etc/urls.json` avant distribution par le serveur Web statique mettant à disposition l'application.
+- chaque hébergeur doit corriger les deux fichiers suivants par les siens avant distribution par le serveur Web statique mettant à disposition l'application:
+  - `dist/pwa/services.json`: décrit vers quels URls les services sont assurés en fonction des organisations.
+  - `dist/pwa/README.md` : information des utilisateurs sur la build de l'application qu'il utilise.
+  - `dist/pwa/patch/...` : à titre documentaire, fichiers sources éventuels utilisés pour _patcher_ la distribution _open source_. 
+
+Exemple de `services.json`
 
     {
-    "opurl" : "http://localhost:8443",
-    "pubsuburl" : "http://localhost:8443",
-    "docsurls": { "fr-FR": "http://localhost:4000/fr", "en-EN": "http://localhost:4000/en" },
-    "vapid_public_key": "BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew",
+      "vapid_public_key": "BC8J60J...QE88Ew",
+      "docsurls": { 
+        "fr-FR": "https://asocialapps.github.io/frdocs", 
+        "en-EN": "https://asocialapps.github.io/frdocs" 
+      },
+      "services": {
+        "a": {
+          "opurl": "https://....com",
+          "pubsuburl": "https://....com",
+          "orgs": ["demo", "monorg"]
+        },
+        "z": {
+          "opurl": "http://localhost:8080",
+          "pubsuburl": "http://localhost:8080",
+          "orgs": []        
+        }
+      } 
     }
+
+Exemple de `README.md`
+
+    Application "asocial":
+    - distribution: t1
+    - build: v1.3.4 - 1.01
+    - url: https://asocialapps.github.io/t1
+
+    Sources: 
+    - dépôt: https://github.com/dsportes/asocial-app/tree/v1.3.4
+    - tag: v1.3.4
+    - patchs: _aucun_
+
 
 _**Remarques:**_
 - ce fichier _peut_ être téléchargé / affiché par n'importe qui: il ne comporte aucune information confidentielle.
 - ce fichier ne comporte _que_ les informations propres à chaque hébergeur, qui chacun a modifié la distribution sortie de _build_ pour y mettre ses propres URLs.
-- `opurl`: URL du service OP de l'hébergement.
-- `pubsuburl`: URL du service PUBSUB de l'hébergement (_peut_ être égal à celui de OP).
-- `docsurls`: URLs dans les différentes langues supportées du site de documentation de l'application. Chaque hébergement _peut_ proposer son propre site de documentation OU choisir celui standard.
 - `vapid_public_key`: chaque hébergement _peut_ avoir généré son propre couple de clés VAPID (pour le service web-push), mais peut aussi opter par facilité pour le couple de clés générées pour le test de l'application.
+- `docsurls`: URLs dans les différentes langues supportées du site de documentation de l'application. Chaque hébergement _peut_ proposer son propre site de documentation OU choisir celui standard ci-dessus.
+- sous la rubrique `services`, il y a un groupe d'information par _serveur_ (en fait couple de services OP / PUBSUB) indiquant quelles organisations sont servies par ce _serveur_.
+  - `opurl`: URL du service OP de l'hébergement.
+  - `pubsuburl`: URL du service PUBSUB de l'hébergement (_peut_ être égal à celui de OP).
+  - `"orgs": ["org1", "org2", ...]` : liste des organisations servies par ce serveur.
 
-> Les fichiers de l'application _buildée_ sont lisible _en clair_ (à peu près !) par n'importe qui. La comparaison avec les fichiers _certifiés_ permet de déterminer si elle a subi des transformations depuis le source public _open source_.
+Pour ce connecter, un compte d'une organisation va indiquer le couple _org1 / phrase secrète_ de son compte. 
+- le _pseudo_ compte `admin` doit être indiqué sous la forme `admin-a` ou `admin-z` c'est à dire en précisant le serveur.
+- le service `"z"` n'est à décrire que si on veut utiliser l'application Web pour tester un serveur local (sur `localhost`): dans ce cas il faut spécifier `org1-z` au lieu de `org1` comme code d'organisation afin d'être dirigé sur le serveur de test et non de production.
+
+> Les quelques fichiers de l'application _distribuée_ sont lisibles _en clair_ (à peu près, dans un browser en debug) par n'importe qui. 
+
+> Il est possible de les comparer avec ceux du dépôt public _open source_, patchés le cas échéant comme indiqué dans le `README.md`, après un _build_. On peut ainsi s'assurer qu'aucune intervention malicieuse cachée n'a été appliquée dans la livraison.
 
 ## Chargement de la configuration: `config-store.js`
 Il est assuré par le script `src/boot/appconfig.mjs` qui est lancé au boot de l'application, avant affichage de _la_ vue racine `App.vue`.
 
-Par commodité, la configuration _compilée_ est stockée dans le _store_ `src/stores/config-store.js`: c'est peu rationnel, la configuration par principe ne devrait pas changer après chargement initial et n'aurait pas besoin d'être disponible dans un _store_ réactif. Toutefois, parce que ce sont les seules données permanentes d'une session du browser, ce _store_ inclut 5 propriétés gérées par le _service-worker_. Celles-ci évoluent donc (rarement) en cours de session: en particulier la propriété `nouvelleVersion` (effectivement réactive) est affichée dans `App.vue`.
+Par commodité, la configuration _compilée_ est stockée dans le _store_ `src/stores/config-store.js`: c'est peu rationnel, la configuration par principe ne devrait pas changer après chargement initial et n'aurait pas besoin d'être disponible dans un _store_ réactif. 
+
+**Ce sont les seules données permanentes d'une session du browser:** ce _store_ inclut des propriétés gérées par le _service-worker_. Celles-ci évoluent donc (rarement) en cours de session: en particulier la propriété `nouvelleVersion` (effectivement réactive) est affichée dans `App.vue`.
 
 Ce _store_ est le seul qui est constant depuis le chargement de l'application et **ne subit pas de _reset_** à la connexion à un nouveau compte.
 
@@ -80,7 +121,7 @@ Ce _store_ est le seul qui est constant depuis le chargement de l'application et
     nc: 0, // numéro d'ordre de connexion dans la session du browser
     permState: '???', // granted denied prompt
 
-Ces données sont fondamentales pour la gestion des notifications web-push:
+Ces données sont utilisées pour la gestion des notifications web-push:
 - `subJSON` est le token web-push obtenu par le _service-worker_ depuis le browser.
 - `pageSessionId` est un identifiant aléatoire représentant la session de l'application.
 - `nc` est un numéro d'ordre de 1 à N de connexion croissant dans une session.
@@ -93,7 +134,7 @@ Ces données sont fondamentales pour la gestion des notifications web-push:
 - `src/pwa/custom-service-worker.js` : ce script est une extension du _service-worker_ et s'exécute donc dans le SW lui-même.
 
 ### `src/pwa/register-service-worker.js`
-Le script propose des débranchements lors des évènements:
+Ce script propose des débranchements lors des évènements:
 - `ready` : à cette occasion l'objet `registration` est transmis pour stockage dans `config-store`.
 - `updatefound updated` : ces événements activent une action de `config-store`. La propriété (réactive) `nouvelleVersion` passe à `true` sur réception de `updated` (`updatefound` est ignoré), ce qui provoque l'affichage dans `App.vue` du bouton `Nouvelle version disponible`. 
 
@@ -106,8 +147,10 @@ Il faut d'abord indiquer au browser que l'application est à l'écoute de celles
   - `prompt`: l'utilisateur ne s'est pas encore prononcé ou a réinitialisé les permissions,
   - `granted`: l'utilisateur a accepté,
   - `denied`: l'utilisateur a refusé.
-  - on écoute les changements de ce statut en permanence, l'utilisateur pouvant agir à n'importe quel instant en dehors de tout contrôle de l'application. Uand le statut passe à granted on peut récupérer la `subscription`.
+  - on écoute les changements de ce statut en permanence, l'utilisateur pouvant agir à n'importe quel instant en dehors de tout contrôle de l'application. Quand le statut passe à `granted` on peut récupérer la `subscription`.
 - on obtient le jeton du browser depuis cet objet `registration`:
+
+Extrait de config-store:
 
     async setRegistration(registration) {
       await this.listenPerm()
@@ -117,11 +160,10 @@ Il faut d'abord indiquer au browser que l'application est à l'écoute de celles
     },
 
     async listenPerm () {
-      const notificationPerm = await navigator.permissions.query({ name: 'notifications' })
-      this.permState = notificationPerm.state
-      notificationPerm.onchange = async () => {
-        console.log("User decided to change his seettings. New permission: " + notificationPerm.state)
-        this.permState = notificationPerm.state
+      await this.getPerm()
+      this.notificationPerm.onchange = async () => {
+        console.log("User decided to change his settings. New permission: " + this.notificationPerm.state)
+        await this.getPerm()
         if (this.permState === 'granted') await this.setSubscription()
       }
     },
@@ -140,7 +182,13 @@ Il faut d'abord indiquer au browser que l'application est à l'écoute de celles
       }
     },
 
-Pour obtenir subJSON il faut fournir la clé publique VAPID correspondant à la clé privée employée par le service PUBSUB pour émettre les notifications web-push.
+    // ServiceWorker : événements de détection de changement de version
+    setSwev (x) {
+      console.log('SW event reçu:', x)
+      if (x === 'updated') this.nouvelleVersion = true
+    }
+
+Pour obtenir `subJSON` il faut fournir la clé publique VAPID correspondant à la clé privée employée par le service PUBSUB pour émettre les notifications web-push.
 
 La clé `subJSON` spécifique de cette session du browser est conservée dans `config-store` et sera communiquée aux service OP et PUBSUB pour leur permettre d'émettre des notifications web-push à cette session du browser (identifiée universellement sur la planète).
 
@@ -150,18 +198,20 @@ Ce script étend le script de SW et donne la possibilité d'écouter les évène
 - on utilise pour ça le service `BroadcastChannel` initialisé pour traiter le channel `channel-pubsub` et permet cette communication événementielle entre SW et application.
 - la `payload` des évènements reçus y est envoyée par un `postMessage`.
 
-    const broadcast = new BroadcastChannel('channel-pubsub')
+      const broadcast = new BroadcastChannel('channel-pubsub')
 
-    self.addEventListener('push', (event) => {
-      const payload = event.data ? event.data.text() : ''
-      broadcast.postMessage({ type: 'pubsub', payload: payload})
-    })
+      self.addEventListener('push', (event) => {
+        const payload = event.data ? event.data.text() : ''
+        broadcast.postMessage({ type: 'pubsub', payload: payload})
+      })
 
 ### Dans l'application `src/boot/appconfig.js`
 Au boot de la session, une fonction `msgPush` est déclarée à titre de _callback_ sur réception des messages postés par `postMessage` dans le SW:
 
+    // Dans appconfig.js : lecture de la configuartion:
     new BroadcastChannel('channel-pubsub').onmessage = msgPush
-    ...
+
+    // fonction déclarée dans ce fichier
     async function msgPush (event) {
       if (event.data && event.data.type === 'pubsub') {
         try {
@@ -169,7 +219,7 @@ Au boot de la session, une fonction `msgPush` est déclarée à titre de _callba
           if (obj.sessionId === stores.session.sessionId)
             syncQueue.synchro(obj.trLog)
         } catch (e) {
-          console.log(e.toString())
+          console.log('msgPush: ' + e.toString())
         }
       }
     }
@@ -201,6 +251,13 @@ L'application étant lancée, elle peut vivre une succession de _sessions connec
 
 Une session sort de l'état _fermée_ par une opération de `connexion` et retourne à l'état `fermée` par une opération de `deconnexion`.
 
+## Déconnexions sur _inactivité_
+Afin d'éviter qu'une session inactive continue à envoyer des _heartbeats_ au service PUBSUB le maintenant inutilement en vie, l'activité des sessions est détectée à l'occasion:
+- d'un appui sur un _bouton_,
+- d'un changement de _page_ ou d'onglet sur une page affichée.
+
+En modes _synchronisé / incognito_, à l'occasion de l'envoi d'un _heartbeat_, si la session n'a pas reçu un signe de vie depuis 10 minutes, le _heartbeat_ n'est pas envoyé et la session est déconnectée (revient à la page de login).
+
 # Données d'une session connectée
 Toutes les données sont effacées au début d'une session connectée, il ne reste rien des sessions antérieures (à l'exception de `config-store`).
 
@@ -212,9 +269,11 @@ Dans les deux cas, les documents sont,
 - _compilés_ depuis leur forme sérialisée en leur forme instance de leur classe (`src/modele.mjs`), 
 - accumulés dans un _buffer_, une instance de la classe `SB` (`src/synchro.mjs`),
 - puis en une seule fois, sans interruption, mémorisés dans les _stores_,
-- in fine en une seule transaction stockés dans IDB (si nécessaire).
+- in fine en une seule transaction stockés dans IDB (en mode _synchronisé_).
 
-L'ensemble des _stores_ présente en conséquence toujours un état _cohérent_ (atomique) représentant exactement un état _passé_ (de peu) mais consistent des documents du périmètre du compte. Les vues à l'écran reflétant l'état _réactif_ des _stores_, elles ne font apparaître que des vues cohérentes de l'état des documents en base centrale (avec évidemment un léger différé).
+L'ensemble des _stores_ présente en conséquence toujours un état _cohérent_ (atomique) représentant exactement un état _passé_ (de peu) mais consistent des documents du périmètre du compte. 
+
+Les vues à l'écran reflétant l'état _réactif_ des _stores_, elles ne font apparaître que des vues cohérentes de l'état des documents en base centrale (avec évidemment un léger différé).
 
 > Les données des _stores_ ne sont JAMAIS mises à jour directement depuis les vues ou les opérations, elles reflètent **toujours** le résultat de la dernière opération `Sync` (`src/synchro.mjs`) effectuée.
 
@@ -231,18 +290,26 @@ La clé d'un _chat_ est décryptée, soit par la clé K du compte, soit par la c
 
 ## Données _réactives_, les _stores_ : `src/stores/...`
 `./stores.mjs`
-- répertoire des _stores_ existant avec un getter par store.
+- répertoire des _stores_ existant avec un _getter_ par store.
 
 ### Données issues des _documents_ du périmètre du compte
 **Rappel: le périmètre d'un compte comporte les documents suivants:**
-- les singletons `espace synthese` identifiés par le `ns` de l'espace de l'organisation.
+- les singletons `espace synthese` identifiés par le code `org` de l'espace de l'organisation.
 - les singletons `compte compti compta invits` portant l'identification du compte.
 - un document `partition` pour les comptes O.
 - tous les documents `avatar note chat sponsoring ticket` dont l'identifiant _majeur_ est celui d'un des avatars du compte.
 - tous les documents `groupe note membre` dont l'identifiant _majeur_ est celui d'un des groupes où le compte est _actif_.
 
-Tous ces documents SAUF `synthese compta partition` sont _synchronisés_: toute modification les concernant est signalée par web-push aux browsers dont une session est connectée et faisant partie de leur périmètre.
+Ces documents SAUF `synthese compta partition` sont _synchronisés_: toute modification les concernant est signalée par web-push aux browsers dont une session est connectée et faisant partie de leur périmètre.
 - `synthese compta partition` sont a contrario lus sur demande dans les vues qui en affichent le contenu.
+
+**L'objet `adc`:**
+- c'est un petit résumé de quelques compteurs de `compta`, qui N'EST PAS synchronisé en raison de la fréquence élevée de ses modifications.
+- quand `compta` subit dans le serveur une des modifications _significatives_ ci-dessous, un objet `adc` résumé est retourné en résultat **ET publié par PUBSUB aux autres sessions**:
+  - changement de valeur des quotas,
+  - changement des _alertes_ détectées sur compta,
+  - évolution sensible des compteurs de consommation,
+  - changement de la _date limite de validité_ du compte.
 
 `./session-store.js`
 - tous les documents singletons du compte: `compte compta compti espace partition`
@@ -285,7 +352,8 @@ Tous ces documents SAUF `synthese compta partition` sont _synchronisés_: toute 
 
 # Fichiers de l'application
 `/public` : ces fichiers se retrouvent tels quels dans la distribution
-  - `./etc/urls.json` : valeur utilisées en test.
+  - `./services.json` : valeur utilisées en test.
+  - `./README.json`
   - `./icons/favicon-128x128.png`
   - `./favicon.ico`
 
@@ -304,7 +372,7 @@ Fichiers de configuration technique _customisés_
 
 ## Le folder `src/app`
 `api.mjs`
-- fichier strictement identique en application et services OP / PUBSUB.
+- fichier strictement identique en application Web et services OP / PUBSUB.
 - ID et clés, génération etc.
 - classes utilitaires devant avoir exactement le même comportement.
 
@@ -319,7 +387,7 @@ Fichiers de configuration technique _customisés_
 
 `modele.mjs`
 - registres _non réactifs_ des clés.
-- toutes les classes de _document_ de l'application et leur compilation depuis le format _row_ sérialisé reçu par _Sync_ et lu depuis IDB.
+- toutes les classes de _document_ de l'application et leur compilation depuis le format _data_ sérialisé reçu par _Sync_ et lu depuis IDB.
 
 `net.mjs`
 - fonctions d'accès à Internet GET / POST, aux services OP et PUBSUB et au _storage_.
@@ -335,7 +403,7 @@ Fichiers de configuration technique _customisés_
 - classe `SB` : buffer accumulant les documents à ranger en _store_ en une fois et à ranger en IDB en une transaction.
 - fonction de `connexion` / `deconnexion`
 - opération `Sync (SyncStd / SyncFull)` : récupération du delta des documents mis à jour sur le serveur depuis le dernier `Sync`.
-- opération `GetEspace` : avec Sync, seule opération utilisée pour gérer connexion / deconnexion / synchronisation.
+- opération `GetEspace` : avec Sync, seule opération utilisée pour gérer connexion / déconnexion / synchronisation.
 
 `util.mjs`
 - diverses fonctions utilitaires.
@@ -345,10 +413,10 @@ Fichiers de configuration technique _customisés_
 
 ## Le folder `src/assets`
 `./fonts`
-- les fontes utilisées dans l'application
+- les fontes utilisées dans l'application.
 
 `./help`
-- les ressources de l'aide en ligne (voir plus avant)
+- les ressources de l'aide en ligne (voir plus avant).
 
 `./*.png *.jpg *.svg *.bin`
 - quelques images et deux sons `beep.bin` `cliccamera.bin`
@@ -435,12 +503,12 @@ Les variables déclarées comme `const v = computed(() => {...})` sont _calculé
 ## `src/App.vue`
 C'est LE layout unique décrivant LA page de l'application. Elle est constituée des éléments suivants:
 - **headaer**
-  - _boutons à gauche_: aide, notifications, menu, accueil, page _back_, statut de la session,fichiers visibles en avion, presse-papier
+  - _boutons à gauche_: aide, notifications, menu, accueil, page _back_, statut de la session, fichiers visibles en avion, presse-papier
   - _titre de la page courante_. Le cas échéant une seconde barre affiche les onglets pour les pages ayant des onglets.
   - _boutons à droite_: ouverture du drawer de recherche (si la page a une recherche), aide.
 - **footer**:
   - _boutons à gauche_: langue, mode clair / foncé, outils,
-  - _information du compte connecté_ son type `D/A/O`, son nom, son organisation,
+  - _information du compte connecté_ son type `Délégué / Autonome / Organisation`, son nom, son organisation,
   - _bouton de déconnexion_.
 - **drawer de filtre à droite** affichant les filtres de recherche pour les pages en ayant. 
   - il s'affiche par appui sur le bouton de recherche (en haut à droite).
@@ -452,7 +520,7 @@ C'est LE layout unique décrivant LA page de l'application. Elle est constituée
 
 **App inclut quelques dialogues singletons** afin d'éviter leurs inclusions trop multiples:
 - ces dialogues n'ont pas de propriétés, c'est le contexte courant qui fixe ce qu'ils doivent afficher.
-- chaque dialogue dans App est gardé par un `v-if` de la variable modèle qui l'ouvre.
+- chaque dialogue dans `App` est gardé par un `v-if` de la variable modèle qui l'ouvre.
 - `DialogueErreur DialogueHelp PressePapier PanelPeople OutilsTests PhraseSecrete`
 
 **App a quelques dialogues internes simples:**
@@ -575,39 +643,40 @@ Le component `vue-showdown` affiche le contenu d'un texte MD dans un `<div>`.
 Sa classe de style principal `markdown-body` porte un nom **fixe** de manière assez contraignante (ne supporte pas un nom de classe dynamique). Ceci oblige à un avoir un component distinct pour chaque style désiré:
 - `SdBlanc [texte]`: la fonte du texte est blanche (pour des fonds foncés).
 - `SdNoir [texte]`: la fonte du texte est noire (pour des fonds clairs).
-- `SdRouge [texte]`: la fonte du texte est rouge (pour des fonds clairs ou foncés).
 
 Dans ces components le fond N'EST PAS fixé, il est transparent, et suivra celui de l'environnement. Mais celui de la fonte doit l'être, d'où le component suivant:
 - `SdNb [texte idx]`: il choisit entre `SdBlanc` et `SdNoir` selon, a) que le mode Quasar _dark_ est actif ou non, b) que idx passé en propriété est absent ou pair ou impair (??? pas clair, à vérifier).
 
-> Remarque: de facto seul `SdNb` est utilisé dans les autres éléments. Et encore car l'affichage d'un MD s'effectue quasiment tout le temps par le component `ShowHtml` qui englobe `SdNb`. Toutefois il existe des cas ponctuels d'utilisation de SdBlanc et SdRouge.
+> Remarque: de facto seul `SdNb` est utilisé dans les autres éléments. Et encore car l'affichage d'un MD s'effectue quasiment tout le temps par le component `ShowHtml` qui englobe `SdNb`. Toutefois il existe des cas ponctuels d'utilisation de SdBlanc.
 
 # Opérations
 Toutes les opérations sont rassemblées dans `src/app/operations4.mjs`, sauf `Sync (SyncStd / SyncFull)` et `GetEspace` qui sont dans `src/app/synchro.mjs`:
-- les opérations standard héritent de Operation (src/app/operation.mjs), 
+- les opérations standard héritent de `Operation` (src/app/operation.mjs), 
 - les opérations `Sync (SyncStd / SyncFull)` héritent de `OperationS` (`src/app/synchro.mjs`) qui hérite de `Operation`.
 - une opération a un constructeur acceptant son _code_ en paramètre. Le _code_ est une entrée de traduction dans i18n.
-- une opération a une méthode async run ayant des paramètres spécifiques de l'opération.
-  - elle peut retourner un résultat et se termine par appel de la méthode générique finOK().
-  - elle trappe les exceptions et les transmet à la méthode générique finKO().
+- une opération a une méthode `async run` ayant des paramètres spécifiques de l'opération.
+  - elle peut retourner un résultat et se termine par appel de la méthode générique `finOK()`.
+  - elle trappe les exceptions et les transmet à la méthode générique `finKO()`.
 
-  export class MonOp extends Operation {
-    constructor() { super('MonOp') }
+Exemple:
 
-    async run (...) {
-      ...
-      this.finOK() // OU return this.finOK(ret)
-    } catch (e) {
-      await this.finKO(e)
+    export class MonOp extends Operation {
+      constructor() { super('MonOp') }
+
+      async run (...) {
+        ...
+        this.finOK() // OU return this.finOK(ret)
+      } catch (e) {
+        await this.finKO(e)
+      }
     }
-  }
 
 Une opération _standard_ peut être interrompue par l'utilisateur et sortir en exception.
 
 ### Sortie en Exception
 #### Les exceptions _tueuses_
 - ce sont les exceptions de code compris entre 8990 et 9000.
-- pour les opérations Sync, **toutes** les exceptions sont _tueuses_.
+- pour les opérations `Sync`, **toutes** les exceptions sont _tueuses_.
 
 Une exception _tueuse_ affiche la page `clos` qui ne laisse aucune autre solution que de sortir de l'application.
 
@@ -616,13 +685,13 @@ Les exceptions _normales_:
 - la sortie de ce dialogue a les options suivantes, selon le type d'exception et le choix de l'utilisateur:
   - **se déconnecter**,
   - **se déconnecter et tenter de se reconnecter** au même compte avec la même phrase secrète.,
-  - **ne rien faire**, c'est à dire laisser la session se poursuivre _comme si_ l'opération n'avait pas été lancée. Dans ce cas on peut récupérer cette exception dans l'application (APRES son passage par `DialogueErreur.vue`).
+  - **ne rien faire**, c'est à dire laisser la session se poursuivre _comme si_ l'opération n'avait pas été lancée. Dans ce cas on peut récupérer cette exception dans l'application (APRÈS son passage par `DialogueErreur.vue`).
 
-  try {
-    await new ErreurFonc().run('Mon erreur', 1)
-  } catch (e) {
-    console.log(e.toString())
-  }
+        try {
+          await new ErreurFonc().run('Mon erreur', 1)
+        } catch (e) {
+          console.log(e.toString())
+        }
 
 # Synchronisation
 
@@ -644,17 +713,20 @@ En session on peut ainsi recevoir des `trlog` depuis deux sources:
 
 Le traitement est géré par `syncQueue.synchro(trlog)` (ou `syncQueue` est le singleton de la classe `Queue` `src/app/synchro.mjs`):
 - cette méthode empile les `trlog` reçus (les met en _queue_) en ignorant ceux dont la version est plus ancienne que la dernière prise en compte.
-- s'il y a un traitement de Sync en cours, la méthode se limite à cette mise en attente.
-- sinon la méthode invoque en asynchrone un traitement de `sync` qui va demander les données correspondantes aux avis de changements reçus. 
+- s'il y a un traitement de `Sync` en cours, la méthode se limite à cette mise en attente.
+- sinon la méthode invoque en asynchrone un traitement de `Sync` qui va demander les données correspondantes aux avis de changements reçus. 
 
 ### Objet `trlog`
 - `sessionId`: `rnd.nc`. Permet de s'assurer que ce n'est pas une notification obsolète d'une connexion antérieure.
-- `partId`: ID de la partition si c'est un compte "0", sinon ''.
-- `vpa`: version de cette partition ou 0 si inchangée ou absente.
-- `vce`: version du compte. (utile ?)
-- `vci`: version du document `compti` s'il a changé, sinon 0.
-- `lavgr`: liste `[ [idi, vi], ...]` des Couples des IDs des avatars et groupes ayant été impactés avec leur version.
-- `lper`: **format long seulement**. `liste [ {...}, ...]` des `perimetre` des comptes ayant été impactés par l'opération (sauf celui de l'opération initiatrice).
+- `cid` : **format long seulement** - ID du compte
+- `vcpt` : version du compte
+- `vesp` : version de l'espace
+- `vadq` : version de compta quand adq a _significativement_ changé
+- `lag` : liste `[ [idi, vi], ...]` des Couples des IDs des avatars et groupes ayant été impactés avec leur version.
+- `lp`: **format long seulement**. `[[compteId, {v, vpe, p}]]` des périmètres des comptes ayant été impactés par l'opération (sauf celui de l'opération initiatrice).
+  - `v` : version du compte,
+  - `vpe` : version du compte lors de son dernier changement de périmètre,
+  - `p` : liste ordonnée des IDs de ses avatars et de ses groupes.
 
 ## L'objet `DataSync`
 Cet objet sert:
@@ -719,7 +791,9 @@ A chaque appel de `Sync`, les versions de` comptes comptis invits` sont vérifi�
 - des nouveaux sous-arbres (nouveaux avatars, nouveau groupes apparaissant dans le périmètre),
 - pour les groupes si les accès _membres_ et _notes_ ont changé pour le compte.
 
-Voir dans src/app/synchro.mjs les opérations de `Connexion...` et `Sync...`.
+Voir dans `src/app/synchro.mjs` les opérations de `Connexion...` et `Sync...`.
+
+# TODO A relire
 
 ## Synchronisation _automatique_, gestion du _heartbeat_
 La synchronisation est normalement automatique, les avis de changements des documents par les opérations des **autres** sessions sont reçus par web-push et traités.
