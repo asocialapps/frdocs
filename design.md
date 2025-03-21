@@ -23,3 +23,9 @@ title: Spécifications
 
 [Les déploiements des composants de l'application](tech/deploiements.html)
 - L'application comporte plusieurs _composants_ (application Web, serveurs / Cloud functions, utilitaires ...), chacun a son processus spécifique de déploiement.
+
+[L'application Web](tech/applicationweb.html)
+- L'application Web, sa conception générale, ses modules et vues.
+
+[Configurer le thème de l'application](tech/theme.html)
+- Comment configurer le _thème_ visuel (fontes / couleurs) de l'application Web.

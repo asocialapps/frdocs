@@ -50,7 +50,10 @@ L'application une fois _buildée_ (distribuable `dist/pwa`) est un folder compor
 - chaque hébergeur doit corriger les deux fichiers suivants par les siens avant distribution par le serveur Web statique mettant à disposition l'application:
   - `dist/pwa/services.json`: décrit vers quels URls les services sont assurés en fonction des organisations.
   - `dist/pwa/README.md` : information des utilisateurs sur la build de l'application qu'il utilise.
-  - `dist/pwa/patch/...` : à titre documentaire, fichiers sources éventuels utilisés pour _patcher_ la distribution _open source_. 
+  - `dist/pwa/patchs.zip` : fichiers sources éventuels utilisés pour _patcher_ la distribution _open source_.
+    - un `README.md` exprime comment les installer.
+    - un ou des scripts automatise l'installation.
+    - ce fichier permet à n'importe qui de _refaire une distribution / build_ depuis les sources du dépôt git `asocial-app` (open source).
 
 Exemple de `services.json`
 
@@ -74,7 +77,17 @@ Exemple de `services.json`
       } 
     }
 
-Exemple de `README.md`
+_**Remarques:**_
+- ce fichier _peut_ être téléchargé / affiché par n'importe qui: il ne comporte aucune information confidentielle.
+- ce fichier ne comporte _que_ les informations propres à chaque hébergeur, qui chacun a modifié la distribution sortie de _build_ pour y mettre ses propres URLs.
+- `vapid_public_key`: chaque hébergement _peut_ avoir généré son propre couple de clés VAPID (pour le service web-push), mais peut aussi opter par facilité pour le couple de clés générées pour le test de l'application.
+- `docsurls`: URLs dans les différentes langues supportées du site de documentation de l'application. Chaque hébergement _peut_ proposer son propre site de documentation OU choisir celui standard ci-dessus.
+- sous la rubrique `services`, il y a un groupe d'information par _serveur_ (en fait couple de services OP / PUBSUB) indiquant quelles organisations sont servies par ce _serveur_.
+  - `opurl`: URL du service OP de l'hébergement.
+  - `pubsuburl`: URL du service PUBSUB de l'hébergement (_peut_ être égal à celui de OP).
+  - `"orgs": ["org1", "org2", ...]` : liste des organisations servies par ce serveur.
+
+**Exemple de `README.md`**
 
     Application "asocial":
     - distribution: t1
@@ -86,16 +99,12 @@ Exemple de `README.md`
     - tag: v1.3.4
     - patchs: _aucun_
 
-
-_**Remarques:**_
-- ce fichier _peut_ être téléchargé / affiché par n'importe qui: il ne comporte aucune information confidentielle.
-- ce fichier ne comporte _que_ les informations propres à chaque hébergeur, qui chacun a modifié la distribution sortie de _build_ pour y mettre ses propres URLs.
-- `vapid_public_key`: chaque hébergement _peut_ avoir généré son propre couple de clés VAPID (pour le service web-push), mais peut aussi opter par facilité pour le couple de clés générées pour le test de l'application.
-- `docsurls`: URLs dans les différentes langues supportées du site de documentation de l'application. Chaque hébergement _peut_ proposer son propre site de documentation OU choisir celui standard ci-dessus.
-- sous la rubrique `services`, il y a un groupe d'information par _serveur_ (en fait couple de services OP / PUBSUB) indiquant quelles organisations sont servies par ce _serveur_.
-  - `opurl`: URL du service OP de l'hébergement.
-  - `pubsuburl`: URL du service PUBSUB de l'hébergement (_peut_ être égal à celui de OP).
-  - `"orgs": ["org1", "org2", ...]` : liste des organisations servies par ce serveur.
+Ce README permet à n'importe qui de reconstituer l'application Web distribuée depuis les sources:
+- le dépôt des sources est cité ainsi que la tag qui pointe exactement la révision utilisée.
+- la section `patchs` résume ce qui a été modifié dans ces sources avant build. 
+  - les fichiers correspondants sont à stocker dans `patchs.zip`.
+  - un README.md exprime comment les installer.
+  - un ou des scripts automatise l'installation.
 
 Pour ce connecter, un compte d'une organisation va indiquer le couple _org1 / phrase secrète_ de son compte. 
 - le _pseudo_ compte `admin` doit être indiqué sous la forme `admin-a` ou `admin-z` c'est à dire en précisant le serveur.

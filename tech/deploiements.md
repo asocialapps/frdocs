@@ -16,58 +16,34 @@ Les paramètres de configuration sont à ajuster dans le fichier `src/config.mjs
 
 Après _build_ on obtient un folder _presque_ prêt à distribuer:
 - l'application Web doit disposer des URLs des services OP et PUBSUB.
-- celles-ci, qui localisent les services correspondants sur Internet, et donc la base de données et le storage, sont données dans le fichier `etc/urls.json`.
-- les URLs des sites Web donnant la documentation dans les différentes langues sont données dans l'entrée `docsurls`.
-- avec le même _build_ on peut donc distribuer la même version de l'application sur plus d'une distribution, seulement en ajustant les deux lignes de `etc/urls.json`.
+- celles-ci, qui localisent les services correspondants sur Internet, et donc la base de données et le storage, sont données dans le fichier `public/services.json`.
+- un `README.md` est également à fournir.
 
-Par convention, si les services OP et PUBSUB sont fournis par le **même** serveur que celui distribuant l'application Web les URLs sont simplifiées:
-
-    {
-      "BUILD": "24",
-      "opurl": "http://localhost:8080",
-      "pubsuburl": "http://localhost:8080",
-      "docsurls": { 
-        "fr-FR": "https://asocialapps.github.io/frdocs", 
-        "en-EN": "https://asocialapps.github.io/frdocs" 
-      },
-      "vapid_public_key": "BC8J60JGGoZRHWJDrSbRih-0qi4Ug0LPbYsnft668oH56hqApUR0piwzZ_fsr0qGrkbOYSJ0lX1hPRTawQE88Ew"
-    }
-
-Si le serveur est déployé sur GAE, par exemple:
-
-    "opurl": "https://asocial-test1.ew.r.appspot.com",
-    "pubsuburl": "https://asocial-test1.ew.r.appspot.com",
+Voir plus de détails sur ces deux fichiers dans le document [L'application Web](./applicationweb.html), section "Configuration de _runtime_".
 
 > L'URL du serveur (pas spécialement fun) est masquée ici et l'utilisateur ne connaît que l'URL de son application donnée par son _provider_ de l'application comme:
 
     https://asocialapps.github.io/XX?demo
 
-> Cas particulier où le _serveur_ délivre aussi l'application Web:
-
-    {
-      "opurl": "https",
-      "pubsuburl": "https",
-      ...
-    }
-    
-Si ce serveur est seulement un `http` (en test), `http` remplace `https` ci-dessus.
-
-### Build
-La commande est: 
+### Build et test de la build:
 
     yarn quasar build -m pwa
 
+    # OU
+    npm run build:pwa
+
+    # https://github.com/http-party/http-server
+    # Installation: npm install -g http-server
+
+    npx http-server dist/pwa -p 8080 --cors -S --cert ../asocial-srv/keys/fullchain.pem --key ../asocial-srv/keys/privkey.pem
+
+    # Plus simplement
+    npx http-server dist/pwa -p 8080 --cors
+
 Le résultat est dans `dist/pwa` (environ 40 fichiers pour 5Mo):
-- y ajouter un folder `dist/pwa/etc`
-- y mettre le fichier `urls.json` avec le contenu ci-dessus.
+- y mettre le fichier `services.json` avec le contenu ci-dessus et `README.md`.
 
-L'application _buildée et configurée_ peut être distribuée depuis `dist/pwa` sur le CDN de son choix, par exemple ci-après dans `githug pages`.
-
-On peut la tester, par exemple, au moyen des commandes suivantes lançant un serveur http/https:
-
-    yarn quasar serve dist/pwa --https --port 8343 --hostname test.sportes.fr --cors --cert ../asocial-srv/keys/fullchain.pem --key ../asocial-srv/keys/privkey.pem 
-
-    yarn quasar serve dist/pwa --http --port 8080
+L'application _buildée et configurée_ peut être distribuée depuis `dist/pwa` sur le CDN de son choix, par exemple ci-après dans `github pages`.
 
 #### browser-list pas à jour
 Au cours du _build_ un message apparaît souvent en raison de l'obsolescence de la browser-list.
@@ -84,23 +60,10 @@ Un _repository_ `github.com` peut aussi gérer un site Web de distribution.
 
 Sur le poste qui génère la distribution,
 - créer un folder `asocialapps-XX` et y copier les fichiers récupérés du build (dans `./dist/pwa`).
-- y ajouter un fichier `README.md`, purement informatif, ayant typiquement ce contenu:
-
-      Application "asocial":
-      - distribution: XX
-      - build: 24
-      - url: https://asocialapps.github.io/XX
-
-      Sources: 
-      - dépôt: https://dsportes.github.com/asocial-app
-      - tag: V2.4
-      - patchs: _aucun_
-
-      URLS externes: /etc/urls.json
-
-Ce README permet à n'importe qui de reconstituer l'application Web distribuée depuis les sources:
+- y ajouter le fichier `services.json`.
+- y ajouter un fichier `README.md`qui permet à n'importe qui de reconstituer l'application Web distribuée depuis les sources:
 - le dépôt des sources est cité ainsi que la tag qui pointe exactement la révision utilisée.
-- la section `patchs` indique avec précision ce qui a été modifié dans ces sources avant build. Le cas échéant des fichiers peuvent être cités et retrouvés dans `etc/...`
+- la section `patchs` résume ce qui a été modifié dans ces sources avant build. 
 
 Effectuer un `commit + publish` de `XX` vers le dépôt de distribution.
 
@@ -354,6 +317,8 @@ Les propriétés sont celles d'un serveur externe d'envoi de mail mis en place p
   - dont l'url est donnée ici,
   - et dont un mot de passe est donné ici.
   - Voir en annexe l'API que doit implémenter un tel serveur.
+- le couple `_sendgrid_api_key _from` sont deux propriétés pour solliciter le service sendGrid (Twilio). Usage expérimental en évaluation. Dans le cas d'usage d'autres services du marché, leur configuration serait données ici.
+
 
 ### Folder `keys`
 **Ce folder contient le certificat du domaine de l'application** tels que générés par `Lets Encrypt` (https://letsencrypt.org/) par exemple:
@@ -374,8 +339,8 @@ Ce folder,
   - une partie _technique_ spécifique de chaque déploiement et détaillée ci-après.
 
 Il comporte des lignes donnant les _configurations_ des _providers_ de DB et de Storage:
-- pouvant être citées dans la section `run`,
-- pouvant être citées sur les lignes de commande: `node src/tools.mjs ...`
+- pouvant être cités dans la section `run`,
+- pouvant être cité sur les lignes de commande: `node src/tools.mjs ...`
 
       // Configuration nommées des providers db et storage
       s3_a: { bucket: 'asocial' },
@@ -401,7 +366,7 @@ Chaque nom de configuration comporte: le `nom du provider`, `_`, `lettre d'ident
     - `{ bucket: '...' }` identifiant du bucket réservé à cet usage.
 
 #### La section env: {...}
-_Certains_ paramètres (typiquement ceux de l'emulator de Google Cloud Platform) **doivent** figurer en variables d'environnement. On les déclare dans la section env.
+_Certains_ paramètres (typiquement ceux de _l'emulator de Google Cloud Platform) **doivent** figurer en variables d'environnement. On les déclare dans la section env.
 Cas identifiés:
 - `STORAGE_EMULATOR_HOST`: pour EMULATOR de Google Storage
 - `FIRESTORE_EMULATOR_HOST`: pour EMULATOR de Google Firestore
@@ -436,7 +401,7 @@ Chaque déploiement demande:
 `s3_config`
 - uniquement si le _provider_ de Storage est S3.
 
-**alertes**
+alertes
 - uniquement si les alertes graves sont poussées sur le mail de l'administrateur technique.
 
 ### Folder `keys`
@@ -849,7 +814,7 @@ Les fichiers spécifiques au déploiement GAE sont à préparer dans `asocial-sr
   - `app.yaml`: vérifier la version de node.
   - `cron.yaml`: ajuster l'heure si nécessaire.
   - `.cloudignore`
-  - `depl.sh` `depl.ps1`. Ces scripts recopient les fichiers nécessaires dans le directory de déploiement.
+  - `depl.sh`. Ce fichier recopie les fichiers nécessaires dans le directory de déploiement.
 
 ## Scénario de déploiement
 
@@ -868,10 +833,10 @@ Y créer les folders `src` et `node_modules`.
 
 `npm install` à deux fonctions:
 - permettre d'effectuer un test final après déploiement,
-- générer un `package-lock.json` qui accélère le déploiement ET fixe les versions exactes des modules.
+- générer un package-lock.json qui accélère le déploiement ET fixe les versions exactes des modules.
 
 #### Tester localement
-On peut tester le serveur avec: `node src/server.js`
+On peut tester le serveur avec: node src/server.js
 
 **MAIS ça s'exécuterait sur la base de production**, c'est inopportun. Il faut donc:
 - changer dans `config.mjs` la première ligne `EMULATOR = true`
@@ -883,7 +848,7 @@ Après tests, changer à nouveau dans `config.mjs` la première ligne `EMULATOR 
 
     gcloud app deploy --verbosity debug --no-cache
 
-`no-cache` : sinon plantage du build step 2 en cherchant à comparer avec une version antérieure.
+no-cache : sinon plantage du build step 2 en cherchant à comparer avec une version antérieure.
 
 Quelques minutes ..., puis si nécessaire (si `cron.yaml` a changé par rapport à l'opérationnel):
 
@@ -895,8 +860,6 @@ Dans un autre terminal `gcloud app logs tail` permet de voir les logs de l'appli
 
 Les logs complets s'obtienne depuis la console Google du projet (menu hamburger en haut à gauche `>>> Logs >>> Logs Explorer`).
 
-> On pourrait croire qu'un déploiement lance le serveur: il n'en est rien, la console ne montre pas d'instance active. Lancer une connexion pour voir _monter_ une instance.
-
 # Déploiements _Cloud Function_ des services OP et PUBSUB
 A rédiger, après un premier déploiement réel.
 
@@ -904,7 +867,7 @@ A rédiger, après un premier déploiement réel.
 
 Un _browser_ ne peut pas écrire dans le _file-system_ de son poste. L'application Web offre la possibilité du _download_ d'une sélection de notes et de leurs fichiers attachés. Pour ce faire elle invoque l'URL http://localhost:33666
 
-`upload` est un micro serveur Web qui, une fois lancé, écoute ce port: il reçoit des requêtes PUT émises par l'application Web, une par _fichier_ à écrire localement, et en écrit le contenu sur le répertoire local:
+upload est un micro serveur Web qui, une fois lancé, écoute ce port: il reçoit des requêtes PUT émises par l'application Web, une par _fichier_ à écrire localement, et en écrit le contenu sur le répertoire local:
 - **le path du fichier 'abcd...'** en relatif au directory courant d'exécution, est donné dans l'URL en base64 URL: http://localhost:33666/abcd...
 - le contenu du fichier est dans le body de la requête.
 
@@ -980,15 +943,17 @@ Les commandes sont:
 
 ### `export-db -s --in ... --out ...`
 - `-s` : optionnel. Simulation, rien n'est écrit.
-- `--in org,prov_x,S` - Espace _source_
+- `--in N,org,prov_x,S` - Espace _source_
+  - `N`: lettre / chiffre de l'espace `0..9 a..z A..Z`
   - `org`: code de l'organisation
   - `prov`: nom du provider: `sqlite firestore`
   - `x`: le provider `prov_x` doit être décrit dans la configuration.
   - `S`: lettre du site dans la liste des sites de la configuration.
-- `--out org,prov_x,S` - Espace _cible_
+- `--out N,org,prov_x,S` - Espace _cible_
 
 ### `purge-db --in ...`
-- `--in org,prov_x,S` - Espace à purger
+- `--in N,org,prov_x,S` - Espace à purger
+  - `N`: lettre / chiffre de l'espace `0..9 a..z A..Z`
   - `org`: code de l'organisation
   - `prov`: nom du provider: `sqlite firestore`
   - `x`: le provider `prov_x` doit être décrit dans la configuration.
@@ -1004,16 +969,16 @@ Les commandes sont:
 
 ### Exemples:
 
-    node tools export-db --in doda,sqlite_a,A --out coltes,sqlite_b,B
-    node tools export-db --in doda,sqlite_a,A --out doda,firestore_a,A
-    node tools export-db --in doda,firestore_a,A --out doda,sqlite_b,A
+    node tools export-db --in 1,doda,sqlite_a,A --out 2,coltes,sqlite_b,B
+    node tools export-db --in 1,doda,sqlite_a,A --out 1,doda,firestore_a,A
+    node tools export-db --in A,doda,firestore_a,A --out A,doda,sqlite_b,A
 
     Exemple export-st:
     node tools export-st --in doda,fs_a --out doda,gc_a
 
     Exemple purge-db
-    node tools purge-db --in coltes,firebase_b,A
-    node tools purge-db --in coltes,sqlite_b,B
+    node tools purge-db --in 2,coltes,firebase_b,A
+    node tools purge-db --in 2,coltes,sqlite_b,B
 
 # Utilitaire d'envoi de mails d'alertes
 
