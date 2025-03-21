@@ -802,19 +802,17 @@ A chaque appel de `Sync`, les versions de` comptes comptis invits` sont vérifi�
 
 Voir dans `src/app/synchro.mjs` les opérations de `Connexion...` et `Sync...`.
 
-# TODO A relire
-
 ## Synchronisation _automatique_, gestion du _heartbeat_
 La synchronisation est normalement automatique, les avis de changements des documents par les opérations des **autres** sessions sont reçus par web-push et traités.
 
-La gestion du _heartbeat_ est assurée dans `hb-store` par les actions `startHB stopHB retry`.
+La gestion du _heartbeat_ est assurée dans `hb-store` par les actions `doHB stopHB`: un signal de vie est émis vers le service PUBSUB toutes les 2 minutes (10 secondes en cas de _retry_), afin que PUBSUB maintienne en vie le contexte de la session.
 
 MAIS le service PUBSUB peut s'interrompre sans que le service OP ne soit interrompu:
 - les opérations peuvent toujours être effectuées MAIS la session ne reçoit plus les avis des autres sessions: son affichage est retardé.
 - l'indicateur `hb.statusHB` est à `true` quand le _heartbeat_ a détecté que le service PUBSUB est fonctionnel:
   - il est mis à `true` au lancement du _heartbeat_ et mis à `false` à son arrêt explicite.
-  - il est également mis à `false` quand il a été détecté une rupture dans la numérotation des notifications reçues: a priori une interruption du service (arrêt puis relance) a eyu lieu.
-  - un `pingHB` teste que le service PUBSUB est disponible et un `retry` tente en boucle a vec temporisation de ré-initialiser le contexte de la session dans le service PUBSUB.
+  - il est également mis à `false` quand il a été détecté une rupture dans la numérotation des notifications reçues: a priori une interruption du service (arrêt puis relance) a eu lieu.
+  - un `pingHB` teste que le service PUBSUB est disponible et `doHB` tente en boucle de ré-initialiser le contexte de la session dans le service PUBSUB.
 
 Quand, soit `hb.statusHB` est `false`, soit `config.permState` est différent de `granted`, la synchronisation automatique **N'EST PLUS ACTIVE**:
 - l'utilisateur peut changer son acceptation des notifications si c'était cela qui bloquait.
@@ -822,43 +820,46 @@ Quand, soit `hb.statusHB` est `false`, soit `config.permState` est différent de
   - si le service PUBSUB est à nouveau _up_, la synchronisation automatique revient à l'état normal.
   - sinon, la synchronisation automatique reste inactive, l'utilisateur ayant à redemander une resynchronisation explicite périodiquement ou en cas de doute sur les données affichées.
 
-`startHB` émet périodiquement une requête POST au service PUBSUB en incrémentant le numéro d'envoi afin de pouvoir détecter le cas échéant une rupture dans la séquence des web-push d'avis de modification des documents du périmètre de la session.
+`doHB` émet périodiquement une requête POST au service PUBSUB en incrémentant le numéro d'envoi afin de pouvoir détecter le cas échéant une rupture dans la séquence des web-push d'avis de modification des documents du périmètre de la session.
 
-La déconnexion poste aussi un avis au service PUBSUB pour l'informer de la fin de la session et lui permettre de supprimer les données de la session qu'il conserve.
+La déconnexion `stopHB` poste aussi un avis au service PUBSUB pour l'informer de la fin de la session et lui permettre de supprimer les données de la session qu'il conserve.
 
-Quand le `statusHB` tombe à `false` de manière inattendue un `retry` est lancé: en d'autres termes la session tente automatiquement de rétablir le _heartbeat_ (ce qui indirectement provoquera une synchronisation complète): les interruptions _temporaires_ sont normalement surmontées.
+Quand le `statusHB` tombe à `false` de manière inattendue un `doHB` est lancé: en d'autres termes la session tente automatiquement de rétablir le _heartbeat_ (ce qui indirectement provoquera une synchronisation complète): les interruptions _temporaires_ sont normalement surmontées.
+
+L'action `pingHB` teste simplement la disponibilité du service PUBSUB.
 
 > La tombée du service PUBSUB est détectée, soit au prochain _heartbeat_ (au plus dans 2 minutes), soit au retour de la prochaine opération de mise à jour émise par la session.
 
-# Mise en place de l'aide en ligne
+# L'aide en ligne
 Les ressources correspondantes sont toutes dans `/src/assets/help` :
 - `_plan.json` : donne la table des matières des pages de l'aide.
 - des images en PNG, JPG, SVG comme `dessin.svg`.
-- les pages de texte en md : `codepage_lg-LG.md`
-  - `codepage` est le _code_ la page.
+- les pages de texte en md : `xxx_lg-LG.md`
+  - `xxx` est le _code_ la page.
   - `lg-LG` est la locale (`fr-FR` `en-EN` ...).
   - le _titre_ de la page est une traduction dans `/src/i18n/fr-FR/index.js`
-    - son entrée est: `A_codepage: 'Le beau titre',`
+    - son entrée est: `A_xxx: 'Le beau titre',`
 
 ### Plan de l'aide
 Le plan de l'aide en ligne s'affiche dans les pages d'aide, soit en dessous, soit à droite selon que l'écran est en portrait ou paysage.
 
-Le plan apparaît comme un arbre à deux niveaux:
-- des rubriques principales,
-- sous chaque rubrique principale des rubriques secondaires.
+Le plan apparaît comme un arbre avec sous chaque rubrique des rubriques annexes.
 
 Le _code_ d'une page d'aide n'est pas lié à sa place dans l'arbre, c'est un code absolu et le plan peut être changé sans modifier les identifiants des pages.
 
     [
-      { "id": "DOCpg", "lp": [] },
-      { "id": "page_login", "lp": ["page_login_m", "page_login_fa", "page_login_pp", "nouvelle_version" ]},
-      { "id": "sponsoring", "lp": ["sponsoring_d", "sponsoring_a"] },
-      ...
+      "DOCpg",  
+      ["pages", 
+        [ "pages_struct", "top_bar" ],
+        ["page_login", "page_login_m", "page_login_pin", ... ],
+        ...
+      ],
+      ["special", "page_admin" ]
     ]
 
-Il donne la liste ordonné des racines dans l'arbre de l'aide. Chaque racine est décrite par:
-- `id`: le _code_ de la page _racine,
-- `lp`: la liste ordonnée des codes des pages _fille_.
+Dans la séquence `["page_login", "page_login_m", "page_login_pin", ... ]`
+- `"page_login"` est la page _principale_ de la rubrique,
+- `"page_login_m", "page_login_pin", ...` sont les _sous_ rubriques.
 
 ### Conventions d'écriture des pages en markdown
 **La page est découpée en _sections_**, chacune est identifiée par une ligne:
@@ -871,7 +872,7 @@ La partie **avant** la première ligne `# section...` est _l'introduction_.
 
 Chaque section est présentée avec:
 - une _expansion_ dépliable qui permet d'en voir juste le titre, puis le détail une fois dépliée,
-- une liste éventuelle d'autres pages donnant des précisions sur certains sujets: les codes des pages sont donnés dans la ligne de titre après le signe `|`.
+- une liste éventuelle d'autres pages d'aide donnant des précisions sur certains sujets: les codes des pages sont donnés dans la ligne de titre après le signe `|`.
 
 #### Images
 Les _images_ apparaissent sous l'une de ces formes:
@@ -890,11 +891,11 @@ Le fichier est chargé en tant que ressource en base64 (`src/boot/appconfig.mjs 
 - na pas oublier le _background_ pour les SVG et PNG.
 
 #### Hyperliens
-Un hyperlien est à exprimer par un tag <a>:
+Un hyperlien est à exprimer par un tag "a":
 
     <a href="http://localhost:4000/fr/pagex.html" target="_blank">Manuels</a>
 
-Ne pas oublier target="_blank" sinon la page va s'ouvrir sur celle de l'application.
+    // Ne pas oublier target="_blank" sinon la page va s'ouvrir sur celle de l'application.
 
 Toutefois si ce lien correspond à une page de manuel de la documentation de l'application, on utile la convention suivante:
 
@@ -902,12 +903,14 @@ Toutefois si ce lien correspond à une page de manuel de la documentation de l'a
 
 Si la ligne commence exactement par `<a href="$$/` Le terme `$$` sera remplacé par l'URL de la documentation de l'application afin d'avoir une aide en ligne indépendante d'une localisation _en dur_.
 
-Le fichier `/public/etc/urls.json` a cette forme:
+Le fichier `/public/services.json` a cette forme:
 
     {
-      "opurl" : "http://localhost:8443",
-      "pubsuburl" : "http://localhost:8443",
-      "docsurls" : { "fr-FR": "http://localhost:4000/fr", "en-EN": "http://localhost:4000/en"}
+      "docsurls": { 
+        "fr-FR": "https://asocialapps.github.io/frdocs", 
+        "en-EN": "https://asocialapps.github.io/endocs" 
+      },
+      ...
     }
 
 Ce fichier est défini au déploiement, après _build_.
@@ -924,18 +927,29 @@ Dans le browser il y a une base par compte s'étant connecté en mode synchronis
   - une propriété par nom de base,
   - dont la valeur est le trigramme associé.
 
-Cet objet permet au propriétaire du browser dans l'outil de gestion des bases de supprimer les bases qu'il juge obsolète. / encombrantes.
+Cet objet permet au propriétaire du browser dans la page de gestion des bases de supprimer les bases qu'il juge obsolètes / encombrantes.
 
 ### STORES d'une base IDB
 Une base IDB contient les stores suivants:
 
     const STORES = {
-      singletons: 'n', // La clé est le nom du document
-      collections: '[id+n+ids]', // La clé est le triplet id, nom ,ids du document
-      ficav: 'id', // La clé est l'id du fichier (idf dans une note)
-      loctxt: 'id', // La clé est l'id de la note dans le presse-papier
-      locfic: 'id', // La clé est l'id du fichier dans le presse-papier
-      fdata: 'id' // La clé est l'id du fichier et sa data donne son contenu
+      singletons: 'n', 
+      // La clé est le nom du document
+
+      collections: '[id+n+ids]', 
+      // La clé est le triplet id, nom ,ids du document
+
+      ficav: 'id', 
+      // La clé est l'id du fichier (idf dans une note)
+
+      loctxt: 'id', 
+      // La clé est l'id de la note dans le presse-papier
+
+      locfic: 'id', 
+      // La clé est l'id du fichier dans le presse-papier
+
+      fdata: 'id' 
+      // La clé est l'id du fichier et sa data donne son contenu
     }
 
 #### `singletons`
@@ -943,7 +957,7 @@ Le store `singletons` contient les documents singletons pour le compte: `['', 'b
 - un document est accédé par l'indice `n` de son nom dans la liste ci-dessus.
 les deux propriétés sont :
   - `n` : indice du nom.
-  - `data` : le document sous forme sérialisée _row_ crypté par la clé K du compte, sauf pour `boot`.
+  - `data` : le document sous forme sérialisée _data_ crypté par la clé K du compte, sauf pour `boot`.
 
 `boot : 1`
 - l'item est le triplet `{ n, dh, data }`
@@ -954,40 +968,40 @@ les deux propriétés sont :
   - `dh` : date-heure de dernière écriture.
 - `boot` est réécrit en cas de changement de phrase secrète.
 - il faut avoir la phrase secrète pour obtenir la clé K du compte ET son id.
-- si la date-heure dh est plus ancienne que `IDBOBS` jours, la base est considérée comme perdue et effacée (elle contient un historique trop vieux pour être rafraîchi), aucune connexion ne s'étant opéré depuis `IDBOBS` jours.
-- `IDBOBS` est une constante de api.mjs (usuellement 18 * 30).
+- si la date-heure dh est plus ancienne que `IDBOBS` jours, la base est considérée comme perdue et effacée car elle contient un historique trop vieux pour être rafraîchi, aucune connexion ne s'étant opéré depuis `IDBOBS` jours.
+- `IDBOBS` est une constante de `api.mjs` (usuellement 18 * 30).
 
 `datasync : 2`
 - `data` est l'objet `datasync` sérialisé et crypté par la clé K du compte.
 - `datasync` donne l'état courant de IDB, le périmètre du compte avec les versions des documents.
 
-Les autres `singletons` pour `data` le document sous forme sérialisée _row_ crypté par la clé K du compte.
+Les autres `singletons` ont pour `data` le document sous forme sérialisée _data_ crypté par la clé K du compte.
 
 #### `collections`
 Un item collections a 4 propriétés:
 - `id`: id du document crypté par la clé K du compte et mis en base 64.
 - `n`: indice du type de documents: `{ avatars: 1, groupes: 2, notes: 3, chats: 4, sponsorings: 5, tickets: 6, membres: 7, chatgrs: 8 }`
 - `ids`: ids du document crypté par la clé K du compte et mis en base 64.
-- `data`: le document sous forme sérialisée _row_ crypté par la clé K du compte.
+- `data`: le document sous forme sérialisée _data_ crypté par la clé K du compte.
 
 #### `ficav`
 Chaque item a les propriétés:
-- `id`: idf du fichier crypté par la clé K du compte et mis en base 64.
-- `data`: le document de la classe `Ficav` (dans `src/app/modele.mjs`) sous forme sérialisée _row_ crypté par la clé K du compte.
+- `id`: id du fichier crypté par la clé K du compte et mis en base 64.
+- `data`: le document de la classe `Ficav` (dans `src/app/modele.mjs`) sous forme sérialisée _data_ crypté par la clé K du compte.
 
 #### `loctxt`
 Chaque item a les propriétés:
-- `id`: idf du fichier crypté par la clé K du compte et mis en base 64.
-- `data`: le document de la classe `NoteLocale` (dans `src/app/modele.mjs`) sous forme sérialisée _row_ crypté par la clé K du compte.
+- `id`: id du fichier crypté par la clé K du compte et mis en base 64.
+- `data`: le document de la classe `NoteLocale` (dans `src/app/modele.mjs`) sous forme sérialisée _data_ crypté par la clé K du compte.
 
 #### `locfic`
 Chaque item a les propriétés:
-- `id`: idf du fichier crypté par la clé K du compte et mis en base 64.
-- `data`: le document de la classe `FichierLocal` (dans `src/app/modele.mjs`) sous forme sérialisée _row_ crypté par la clé K du compte.
+- `id`: id du fichier crypté par la clé K du compte et mis en base 64.
+- `data`: le document de la classe `FichierLocal` (dans `src/app/modele.mjs`) sous forme sérialisée _data_ crypté par la clé K du compte.
 
 #### `fdata`
 Chaque item a les propriétés:
-- `id`: idf d'un fichier d'une note, d'un fichier ou d'une note du presse-papier crypté par la clé K du compte et mis en base 64.
+- `id`: id d'un fichier d'une note, d'un fichier ou d'une note du presse-papier crypté par la clé K du compte et mis en base 64.
 - `data`: contenu binaire crypté par la clé K du compte.
 
 ### Purge des micro bases locales inutiles
@@ -1008,7 +1022,7 @@ Chaque navigateur (Firefox, Chrome, etc.) a son propre espace privé pour héber
 
 Pour faire plus vite, ouvrir la page de gestion des purges des micro bases locales, c'est affiché en clair.
 
-# Annexe: liste des _pages_
+# Annexe: liste des _pages_ (TODO - A réviser)
 
 ### `PageAccueil.vue`
 Page affichée après connexion réussie et par appui sur le bouton _Accueil_ de la barre supérieure.
@@ -1038,8 +1052,6 @@ Imports:
 - `components/QuotasVols.vue`
 - `components/ChoixQuotas.vue`
 
-
-# TODO
 ### PageLogin (5)
 Login pour un compte déjà enregistré ou auto-création d'un compte depuis une phrase de sponsoring déclarée par un sponsor.
 
