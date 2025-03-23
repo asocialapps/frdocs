@@ -1022,12 +1022,12 @@ Chaque navigateur (Firefox, Chrome, etc.) a son propre espace privé pour héber
 
 Pour faire plus vite, ouvrir la page de gestion des purges des micro bases locales, c'est affiché en clair.
 
-# Annexe: liste des _pages_ (TODO - A réviser)
+# Annexe: liste des _pages_
 
 ### `PageAccueil.vue`
 Page affichée après connexion réussie et par appui sur le bouton _Accueil_ de la barre supérieure.
-- un bloc avec tous les accès aux pages s'ouvrant par des icônes de App.
-- un second bloc qui est le menu d'accueil accessible depuis la App.
+- un premier bloc présente les accès aux pages s'ouvrant aussi depuis les icônes de la barre supérieure de App.
+- un second bloc est le menu d'accueil accessible depuis le bouton menu _hamburger_ de App.
 
 Imports:
 - `components/MenuAccueil.vue`
@@ -1041,145 +1041,277 @@ LA page de l'administrateur technique. Elle a 2 onglets:
   - bouton de lancement du GC.
 
 Dialogues internes:
-- `PAcreationesp`: Création d'un espace
-- `PAnvspc`: Changement de la phrase de sponsoring du Comptable
-- `PAedprf`: Changement des quotas de l'espace
+- `PAcreationesp`: Création d'un espace.
+- `PAnvspc`: Changement de la phrase de sponsoring du Comptable.
+- `PAedprf`: Changement des quotas de l'espace.
 
 Imports:
 - `components/PhraseContact.vue`
 - `components/SaisieMois.vue`
-- `components/NotifIcon.vue`
+- `components/ApercuNotif.vue`
+- `components/IconAlerte.vue`
 - `components/QuotasVols.vue`
 - `components/ChoixQuotas.vue`
 
-### PageLogin (5)
+### `PageLogin`
 Login pour un compte déjà enregistré ou auto-création d'un compte depuis une phrase de sponsoring déclarée par un sponsor.
 
-Import: PhraseContact, AcceptationSponsoring
+Dialogues internes:
+- `ASaccsp`: Dialogue d'acceptation d'un nouveau sponsoring.
+- `pubsub`: Dialogue de demande de permission de notification.
 
+Imports: 
+- `components/PhraseContact`
+- `panels/AcceptationSponsoring`
 
-
-Import: MenuAccueil, BoutonLangue, NotifIcon2, QueueIcon 
-
-### PageCompte (7)
+### `PageCompte`
 Affiche les avatars du compte et les opérations du compte:
 - création d'un nouvel avatar,
-- édition des mots clés du compte,
-- changement de la phrase secrète.
+- auto-mutation en compte A,
+- mise à jour des quotas du compte,
+- suppression d'un avatar.
 
-Import: NomAvatar, ApercuAvatar, MotsCles, SupprAvatar
+Dialogues internes:
+- `PCmuta`: Dialogue de mutation en compte A.
+- `PCnvav`: Dialogue de création d'un nouvel avatar.
+- `SAsuppravatar`: Dialogue de suppression d'un avatar.
+- `PTedq`: Dialogue de mise à jour des quotas du compte
 
-Dialogues:
-- PCnvav: nouvel avatar
-- PCchgps: changement de la phrase secrète
+Imports:
+- `components/ApercuAvatar.vue`
+- `components/NomAvatar.vue`
+- `components/ChoixQuotas.vue`
 
-### PageChats (7)
+#### Composant `ApercuAvatar`
+Composant auxiliaire de PageCompte. Affiche les données d'identification d'un avatar.
+
+Dialogues internes:
+- `AAeditionpc`: Dialogue d'édition de la phrase de contact.
+
+Imports:
+- `components/ApercuGenx.vue`
+- `components/PhraseContact.vue`
+
+### `PageChats`
 Affiche la liste des chats des contacts et des groupes.
-- si le filtre filtre.filtre.chats.tous est false, les stores avatar et groupe ne délivrent que ceux de l'avatar courant positionné sur la page d'accueil.
+- si le filtre `filtre.filtre.chats.tous` est `false`, les stores _avatar_ et _groupe_ ne délivrent QUE ceux de l'avatar courant positionné sur la page d'accueil.
 - exporte les chats sélectionnés dans un fichier MarkDown.
 
-Import: ApercuChat, ContactChat, ApercuChatgr, ApercuGenx
+Imports: 
+- `components/MicroChat.vue`
+- `components/MicroChatgr.vue`
+- `components/ApercuGenx.vue`
+- `dialogues/NouveauChat.vue`
+- `components/SelAvid.vue`
 
-### PageClos (3)
-Page ouverte sur clôture immédiate de la session:
+### `PageClos`
+Page ouverte quand la clôture immédiate de la session est la seule issue possible:
 - blocage intégral par l'administrateur technique,
-- compte résilié par une autre session ou celle courante,
-- ressort toujours par la déconnexion inconditionnelle.
+- compte résilié par une autre session ou celle courante.
 
-Import: BoutonBulle, ShowHtml
+La seule sortie possible de cette page est le retour à la page de login.
 
-### PageCompta (7)
-Quatre onglets donnant l'état de la comptabilité et des blocages.
-- **Notifications**: liste des notifications en cours (avec leurs blocages éventuels).
-- **Comptabilité**: abonnement et consommation (PanelCompta).
+### `PageCompta`
+Quatre onglets donnent l'état de la comptabilité et des blocages.
+- **alertes**: liste des notifications en cours (avec leurs blocages éventuels).
+- **Abon./Conso.**: abonnement et consommation (PanelCompta).
 - **Crédits**: pour les comptes autonomes seulement (PanelCredits).
-- **Chats**: chats d'urgence avec le Comptable et les sponsors.
+- **Chats d'urgence**: chats d'urgence avec le Comptable et les délégués.
 
-Import: SdAl, ApercuGenx, ApercuNotif, PanelCompta, PanelCredits, ApercuChat
+Imports:
+- `components/PanelCompta.vue`
+- `components/ApercuGenx.vue`
+- `components/PanelCredits.vue`
+- `components/PanelAlertes.vue`
 
-### PageSession (2)
-Page qui s'affiche pendant l'initilisation de la session, après login et avant la page d'accueil.
-- **Etat général** de la session.
+#### Composant `PanelCredits`
+Composant auxiliaire de `PageCompta`:
+- obtention de la statistique des crédits,
+- affichage de la liste des crédits,
+- affichage de la liste des dons,
+- appel de la génération d'un ticket.
+
+Imports:
+- `components/ApercuTicket.vue`
+- `components/PanelDialtk.vue`
+- `components/ApercuGenx.vue`
+- `components/SaisieMois.vue`
+
+#### Composant `ApercuTicket`
+Composant auxiliaire de PanelCredits.
+- affichage, création, suppression d'un ticket de paiement.
+
+Imports:
+- `components/PanelDialtk.vue`
+
+#### Composant `PanelDialtk`
+Composant auxiliaire de `PanelCredits` et `ApercuTicket`.
+- affichage création mise à jour d'un ticket de paiement.
+
+### `PageSession`
+Page qui s'affiche pendant l'initialisation de la session, après login et avant la page d'accueil. Elle s'affiche ausii sur demande par le bouton _Résumé de la session en cours_ de la page d'accueil.
+- **État général** de la session et de sa consommation cumulée depuis le début de la session.
 - **RapportSynchro**: son contenu est dynamique lors du chargement de la session, puis fixe après (synthèse du chargement initial).
-- **Téléchargements en cours**: zone passive d'affichage sans action. En fin d'intialisation d'une session, les chargements des fichiers accessibles en mode avion et qui ne sont pas disponibles dans la base locale, sont chargés en tâche de fond. Cet zone liste les téléchargements restant à effectuer.
-- **Téléchargements en échec**: erreurs survenues dans ces téléchargements. Actions possibles sur chaque fichier en échec: _ré-essai abandon_.
 
-Import: RapportSynchro
+Imports:
+- `components/RapportSynchro.vue`
 
-### PageEspace (4)
-Affiche le découpage de l'espace en tranches:
-- pour le Comptable, création de tribu et ajustement des paramètres de l'espace pour les transferts de compte O / A.
+#### Composant `RapportSynchro`
+Composant auxiliaire de de PageSession:
+- affiche par avatars et groupes du compte, leurs nombres de notes, membres, sponsorings, chats, tickets.
 
-La page est également invoquée dans un dialogue interne de PageAdmin pour affichage des tranches (mais sans droit d'agir).
+### `PageEspace`
+Affiche pour le Comptable le découpage de l'espace en partitions:
+- création de partition et ajustement de ses quotas,
+- acceptation ou non des comptes A,
+- quotas réservés aux comptes A,
+- nombre de mois d'inactivité.
 
-Import: ChoixQuotas, TuileCnv, TuileNotif, ApercuNotif
+Dialogues internes:
+- `PEedqA`: Dialogue de mise à jour des quotas des comptes A.
+- `PEnp`: Dialogue de création d'une nouvelle partition.
 
-### PageTranche (6)
-Affiche en tête la tranche courante,
-- celle du compte
-- pour le comptable celle courante sélectionnée depuis la PageEspace.
-- pour le comptable ouvre le panel NouveauSponsoring pour sponsoriser un compte dans n'importe quelle tranche.
+Imports:
+- `components/SaisieMois.vue`
+- `components/ChoixQuotas.vue`
+- `components/SynthHdrs.vue`
+- `components/SynthLigne.vue`
 
-Affiche en dessous les sponsors et pour le Comptable les autres comptes de la tranche.
+### `PagePartition`
+Pour un délégué et le Comptable, affiche les données de la partition et la la liste de ses comptes.
+- pour le Comptable, celle désignée depuis la page de l'espace.
+- pour un délégué, SA partition.
 
-Import: TuileCnv,TuileNotif, ApercuNotif, ChoixQuotas, ApercuGenx, PanelCompta, QuotasVols, NouveauSponsoring, BarrePeople
+Dialogues internes:
+- `NSnvsp`: Dialogue de création d'un nouveau sponsoring.
+- `PTedq`: Dialogue de mise à jour des quotas du compte.
 
-Dialogues: 
-- PTcptdial : affichage des compteurs comptables du compte sélectionné
-- PTedq: mise à jour des quotas du compte sélectionné
+Imports:
+- `components/SynthHdrs.vue`
+- `components/SynthLigne.vue`
+- `components/ApercuNotif.vue`
+- `components/ChoixQuotas.vue`
+- `components/ApercuGenx.vue`
+- `components/QuotasVols.vue`
+- `panels/NouveauSponsoring.vue`
+- `components/BarrePeople.vue`
 
-### PageSponsorings (4)
+#### Composant `SynthHdrs`
+Composant auxiliaire d'affichage des entêtes de colonnes dans `PageEspace` et `PagePartition`.
+
+#### Composant `SynthLigne`
+Composant auxiliaire d'affichage de la ligne d'une partition dans `PageEspace` et `PagePartition`.
+
+Dialogues internes:
+- `PEedqP` : Dialogue de mise à jour des quotas de la partition.
+- `PEedcom` : Édition du code d'une partition.
+- `DNdialoguenotif` : Dialogue de gestion d'alerte niveau partition.
+
+Imports:
+- `components/ChoixQuotas.vue`
+- `components/DialogueNotif.vue`
+
+### `PageSponsorings`
 Liste les sponsorings actuellement en cours ou récents:
 - boutons de prolongation des sponsorings en cours et d'annulation.
 
-Bouton général pour créer un nouveau sponsoring.
+Dialogues internes:
+- `NSnvsp` : Dialogue de création d'un sponsoring: pour un délégué et un compte "O" dans sa propre partition.
 
-Import: NouveauSponsoring, ShowHtml, QuotasVols
+Imports:
+- `components/ShowHtml.vue`
+- `panels/NouveauSponsoring.vue`
+- `components/QuotasVols.vue'`
 
-### PageGroupes (8)
-Liste les groupes accédés par le compte, dans lesquels il est actif.
-- synthèse des volumes occupés par les groupes hébergés,
-- bouton de création d'un nouveau groupe,
+### `PageGroupes`
+Liste les groupes dans lesquels le compte,
+- est simple contact,
+- est invité en attente d'acceptation / refus,
+- est actif.
+
+Affiche:
+- la synthèse des volumes occupés par les groupes hébergés,
+- un bouton de création d'un nouveau groupe,
 - une carte par groupe avec :
   - un bouton pour ouvrir le chat du groupe,
   - un bouton pour accéder à la page du groupe.
 
-Import: ChoixQuotas, NomAvatar, ApercuGenx, InvitationsEncours, ApercuChatgr
+Dialogues internes:
+- `IAaccinvit` : Acceptation / refus de l'invitation.
+- `PGctc` : Création d'un nouveau contact du groupe.
+- `PGcrgr` : Création d'un nouveau groupe.
+- `PGACGouvrir` : Chat du groupe.
 
-Dialogue:
-- PGcrgr: création d'un groupe.
+Imports: 
+- `components/ChoixQuotas.vue`
+- `components/NomAvatar.vue`
+- `components/ApercuGenx.vue`
+- `components/SelAvid.vue`
+- `panels/ApercuChatgr.vue`
+- `components/InvitationAcceptation.vue`
 
-### PageGroupe (10)
+### `PageGroupe`
 Affiche les détails d'un groupe:
 - onglet **Détail du groupe**: entête et participations des avatars du compte au groupe.
   - bouton d'ajout d'un contact comme contact du groupe.
 - onglet **Membres**: liste des contacts membres du groupe si le compte a accès aux membres.
 
-Import: ApercuMembre, ApercuGroupe
+Dialogues internes:
+- `AGediterUna` : Gérer le mode simple / unanime.
+- `AGgererheb` : Gérer l'hébergement, changer les quotas.
+- `ACGouvrir` : Chat du groupe.
 
-### PagePeople (6)
-Affiche tous les contacts connus avec une courte fiche pour chacun (pouvant ouvrir sur le détail du contact).
-- un bouton rafraîchit les cartes de viste qui en ont besoin.
+Imports:
+- `components/ApercuGenx.vue`
+- `components/ApercuMembre.vue`
+- `components/SelAvidgr.vue`
+- `components/QuotasVols.vue`
+- `components/ChoixQuotas.vue`
+- `panels/ApercuChatgr.vue`
 
-Import: ApercuGenx
+### `PagePeople`
+Affiche tous les contacts connus avec une courte fiche pour chacun.
+- un bouton rafraîchit les cartes de visite qui en ont besoin.
 
-### PageNotes (7)
+Imports:
+- `components/ApercuGenx.vue`
+
+### `PageNotes`
 Affiche l'arbre des notes avec pour racines les avatars et les groupes:
 - en tête affiche le détail de la note courante, avec les actions qu'elle peut subir.
-- la barre séparatrice petmet de lancer le chragment local des notes sléctionnées et le plier / déplier global de l'arbre.
+- la barre séparatrice permet de lancer le chargment local des notes sléctionnées et le plier / déplier global de l'arbre.
 - en bas l'arbre des notes selon leur rattachemnt.
 
-Import: ShowHtml, ApercuMotscles, NoteEdit, NoteMc, NotePlus, NoteExclu, NoteFichier, NoteConfirme, ListeAuts
+Dialogues internes:
+- `NE` : Edition du texte de la note.
+- `NX` : Gestion de l'exclusivité de la note.
+- `NF` : Gestion des fichiers attachés à la note.
+- `AP` : Album de photo de la note et ses descendantes.
+- `confirmSuppr` : Confirmation de la suppression d'une note.
+- `PNdl` : Dialogue de download des notes sélectionnées.
+- `NM` : Mise à jour des hashtags de la note.
 
-Dialogue:
-- PNdl: dialogue gérant le chargement des notes en local.
+Imports:
+- `components/ShowHtml.vue`
+- `panels/NoteEdit.vue`
+- `panels/NoteExclu.vue`
+- `panels/NoteFichier.vue`
+- `components/ListeAuts.vue`
+- `components/NotePlus.vue`
+- `components/HashTags.vue`
+- `components/BoutonConfirm.vue`
+- `components/ApercuGenx.vue`
+- `panels/AlbumPhotos.vue`
 
-### PageFicavion (2)
+### `PageFicavion`
 Affiche la liste des fichiers visible en mode avion et pour chacun,
 - permet de l'afficher et de l'enregistrer localement,
 - de voir la note à laquelle il est attaché.
 
-# Annexe: liste des _panels_
+Imports:
+- `components/MenuFichier.vue`
+
+# Annexe: liste des _panels_ (TODO - A réviser)
 
 ### DialogueHelp (3)
 Affiche les pages d'aide.
