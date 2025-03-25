@@ -242,7 +242,7 @@ Ses données sont stockées à l'occasion des opérations de mises à jour effec
 
 Trois implémentations interchangeables correspondent à trois classes _providers_ présentant le même API, sont disponibles:
 - **SQLite**: principalement pour les tests, ou pour une production de faible puissance sur un serveur géré.
-- **PostgreSQL** (à faire): supportant plusieurs instances de services OP et pouvant être hébergé par un service géré.
+- **PostgreSQL** : supportant plusieurs instances de services OP et pouvant être hébergé par un service géré.
 - **Firestore** (Firebase), base NOSQL en service hébergé par Google Cloud Platform.
 
 Une classe _provider_ est écrite pour chaque modèle de base de données souhaité.
@@ -413,7 +413,7 @@ Ce service est implémenté en Node: son parallélisme est celui des requêtes H
 
 Augmenter la puissance de ce service si elle est insuffisante oblige à changer de technologie:
 - la mémoire des _périmètres_ doit passer dans un service de mémoire partagée,
-- Postgresql offre aussi un mécanisme de souscription / publication utilisable.
+- PostgreSql offre aussi un mécanisme de souscription / publication utilisable.
 
 Il n'est pas certain qu'en servant une seule organisation, on atteigne la limite de saturation du service PUBSUB s'exécutant sur une VM ayant plusieurs CPU avant d'atteindre d'autres limites et contentions sur la base de données typiquement.
 

@@ -8,11 +8,12 @@ Elles sont importantes : **AsocialApp** donne accès à **des** espaces **a-soci
 Clairement **AsocialApp** n'est pas _monétisable_ par la publicité ciblée, donc d'une manière ou d'une autre payante, aucune information personnelle / intelligible ne pouvant être captée.
 
 ### Public versus privé
-Un _réseau social_ est public, ouvert au plus grand monde, parfois avec des millions d'utilisateurs ayant une identité visible (un nom / pseudo, une photo, etc.). L'objectif du fournisseur est de capturer le maximum d'informations sur les personnes ayant un compte afin de les monétiser.
+Un _réseau social_ est public, ouvert au plus grand monde, parfois avec des millions d'utilisateurs ayant une identité visible (un nom / pseudo, une photo, etc.). L'objectif du fournisseur est de capturer le maximum d'informations sur les personnes ayant un compte afin de les monétiser. D'une manière ou d'une autre **les comptes sont reliés à un identifiant du monde réel, adresse e-mail, numéro de téléphone, ...**
 
 A l'inverse chaque _organisation_ peut avoir son propre _espace **AsocialApp** ayant son URL spécifique_  réservé à ses membres: en centaines, voire en milliers, certainement pas des millions.
-- les comptes y sont identifiés par un code aléatoire sans signification.
+- **les comptes y sont identifiés par un code aléatoire sans signification**, sans aucune relation avec des identifiants du monde réel.
 - _l'identité_, la _carte de visite_ de l'avatar d'un compte n'est visible que par les quelques contacts qu'il a agréé.
+- l'accès à son compte est subordonné à la connaissance par son titulaire de sa phrase secrète (d'au moins 24 signes) qu'il est seul à connaître et n'est écrite nulle part dans l'application.
 
 ### Inscription libre versus cooptation
 L'inscription à un _réseau social_ est, en général, libre, ouverte à tous.
@@ -26,12 +27,12 @@ Dans **AsocialApp** il n'existe aucun répertoire nominatif des comptes et avata
 ### Groupes ouverts versus groupes sur invitation
 Dans un _réseau social_ il est en général possible de créer des _groupes_ d'utilisateurs.
 
-Avec **AsocialApp** c'est aussi le cas mais un membre ne peut proposer à l'invitation qu'un de ses _contacts_: il est impossible d'obtenir un contact par son nom / pseudo ou tout autre crière de recherche, les données d'identications n'étant pas disponibles sur les serveurs.
+Avec **AsocialApp** c'est aussi le cas mais un membre ne peut proposer à l'invitation qu'un de ses _contacts_: il est impossible d'obtenir un contact par son nom / pseudo ou tout autre critère de recherche, les données d'identification n'étant pas disponibles sur les serveurs.
 
 ### Textes publics versus textes cryptées
 Dans **AsocialApp** tous les textes / fichiers humainement interprétables sont cryptés de bout en bout, le serveur (ni le réseau) n'y ont accès en clair.
 
-Les cryptage / décryptage sont effectués à partir de clés générées et cryptées elles-mêmes par la _phrase secrète_ déclarée par le compte et connue de lui-seul (et jamais inscrite nulle part). C'est le cas pour:
+Les cryptage / décryptage sont effectués à partir de clés générées et cryptées elles-mêmes par la _phrase secrète_ déclarée par le compte. C'est le cas pour:
 - les données de la _carte de visite_ de chaque avatar d'un compte,
 - les textes des _chats_ entre deux comptes où à l'intérieur d'un groupe,
 - les textes des _notes_ personnelles ou d'un groupe, ainsi que leurs fichiers attachés dont l'espace de stockage ne connaît jamais que des contenus cryptés qui ne peuvent être interprétés que dans les sessions des comptes en ayant la clé associée.

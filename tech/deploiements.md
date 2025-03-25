@@ -152,7 +152,7 @@ Un serveur NON géré est un serveur dont on assure soi-même la configuration e
 
 Sur un site non géré, il faut installer:
 - _éventuellement_ un `nginx` (ou équivalent) capable d'effectuer un _load balancing_ entre plusieurs instances de serveur HTTP assurant un service OP afin d'accroître la puissance disponible.
-- _éventuellement_ une base de données, `Sqlite` (ou `Postgresql` si l'accès est développé), locale, et en gérer la sécurité / backup / restore. Mais il est aussi possible d'utiliser un service d'hébergement `Firestore` (ou par extension DynamoDB -Amazon-, ou CosmoDB -Microsoft Azure-) où un service d'hébergement externe `Postgresql`.
+- _éventuellement_ une base de données, `Sqlite` (ou `Postgresql`), locale, et en gérer la sécurité / backup / restore. Mais il est aussi possible d'utiliser un service d'hébergement `Firestore` (ou par extension DynamoDB -Amazon-, ou CosmoDB -Microsoft Azure-) où un service d'hébergement externe `Postgresql`.
 
 Les déploiements documentés sont les suivants:
 - **Serveur OP**: serveur assurant le seul service OP.
@@ -191,7 +191,7 @@ Il n'est documenté ici que l'usage de _Google Cloud Functions_: les deux autres
 # Choix de la _base de données_
 
 ### Autogestion de la base de données
-C'est possible pour les _providers_ `SQLite` et `PostgreSQL` s'il est développé.
+C'est possible pour les _providers_ `SQLite` et `PostgreSQL`.
 
 C'est une gestion lourde et humainement contraignante pour une organisation.
 

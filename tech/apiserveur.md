@@ -1133,12 +1133,13 @@ Le provider `GcProvider` (_Google Cloud Storage_) propose bien `getUrl / putURL`
 - A noter qu'in fine les fichiers se retrouvent bien dans le storage émulé, ils ont juste fait un transit supplémentaire en mémoire dans le cas d'usage de _emulator_.
 
 # Providers d'accès aux bases de données
-Deux _providers_ ont été écrits:
-- `dbSqlite` : classe `SqliteProvider` pour accéder à d'autres bases SQL (comme PostgresQL) cette classe doit être dédoublée et ajustée.
+trois _providers_ ont été écrits:
+- `dbSqlite` : classe `SqliteProvider` pour accéder à Sqlite.
+- `dbPg` : classe `PgProvider` adaptation de `dbSqlite` pour accéder à `PostgreSql`.
 - `dbFirestore` : classe `FirestoreProvider` pour Google Firestore (NoSql).
 
-Les deux classes ont leur propre constructor qui admet deux arguments:
-- `code` : `sqlite_a firestore_a` ...
+Ces classes ont leur propre `constructor` qui admet deux arguments:
+- `code` : `sqlite_a firestore_a pg_a` ...
 - `site` : `A B` ... identifie le site et ses conditions de cryptage dans `keys.json`.
 
 Le `constructor` récupère les éléments de configuration qui lui sont nécessaires dont les clés d'accès / paths requis et présents dans `config / keys.json`.

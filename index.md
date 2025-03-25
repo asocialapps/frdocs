@@ -12,7 +12,7 @@ L'application **AsocialApp** propose des fonctionnalités équivalentes à celle
 
 ### Différences de fond - [En savoir plus ...](differences.html)
 Elles sont importantes : **AsocialApp** permet d'accéder à **des** espaces **a-sociaux**, privés, cryptés de bout en bout pour des comptes _numérotés_ et anonymes, bref pas _sociaux_ du tout. 
-- Comptes publics avec inscription libre vs _privés_ et _création par cooptation_
+- Comptes avec inscription depuis un identifiant public dans le vrai monde (e-mail, numéro de téléphone) pour un réseau social, versus _création par cooptation_ **sans aucun identifiant relié au monde réel** pour un réseau a-social
 - Groupes ouverts vs _sur invitation_
 - Textes publics vs _cryptés_
 - Fournisseur unique / _multiples_
