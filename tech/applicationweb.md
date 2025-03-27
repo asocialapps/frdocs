@@ -542,6 +542,7 @@ C'est LE layout unique décrivant LA page de l'application. Elle est constituée
 - _ui.d.a.opDialog_ : Affiche l'opération en cours et propose son interruption
 - _ui.d.a.confirmstopop_ : Confirmation d'interruption de l'opération en cours
 - _ui.d.a.sync_ : Gestion de la synchronisation automatique
+- _ui.paranovis_ : Panel de déverrouillage 
 
 La logique embarquée se limite à:
 - détecter le changement de largeur de la page pour faire gérer correctement l'ouverture du drawer de filtre dans `stores.ui`,
@@ -1124,6 +1125,13 @@ Imports:
 - `components/NomAvatar.vue`
 - `components/ChoixQuotas.vue`
 
+#### Panel `SupprAvatar` : auxiliaire de `PageCompte`
+Panel de suppression d'un avatar ou du compte.
+- affiche les conséquences en termes de pertes de notes, de groupes et de chats avec les volumes associés récupérés.
+
+Imports:
+- `components/QuotasVols.vue`
+
 #### Composant `ApercuAvatar` : auxiliaire de `PageCompte`
 Affiche les données d'identification d'un avatar.
 
@@ -1289,7 +1297,18 @@ Dialogues internes:
 - `Zimg` : Zoom d'une photo
 
 imports:
+- `dialogues/NouveauFichier.vue`
+- `components/MenuFichier.vue`
+- `components/NoteEcritepar2.vue`
+- `components/ZoomPhoto.vue`
+- `components/ListeAuts.vue`
+- `components/NodeParent.vue`
 
+#### Dialogue `NouveauFichier` : auxiliaire de `NoteFichier`
+Dialogue par étapes pilotant la création d'un nouveau fichier ou nouvelle révision d'un fichier, gestion des fichiers à supprimer à cette occasion. In fine suivi des étapes d'enregistrement sur le _stockage_ et le serveur.
+
+Imports:
+- `components/NomGenerique.vue`
 
 #### Panel `AlbumPhotos` : auxilaire de `PageNotes` et `NoteFicchier`
 Présente toutes les _miniatures_ des fichiers _images_ attachés aux notes sous une racine connée.
@@ -1364,56 +1383,107 @@ Imports:
 - `panels/NouveauSponsoring.vue`
 - `components/QuotasVols.vue'`
 
-# Annexe: liste des _panels_ (TODO - A réviser)
+# Annexe: liste des _panels_
 
+### Panel `ApercuChat` : ouvert par `ChatsAvec` `MicroChat`
+Ce panel affiche une entête d'information sur le chat et affiche dans l'ordre antéchronologique les items d'échanges. Des dialogues d'actions s'applique, soit au niveau du chat, soit au niveau d'un item.
 
+Dialogues internes:
+- `mutation` : Gestion des mutations.
+- `BPmut` : Mutation de type de compte en "type" A ou O.
+- `ACconfirmeff` : Confirmation d'effacement d'un échange.
+- `ACconfirmrac` : Confirmation du raccrocher.
+- `BPcptdial` : Affichage des compteurs de compta du compte "courant".
+- `ACchatedit` : Dialogue d'ajout d'un item au chat.
 
-### DialogueHelp (3)
+Imports:
+- `components/SdBlanc.vue`
+- `components/EditeurMd.vue`
+- `components/ApercuGenx.vue`
+- `components/PanelCompta.vue`
+- `components/ChoixQuotas.vue`
+
+### Panel `ApercuChatgr` : ouvert par `PageGroupes` `PageGroupes` `MicroChatgr`
+Ce panel affiche une entête d'information sur le chat du groupe et affiche dans l'ordre antéchronologique les items d'échanges. Des dialogues d'actions s'applique, soit au niveau du chat, soit au niveau d'un item.
+
+Dialogues internes:
+- `ACGconfirmeff` : Confirmation d'effacement d'un échange.
+- `ACGchatedit` : Dialogue d'ajout d'un item au chat.
+
+Imports:
+- `components/SdBlanc.vue`
+- `components/EditeurMd.vue`
+- `components/SelAvmbr.vue`
+- `components/ApercuGenx.vue`
+
+### Panel `DialogueHelp` : ouvert par `BoutonHelp`
 Affiche les pages d'aide.
-- la table des matières, le titre de chaque page, les pages à trouver en bas de chaque page d'aide, sont configurés dans `src/app/help.mjs`
-- chaque page d'aide est un fichier par langue dans `src/assets/help`
-- les images dans ces pages sont dans `public/help`
-- ce dialogue est ouvert / géré par `ui-store pushhelp pophelp fermerhelp`.
-- l'ouverture est déclencher par BoutenHelp.
+- la page d'aide courante.
+- l'arbre des pages d'aide.
 
-### ApercuChatgr (3)
-Affiche le chat d'un groupe.
-- ajout d'items et supression d'items.
+Cet arbre est construit depuis `src/assets/help/_plan.json`
+- chaque page ppp est un fichier `src/assets/help/ppp_fr-FR.md`, voire en d'autres langues.
 
-Import: EditeurMd, NoteEcritepar
+Les titres des rubriques d'aide (des pages d'aide) sont traduits dans `src/i18n`.
 
-### ApercuChat (6)
-Affiche le chat d'un avatar du compte avec un contact.
-- ajout d'items et supression d'items.
-- raccrocher le chat/
+Dialogues internes:
+- `readme` : Affichage du README de la version courante de l'application.
 
-Import: SdDark1, EditeurMd, ApercuGenx
+Imports:
+- `components/ShowHtml.vue`
 
-### SupprAvatar (2)
-Panel de suppression d'un avatar.
-- affiche les conséquences en termes de pertes de secrets, de groupes et de chats avec les volumes associés récupérés.
-- importé **uniquement* par PageCompte.
+### Panel `NouveauSponsoring` : ouvert par `PageSponsorings` `PagePartition`
+Panel de saisie par étapes d'un sponsoring par un compte lui-même sponsor.
 
-### OutilsTests (1)
-Trois onglets:
-- **Tests d'accés**: tests d'accès au serveur, ping des bases locales et distantes.
-- OTrunning:
-  - présente la liste des bases synchronisées.
-  - sur demande calcul de leur volume (théorique pour le volume V1).
+Imports:
+- `components/NomAvatar.vue`
+- `components/ChoixQuotas.vue`
+- `components/EditeurMd.vue`
+- `components/PhraseContact.vue`
+- `components/QuotasVols.vue`
+
+### Panel `OutilsTests` : ouvert par `App` et `PageAccueil`
+Plusieurs onglets:
+- **Comptes synchronisés:**
+  - présente la liste des bases synchronisées dans le browser.
+  - sur demande calcul de leur volume.
   - propose la suppression de la base.
-- **Phrase secrète**: test d'une phrase avec affichage des différents cryptages / encodages associés.
+- **Tests d'accès:** 
+  - tests d'accès au serveur, 
+  - ping des bases locales et distantes,
+  - simulation d'erreur.
+- **Affichage du thème:** couleurs et fontes.
+- **Test d'une phrase secrète:** affichage de ses cryptage / hash.
+- **_Test du calcul des compteurs:_**
+  - pas visible en production.
+  - permet de tester le recalcul des compteurs selon une succession d'étapes dans le temps.
 
-Invoqué par un bouton de la page d'accueil / App.vue
+Dialogues internes:
+- `OTrunning` :  Dialogue de calcul du volume d'une base locale.
+- `ORsupprbase` : Dialogue de suppression d'une base locale.
 
-Dialogues:
-- OTrunning: affiche la progression du calcul de la taille de la base.
-- ORsupprbase: dialogue de confirmation de la suppression.
+Imports:
+- `components/TestCompteurs.vue`
 
-### NouveauSponsoring (3)
-Panel de saisie d'un sponsoring par un compte lui-même sponsor.
-- importé par PageSponsorings et PageTranche.
+### Panel `PressePapier` : ouvert par un bouton de `App`
+Gère le presse-papier des notes et fichiers conservés localement en mémoire et/ou dans la base locale.
 
-Import: PhraseContact, ChoixQuotas, NomAvatar, EditeurMd, QuotasVols
+Dialogues internes:
+- `PPnvnote` : Dialogue de confirmation de suppression d'une note.
+- `PPnvfic` : Dialogue d'ajout d'un nouveau fichier.
+- `PPsupprnote` : Dialogue de confirmation de suppression d'une note.
+- `PPsupprfic` : Dialogue de confirmation de suppression d'un fichier.
+
+Imports:
+- `components/ShowHtml.vue`
+- `components/EditeurMd.vue`
+- `components/NomGenerique.vue`
+
+
+
+
+
+
 
 
 ## PanelPeople (7)
@@ -1481,6 +1551,8 @@ Affiche et attribue les mots clés d'une note, personnelle et du groupe.
 Import: BoutonBulle, ApercuGenx, ChoixMotscles, ListeAuts
 
 # Annexe: liste des _dialogues_
+(TODO - A réviser)
+
 ### DialogueErreur (1)
 Affiche une exception AppExc et gère les options de sortie selon sa nature (déconnexion, continuation ...).
 
