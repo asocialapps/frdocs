@@ -1551,119 +1551,91 @@ Affiche et attribue les mots clés d'une note, personnelle et du groupe.
 Import: BoutonBulle, ApercuGenx, ChoixMotscles, ListeAuts
 
 # Annexe: liste des _dialogues_
-(TODO - A réviser)
 
-### DialogueErreur (1)
-Affiche une exception AppExc et gère les options de sortie selon sa nature (déconnexion, continuation ...).
+### Dialogue `ApercuCv` : ouvert par `ApercuGenx` `ListeAuts`
+Affiche la photo et le texte d'une carte de visite.
 
-### ChoixEmoji (1)
+Imports:
+- `components/ShowHtml.vue`
+
+### Dialogue `CarteVisite` : ouvert par `ApercuGenx`
+Edition d'une carte de visite, photo et texte.
+- la photo peut être issue d'un fichier ou de la caméra.
+- elle peut être retaillée et centrée.
+
+Imports:
+- `webcam-easy`
+- `vue-advanced-cropper`
+- `components/EditeurMd.vue`
+
+### Dialogue `ChoixEmoji` : ouvert par `EditeurMd`
 Dialogue de saisie des émojis à insérer dans un input / textarea.
 - se ferme à la fin de la saisie.
-- singleton, du fait de son inclusion soit dans EditeurMd soit dans Motscles qui n'ont qu'une seule instance en édition à un instant donné (toujours inclus dans des dialogues).
+- singleton, du fait de son inclusion dans EditeurMd qui n'a qu'une seule instance en édition à un instant donné (toujours inclus dans un dialogue).
 
-### PhraseSecrete (1)
+Import:
+- `emoji-mart-vue-fast/data/google.json`
+- `emoji-mart-vue-fast/src`
+
+### Dialogue `DialogueErreur` : ouvert par `App`
+Affiche une exception `AppExc` et gère les options de sortie selon sa nature (déconnexion, continuation ...).
+
+Bien qu'affiché par `App`, la sollicitation vient de `ui-store.afficherExc`:
+- sur trap d'une exception de `Operation`,
+- sur trap d'exceptions UI:
+  - `util.trapex` : `MenuFichier NouveauFichier`
+  - `PageNotes`
+
+### Dialogue `Parano` : ouvert par `App`
+Affiche plein écran un clavier simplifié permettant de saisir le code PIN de déverrouillage (donc de disparition du dialogue) ou de retour à la page de login.
+- déclenché périodiquement ou appui sur l'icône de verrou.
+
+### Dialogues `DialStd1`
+Template générique d'un dialogue simplifié avec,
+- une barre de titre,
+- un slot,
+- une barre de boutons renocer / valider.
+
+### Dialogues `DialStd2`
+Template générique d'un dialogue pleine page (avec _layout_) avec,
+- une barre de titre,
+- un slot dans le _page-container_.
+
+### Dialogue `NouveauChat` : ouvert par `ChatsAvec` `MicroChat` `PageChats`
+Dialogue de création d'un _chat_ avec un premier item.
+
+Imports:
+- `components/PhraseContact.vue`
+- `components/ApercuGenx.vue`
+- `components/EditeurMd.vue`
+
+### Dialogue `PhraseSecrete` : ouver par `App`
 Saisie contrôlée d'une phrase secrète et d'une organisation (sur option), avec ou sans vérification par double frappe.
 
-Ce composant héberge *simple-keyboard* qui affiche et gère un clavier virtuel pour la saisie de la phrase. Il utilise pour s'afficher un `<div>` de classe "simple-keyboard" ce qui pose problème en cas d'instantiation en plusieurs exemplaires.
-- Ceci a conduit a avoir une seule instance du dialogue hénergée dans App et commandée par la variable sorres.ui.d.PSouvrir
-- les propritées d'instantiation sont dans stores.ui.ps, dont ok qui est la fonction de callback à la validation de la saisie.
-le dialogue est positionné au *top* afin de laisser la place au clavier virtuel de s'afficher au dessous quand il est sollicité.
+Bien que techniquement ouvert par `App`, de facto PhraseSecrete l'est depuis:
+- `PageLogin`: saisie de la pharse de connexion.
+- `AcceptationSponsoring`: donnée de la phrase par le filleul juste avant sa connexion.
+- `PageCompte`: changement de phrase secrète.
+- `PageCompta`: saisie de la phrase secrète du Comptable à la création d'un espace.
+- `OutilsTests`: pour tester la saisie d'une phrase secrète et la récupération de ses cryptages.
 
-PhraseSecrete est ouverte pat :
-- PageLogin: saisie de la pharse de connexion.
-- AcceptationSponsoring: donnée de la phrase par le filleul juste avant sa connexion.
-- PageCompte: changement de phrase secrète.
-- PageCompta: saisie de la phrase secrète du Comptable à la création d'un espace.
-- OutilsTests: pour tester la saisie d'une phrase secrète et la récupération de ses cryptages.
+Ce composant héberge *simple-keyboard* qui affiche et gère un clavier virtuel pour la saisie de la phrase. Il utilise pour s'afficher un `<div>` de classe `simple-keyboard` ce qui pose problème en cas d'instantiation en plusieurs exemplaires.
+- Ceci a conduit a avoir une seule instance du dialogue hénergée dans `App` et commandée par la variable sorres.`ui.d.PSouvrir`
+- les propritées d'instantiation sont dans `stores.ui.ps`, dont `ok` qui est la fonction de callback à la validation de la saisie.
+- le dialogue est positionné au *top* afin de laisser la place au clavier virtuel de s'afficher au dessous quand il est sollicité.
 
-### ApercuCv (4)
-Affiche une carte de visite d'un avatar, contact ou groupe:
-- pour un contact, le bouton refresh recharge la carte de visite depuis le serveur.
-- pour un avatar ou un groupe, le bouton d'édition permet de l'éditer. Pour un groupe, il faut que compte en soit animateur.
-
-Import: ShowHtml, CarteVisite
-
-### CarteVisite (3)
-Dialogue d'édition d'une carte de visite, sa photo et son information.
-- est importé **uniquement** depuis ApercuCv (la photo et l'information y étant présente).
-- sauvegarde les cartes de visite (avatar et groupe).
-
-Import: EditeurMd
-
-### MotsCles (2)
-Edite les mots clés, soit d'un compte, soit d'un groupe.
-
-N'est importé **que** par PageCompte et ApercuGroupe (une seule édition à un instant donné).
-
-Import: ChoixEmoji
-
-### ContactChat (2)
-Dialogue de saisie de la phrase de contact d'un avatar, puis création, éventuelle, d'un nouveau chat avec lui.
-
-Import: PhraseContact
-
-### PanelCredits (3)
-C'est l'onglet "crédits" de PageCompta:
-- affiche les tickets en cours,
-- rafraîchit leur incorporation,
-- bouton de génération d'un nouveau ticket.
-
-Import: ApercuTicket, PanelDeta, PanelDialtk
-
-### ApercuTicket (2)
-Affiche un ticket,
-- plié: donnée synthétique,
-- déplié: son détail et les actions possibles.
-
-Import: PanelDialtk
-
-### NoteConfirme (2)
-Dialogue de confirmation d'une action sur une note:
-- ne s'applique qu'à la suppression d'une note.
-- vérifie l'autorisation d'écriture, dont l'exclusivité d'accès pour une note de groupe.
-
-Import: BoutonConfirm
-
-### NouveauFichier (2)
-Dialogue d'acquisition d'un nouveau fichier, local ou depuis le presse-papier, pour une note.
-- permet de changer son nom,
-- liste les versions antérieures de même nom devant être purgées.
-
-Import: NomGenerique
+Imports:
+- `simple-keyboard`
+- `simple-keyboard/build/css/index.css`
 
 # Annexe: _components_ particuliers
-### Les filtres
-La page principale App a un drawer à droite réservé à afficher les filtres de sélection propres à chaque page et permettant de restreindre la liste des éléments à afficher dans la page (par exemple les notes).
 
-Chaque filtre est un component simple de saisie d'une seule donnée: la valeur filtrée étant stockée en store.
+### Filtres
+La page principale `App` a un drawer à droite réservé à afficher les filtres de sélection propres à chaque page et permettant de restreindre la liste des éléments à afficher dans la page (par exemple les notes).
 
-- **FiltreNom**: saisie d'un texte filtrant le début d'un nom ou un texte .contenu dans un string.
-- **FiltreMc**: liste de mots clés (qui peuvent être soit requis, soit interdits).
-- **FiltreNbj**: saisie d'un nombre jours 1, 7, 30, 90, 9999.
-- **FiltreAvecgr**: case à cocher 'Membre d\'un groupe' pour filtre des contacts.
-- **FiltreTribu**: menu de sélection de:
-  - '(ignorer)',
-  - 'Compte de ma tranche de quotas',
-  - 'Sponsor de ma tranche de quotas',
-- **FiltreAvecsp**: case à cocher 'Comptes "sponsor" seulement'.
-- **FiltreNotif**: menu de sélection de la gravité d'une notification:
-  - '(ignorer)',
-  - 'normale ou importante',
-  - 'importante'
-- **FiltreRac**: menu de sélection d'un statut de chat:  
-  - '(tous, actifs et raccrochés)',
-  - 'Chats actifs seulement',
-  - 'Chats raccrochés seulement'
-- **FiltreSansheb**: case à cocher 'Groupes sans hébergement'.
-- **FiltreEnexcedent**: case à cocher 'Groupes en excédent de volume'.
-- **FiltreAinvits**: case à cocher 'Groupes ayant des invitations en cours'.
-- **FiltreStmb**: menu de sélection du statut majeur d'un membre.
-  - '(n\'importe lequel)',
-  - 'contact',
-  - 'invité',
-  - 'actif',
-  - 'animateur',
-  - 'DISPARU',
+Chaque filtre est un component simple de saisie d'une seule donnée: la valeur filtrée étant stockée en `filtre-store`.
+
+- **FiltreAinvits**: case à cocher pour filtre des groupes ayant une invitation en cours.
 - **FiltreAmbno**: filtre des membres d'un groupe selon leurs drots d'accès:
   - '(indifférent)',
   - 'aux membres seulement',
@@ -1671,22 +1643,59 @@ Chaque filtre est un component simple de saisie d'une seule donnée: la valeur f
   - 'aux membres et aux notes',
   - 'ni aux membres ni aux notes',
   - 'aux notes en écriture'
+- **FiltreAvecgr**: case à cocher 'Membre d\'un groupe' pour filtre des contacts.
+- **FiltreAvecmut**: case à cocher pour filtre des chats ayant une demande de mutation en cours.
+- **FiltreAvecsp**: case à cocher pour filtrer les comptes délégués d'une partition.
+- **FiltreAvgr**: case à cocher pour filtrer les notes de groupes.
+- **FiltreEnexcedent**: case à cocher 'Groupes en excédent de volume' dans la liste des groupes.
+- **FiltreInvitables**: case à cocher pour filtrer les seuls contacts pouvant être invités dans un groupe.
+- **FiltreMc**: liste de _hashtags_ (qui peuvent être soit requis, soit interdits) pour toutes les pages ayant un filtre (sauf `admin` et `partition`).
+- **FiltreNbj**: saisie d'un nombre jours 1, 7, 30, 90, 9999 pour les pages `chats` et `notes`.
+- **FiltreNom**: saisie d'un texte filtrant le début d'un nom ou un texte contenu dans un string (presque toutes les pages).
+- **FiltreNonlus**: case à cocher pour filtrer les _chats_ non lus.
+- **FiltreNotif**: filtre pour sélectionner les comptes d'une `partition` en fonction de la gravité de sa _notification_.
+- **FiltreRac**: menu de sélection d'un statut de chat:  
+  - '(tous, actifs et raccrochés)',
+  - 'Chats actifs seulement',
+  - 'Chats raccrochés seulement'
+- **FiltreSansheb**: case à cocher pour filtrer les 'Groupes sans hébergement'.
+- **FiltreStmb**: menu de sélection du statut majeur d'un membre.
+  - '(n\'importe lequel)',
+  - 'contact',
+  - 'invité',
+  - 'actif',
+  - 'animateur',
+  - 'DISPARU',
 - **FiltreVols**: menu permettant de sélectionner un volume de fichiers d'une note 1Mo, 19Mo, 100,Mo 1Go
-- **FiltreTri**: sélectionne un critère de tri dans une des deux listes TRIespace et TRItranche définies au dictionnaire. 
-  - sur tranche: stores.avatar.ptLcFT tri selon l'une des 9 propriétés des tranches listées en tête de stores.avatar.
-  - sur espace: PageEspace effectue un tri selon 17 propriétés des synthèses.
- 
-### Les boutons
+
+#### `FiltreTri`
+Ce filtre spécifique sélectionne un critère de tri dans une des listes `TRIadmin TRIespace TRIpartition` définies au dictionnaire.
+
+### Boutons
+
 Ils n'importent aucune autre vue et sont des "span" destinés à figurer au milieu de textes.
+- **BoutonBulle**: affiche en bulle sur clic, un texte MD figurant dans le dictionnaire des traductions.
+- **BoutonBulle2**: affiche en bulle sur clic, un texte MD qui a été composé dynamiquement en respectant les traductions.
+- **BoutonConfirm**: active la foncion de confirmation quand l'utilisateur a frappé le code aléatoire de 1 à 255 qui lui est proposé.
+- **BoutonDlvat**: voir détail plus avant.
 - **BoutonHelp**: ouvre une page d'aide.
 - **BoutonLangue**: affiche la langue courante et permet de la changer.
-- **NotifIcon**: affiche le statut de notification de restriction et ouvre PageCompta. 
-- **BoutonMembre**: affiche le libelleé d'un membre, son statut majeur et optionnellment un bouton ouvrant un PanelMembre qui le détaille. N'est importé que dans ApercuGroupe.
-- **BoutonBulle** (3): affiche en bulle sur clic, un texte MD figurant dans le dictionnaire des traductions.
-- **BoutonBulle2** (3): affiche en bulle sur clic, un texte MD qui a été composé dynamiquement en respectant les traductions.
-- **BoutonUndo**: affiche une icône undo, disable ou non selon la condition passée en propriété.
-- **BoutonConfirm**: active la foncion de confirmation quand l'utilisateur a frappé le code aléatoire de 1 à 255 qui lui est proposé.
+- **BoutonUndo**: affiche une icône _undo_, disable ou non selon la condition passée en propriété.
+
+#### Boutons spéciaux / icônes
+- **IconAlerte**: affiche un statut d'alerte / restriction.
+- **IconMode**: affiche le mode de connexion courante.
 - **QueueIcon**: petit rond de couleur au-dessus d'une icöne pour marquer l'existence d'une queue de fichiers en téléchargement.
+
+#### Bouton `BoutonDlvat` : inséré dans `PageAdmin`
+Saisie d'un mois signifiant une date limite de connexion autorisée par l'Administrateur Technique.
+
+Dialogues internes:
+- `PEdlvat` : Changement d'une _dlvat_.
+
+# Annexe: autres _components_
+
+(TODO - A réviser)
 
 ### ChoixQuotas (1)
 Saisie des quotas d'abonnement / consommation à affecter à une tranche, un compte, un groupe.
