@@ -269,20 +269,20 @@ Un document par ticket de crédit généré par un compte A. `ids` est un nombre
 # Phrases secrètes et clés de cryptage
 ## Phrases
 ### Phrase de création du comptable
-- CC : PBKFD de la phrase complète - hCC son hash.
-- CR : PBKFD d'un extrait de la phrase - hCR son hash.
+- CC : PBKDF de la phrase complète - hCC son hash.
+- CR : PBKDF d'un extrait de la phrase - hCR son hash.
 
 ### Phrase secrète d'accès à un compte
-- XC : PBKFD de la phrase complète - hXC son hash.
-- XR : PBKFD d'un extrait de la phrase - hXR son hash.
+- XC : PBKDF de la phrase complète - hXC son hash.
+- XR : PBKDF d'un extrait de la phrase - hXR son hash.
 
 ### Phrase de sponsoring
-- YC : PBKFD de la phrase complète - hYC son hash
-- YR : PBKFD d'un extrait de la phrase - hYR son hash.
+- YC : PBKDF de la phrase complète - hYC son hash
+- YR : PBKDF d'un extrait de la phrase - hYR son hash.
 
 ### Phrase de contact d'un avatar
-- ZC : PBKFD de la phrase complète - hZC son hash.
-- ZR : PBKFD d'un extrait de la phrase - hZR son hash.
+- ZC : PBKDF de la phrase complète - hZC son hash.
+- ZR : PBKDF d'un extrait de la phrase - hZR son hash.
 
 ## Clés
 ### S : clé du site
@@ -331,8 +331,8 @@ Chaque avatar a un couple de clés privée / publique:
 - `cleES` : clé E cryptée par la clé S.
 
 ### `comptes`
-- `hXC`: hash du PBKFD de la phrase secrète complète.
-- `hk`: `hXR` hash du PBKFD d'un extrait de la phrase secrète.
+- `hXC`: hash du PBKDF de la phrase secrète complète.
+- `hk`: `hXR` hash du PBKDF d'un extrait de la phrase secrète.
 - `cleKXC` : clé K cryptée par XC.
 - `cleEK` : Comptable seulement. Clé E cryptée par sa clé K.
 - `privK` : clé privée RSA de son avatar principal cryptée par la clé K du compte.
@@ -347,18 +347,18 @@ Chaque avatar a un couple de clés privée / publique:
 ### `avatars`
 - `cleAZC` : clé A cryptée par ZC.
 - `pcK` : phrase de contact cryptée par la clé K du compte.
-- `hZC` : hash du PBKFD de la phrase de contact complète.
-- `hk` : `hZR` hash du PBKFD d'un extrait de la phrase de contact.
+- `hZC` : hash du PBKDF de la phrase de contact complète.
+- `hk` : `hZR` hash du PBKDF d'un extrait de la phrase de contact.
 - `pub privK` : couple des clés publique / privée RSA de l'avatar.
 
 ### `sponsorings`
-- `ids`: `hYR` hash du PBKFD de la phrase secrète réduite.
+- `ids`: `hYR` hash du PBKDF de la phrase secrète réduite.
 - `hk` : redondance de ids permettant un cryptage en base `org@id`.
 - `pspK` : phrase de sponsoring cryptée par la clé K du sponsor.
-- `YCK` : PBKFD de la phrase de sponsoring cryptée par la clé K du sponsor.
-- `hYC` : hash du PBKFD de la phrase de sponsoring,
-- `cleAYC` : clé A du sponsor crypté par le PBKFD de la phrase de sponsoring.
-- `clePYC` : clé P de la partition (si c'est un compte "O") cryptée par le PBKFD de la phrase de sponsoring.
+- `YCK` : PBKDF de la phrase de sponsoring cryptée par la clé K du sponsor.
+- `hYC` : hash du PBKDF de la phrase de sponsoring,
+- `cleAYC` : clé A du sponsor crypté par le PBKDF de la phrase de sponsoring.
+- `clePYC` : clé P de la partition (si c'est un compte "O") cryptée par le PBKDF de la phrase de sponsoring.
 
 ### `chats`
 - `cleCKP` : clé C du chat cryptée,
@@ -538,7 +538,7 @@ Ce protocole n'est pas contraignant, plutôt une facilité, par rapport à un us
 ## Le hash SHA256
 Son résultat fait 32 bytes. Il est rapide à calculer. Il est utilisé par _hash court_ (voir ci-dessous).
 
-## Le hash PBKFD
+## Le hash PBKDF
 Son résultat fait 32 bytes. Long à calculer, son algorithme ne le rend pas susceptible d'être accéléré par usage de CPU graphiques. Il est considéré comme incassable par force brute.
 
 ## Les clés AES
@@ -587,7 +587,7 @@ Les ID des documents ci-dessus sont calculés ainsi:
 # Authentification
 
 ## L'administrateur technique
-Il a une phrase de connexion dont le SHA256 de son PBKFD (`shax`) est enregistré dans la configuration d'installation. 
+Il a une phrase de connexion dont le SHA256 de son PBKDF (`shax`) est enregistré dans la configuration d'installation. 
 - Il n'a pas d'id, ce n'est PAS un compte.
 - Une opération de l'administrateur est repérée parce que son _token_ contient son `shax`.
 
@@ -607,12 +607,12 @@ L'identifiant d'une connexion est `sessionId` : `pageId.nc`.
 Toute opération ayant à authentifier son émetteur porte un `token` sérialisation encodée en base 64 URL de `{ sessionId, org, shax, hXR, hXC }`:
 - Pour l'administrateur technique:
   - `org`: `admin`
-  - `shax` : SHA256 du PBKFD de sa phrase secrète en base64.
+  - `shax` : SHA256 du PBKDF de sa phrase secrète en base64.
 - Pour un compte connecté:
   - `org` : le code l'organisation.
   - `sessionId`,
-  - `hXR` : hash -_court_ du PBKFD des 12 premiers caractères de la phrase secrète.
-  - `hXC` : hash _court_ du PBKFD de la phrase secrète complète.
+  - `hXR` : hash -_court_ du PBKDF des 12 premiers caractères de la phrase secrète.
+  - `hXC` : hash _court_ du PBKDF de la phrase secrète complète.
 
 Le service OP recherche le document `comptes` par `org@hXR` (propriété `hk` indexée de `comptes`):
 - vérifie que `hXC` est bien celui enregistré dans `comptes`.
@@ -730,7 +730,7 @@ Ces documents sont créés par l'administrateur technique à l'occasion de la cr
 #### Clé de l'espace `cleES / cleET`
 **`cleES` ne sert qu'à crypter les rapports statistiques** des comptes et des tickets: comme c'est le traitement GC qui les génère il faut bien qu'il puisse la lire _en clair_.
 - c'est la seule clé détenue en _clair_ dans la base (mais _data_ est cryptée).
-- `cleES` est cryptée en `cleET` par le PBKFD de la phrase complète de sponsorings du Comptable:
+- `cleES` est cryptée en `cleET` par le PBKDF de la phrase complète de sponsorings du Comptable:
   - à la création du compte du Comptable, `cleET` peut être décryptée (le Comptable ayant saisi sa phrase de sponsorings) et elle est ré-encryptée en `cleEK` dans le document `comptes` du Comptable par sa clé K.
   - `cleET` ne sert donc que peu de temps, entre la création de l'espace par l'administrateur technique et la création du compte du Comptable.
 
@@ -756,7 +756,7 @@ _data_ :
 - `org` : code de l'organisation propriétaire, récupérée par le service OP, mais pas stockée dans _data_.
 
 - `creation` : date de création.
-- `hTC` : hash _court_ du PBKFD de la phrase de sponsoring du Comptable par l'administrateur technique.
+- `hTC` : hash _court_ du PBKDF de la phrase de sponsoring du Comptable par l'administrateur technique.
 - `moisStat` : dernier mois de calcul de la statistique des comptas.
 - `moisStatT` : dernier mois de calcul de la statistique des tickets.
 - `quotas`:  `{ qn, qv, qc }` : quotas maximum globaux attribués par l'administrateur technique.
@@ -799,7 +799,7 @@ Le Comptable fixe en conséquence un `nbmi` (de 3, 6, 12, 18, 24 mois),
 ## Protocole de création d'un espace et de son Comptable
 **Par l'Administrateur Technique**: création d'un espace:
 - choix du code de l'organisation `org`
-- acquisition de la phrase de sponsoring du comptable T -> `TC` (son PBKFD) -> `hTC` (son hash _court_)
+- acquisition de la phrase de sponsoring du comptable T -> `TC` (son PBKDF) -> `hTC` (son hash _court_)
 - **Opération** `CreationEspace`
   - Arguments: `org TC hTC`
   - Traitement:
@@ -922,14 +922,14 @@ Un document `comptes` est identifié par l'id du compte: il est **synchronisé e
 _data_ :
 - `id` : ID du compte = ID de son avatar principal.
 - `v` : 1..N.
-- `hk` : `hXR`, hash _court_ du PBKFD du début de la phrase secrète (en base `org@hk`).
+- `hk` : `hXR`, hash _court_ du PBKDF du début de la phrase secrète (en base `org@hk`).
 
 - `vpe` : version du périmètre
 - `vci` : version de `comptis`
 - `vin` : version de `invits`
 
-- `hXC`: hash _court_ du PBKFD de la phrase secrète complète.
-- `cleKXC` : clé K cryptée par XC (PBKFD de la phrase secrète complète).
+- `hXC`: hash _court_ du PBKDF de la phrase secrète complète.
+- `cleKXC` : clé K cryptée par XC (PBKDF de la phrase secrète complète).
 - `cleEK` : pour le Comptable seulement, clé de l'espace cryptée par sa clé K à la création de l'espace. Permet au comptable de lire les reports créés sur le serveur et cryptés par cette clé E.
 - `privK` : clé privée RSA de son avatar principal cryptée par la clé K du compte.
 
@@ -1073,12 +1073,12 @@ _data_:
 - `id` : ID de l'avatar.
 - `v` : 1..N.
 - `vcv` : version de la carte de visite afin qu'une opération puisse détecter (sans lire le document) si la carte de visite est plus récente que celle qu'il connaît.
-- `hk` : `hZR` hash _court_ du PBKFD de la phrase de contact réduite (`org@hk` en base).
+- `hk` : `hZR` hash _court_ du PBKDF de la phrase de contact réduite (`org@hk` en base).
 
 - `idc` : id du compte de l'avatar (égal à son id pour l'avatar principal).
-- `cleAZC` : clé A cryptée par ZC (PBKFD de la phrase de contact complète).
+- `cleAZC` : clé A cryptée par ZC (PBKDF de la phrase de contact complète).
 - `pcK` : phrase de contact complète cryptée par la clé K du compte.
-- `hZC` : hash du PBKFD de la phrase de contact complète.
+- `hZC` : hash du PBKDF de la phrase de contact complète.
 - `cvA` : carte de visite de l'avatar `{id, v, ph, tx}`. photo et texte (possiblement gzippé) cryptés par la clé A de l'avatar.
 - `pub privK` : couple des clés publique / privée RSA de l'avatar.
 
@@ -1250,7 +1250,7 @@ _data_ (de l'exemplaire I):
 
 **Quand I connaît la phrase de contact de E**
 - vérification que E a bien cette phrase de contact et récupération de la cleA de E.
-- I a calculé les hash des phrases de contact complète et réduite de E et obtenu en retour la clé A de E cryptée par le PBKFD de cette phrase de contact complète.
+- I a calculé les hash des phrases de contact complète et réduite de E et obtenu en retour la clé A de E cryptée par le PBKDF de cette phrase de contact complète.
 - I demande la clé RSA publique de E pour crypter la clé générée du chat.
 - création avec un item.
 
@@ -1302,27 +1302,27 @@ P est le parrain-sponsor, F est le filleul-sponsorisé.
 
 _data_:
 - `id` : id de l'avatar sponsor.
-- `ids` : hash _court_ du PBKFD de la phrase réduite de parrainage, 
+- `ids` : hash _court_ du PBKDF de la phrase réduite de parrainage, 
 - `v`: 1..N.
 - `dlv` : date limite de validité.
 - `hk` : `ids`, en base `org@hk`. Deux organisations peuvent utiliser des phrases de sponsorings identiques sans collision.
 
 - `st` : statut. _0: en attente réponse, 1: refusé, 2: accepté, 3: détruit / annulé_
 - `pspK` : texte de la phrase de sponsoring cryptée par la clé K du sponsor.
-- `YCK` : PBKFD de la phrase de sponsoring cryptée par la clé K du sponsor.
-- `hYC` : hash _court_ du PBKFD de la phrase de sponsoring,
+- `YCK` : PBKDF de la phrase de sponsoring cryptée par la clé K du sponsor.
+- `hYC` : hash _court_ du PBKDF de la phrase de sponsoring,
 - `dh`: date-heure du dernier changement d'état.
-- `cleAYC` : clé A du sponsor crypté par le PBKFD de la phrase complète de sponsoring.
+- `cleAYC` : clé A du sponsor crypté par le PBKDF de la phrase complète de sponsoring.
 - `partitionId`: id de la partition si compte "O"
-- `clePYC` : clé P de sa partition (si c'est un compte "O") cryptée par le PBKFD de la phrase complète de sponsoring (donne le numéro de partition).
-- `nomYC` : nom du sponsorisé, crypté par le PBKFD de la phrase complète de sponsoring.
+- `clePYC` : clé P de sa partition (si c'est un compte "O") cryptée par le PBKDF de la phrase complète de sponsoring (donne le numéro de partition).
+- `nomYC` : nom du sponsorisé, crypté par le PBKDF de la phrase complète de sponsoring.
 - `del` : `true` si le sponsorisé est délégué de sa partition.
 - `cvA` : `{ id, v, ph, tx }` du sponsor, textes cryptés par sa cle A.
 - `quotas` : `[qc, q1, q2]` quotas attribués par le sponsor.
 - `don` : montant du don éventuel par le sponsor.
 - `dconf` : le sponsor a demandé à rester confidentiel. Si oui, aucun _chat_ ne sera créé à l'acceptation du sponsoring.
 - `dconf2` : le sponsorisé a demandé à rester confidentiel. Si oui, aucun _chat_ ne sera créé à l'acceptation du sponsoring (ignoré en session UI).
-- `ardYC` : ardoise de bienvenue du sponsor / réponse du sponsorisé cryptée par le PBKFD de la phrase de sponsoring.
+- `ardYC` : ardoise de bienvenue du sponsor / réponse du sponsorisé cryptée par le PBKDF de la phrase de sponsoring.
 
 **Remarques**
 - la `dlv` d'un sponsoring peut être modifiée tant que le statut est _en attente_.
